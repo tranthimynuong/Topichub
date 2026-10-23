@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:replace="~{fragments/head :: head('Duyệt Nhóm Đăng ký')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
+<body class="workspace-page">
+
+    <!-- Left Sidebar -->
+    <aside th:replace="~{fragments/sidebar :: sidebar('registrations', ${user})}"></aside>
+
+    <!-- Main Wrapper -->
+    <div class="saas-main-wrapper">
+        <!-- Topbar -->
+        <header th:replace="~{fragments/topbar :: topbar('Nhóm Đăng ký Hướng dẫn', 'Giảng Viên', '/lecturer/dashboard', ${user})}"></header>
+
+        <!-- Main Content View -->
+        <main class="saas-content">
+
+            <!-- Flash Messages -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-emerald-200" role="alert">
+                <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-rose-200" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-1.5 text-rose-600"></i> <span th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
+            </div>
+
+            <!-- Page Header -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900 mb-1">Danh Sách Nhóm Sinh Viên Đăng Ký Đề Tài</h1>
+                    <p class="text-xs text-slate-500 mb-0">Xem và phê duyệt các nhóm sinh viên (3 - 5 SV) đã chọn đề tài do bạn hướng dẫn.</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span id="filteredRowCount" class="badge-pill-neutral font-medium text-xs" th:text="'Tổng số: ' + (${groups != null ? groups.size() : 0}) + ' nhóm'"></span>
+                </div>
+            </div>
+
+            <!-- Universal 1-Row Toolbar -->
+            <div class="saas-card p-3 mb-4 workspace-filterbar">
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                    <div class="search-box-wrapper flex-grow-1 max-w-md">
+                        <i class="fa-solid fa-magnifying-glass search-box-icon text-slate-400"></i>
+                        <input type="text" class="form-control form-control-sm rounded-xl text-xs" placeholder="Tìm kiếm nhóm, đề tài, tên sinh viên..." onkeyup="filterTableByKeyword(this.value)" title="Tìm kiếm nhóm, đề tài, tên sinh viên..." aria-label="Tìm kiếm nhóm, đề tài, tên sinh viên...">
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <select class="form-select form-select-sm rounded-xl text-xs" style="width: 170px;" onchange="filterTableByAttribute('period', this.value)" title="Lựa chọn" aria-label="Lựa chọn">
+                            <option value="all">-- Tất cả các đợt --</option>
+                            <option th:each="p : ${periods}" th:value="${p.id}" th:text="${p.name}"></option>
+                        </select>
+                        <select class="form-select form-select-sm rounded-xl text-xs" style="width: 170px;" onchange="filterTableByAttribute('status', this.value)" title="Lựa chọn" aria-label="Lựa chọn">
+                            <option value="all">-- Tất cả trạng thái --</option>
+                            <option value="REGISTERED">Chờ duyệt</option>
+                            <option value="APPROVED">Đã chấp thuận</option>
+                            <option value="REJECTED">Đã từ chối</option>
+                        </select>
+                        <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2.5 text-slate-600 hover:bg-slate-100" onclick="filterTableByKeyword(''); filterTableByAttribute('period', 'all'); filterTableByAttribute('status', 'all'); document.querySelectorAll('select').forEach(s => s.value='all');" title="Đặt lại bộ lọc">
+                            <i class="fa-solid fa-rotate-left text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registrations Table with Overflow Protection -->
+            <div class="table-saas-container mb-4">
+                <div class="w-full overflow-x-auto">
+                    <table class="table table-saas mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 20%;" scope="col">Tên nhóm & Mã</th>
+                                <th style="width: 28%;" scope="col">Đề tài đăng ký</th>
+                                <th style="width: 18%;" scope="col">Trưởng nhóm</th>
+                                <th style="width: 18%;" scope="col">Thành viên nhóm</th>
+                                <th style="width: 16%;" scope="col">Trạng thái & Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${groups == null || #lists.isEmpty(groups)}">
+                                <td colspan="5" class="text-center py-5 text-muted text-xs">
+                                    <i class="fa-regular fa-folder-open text-2xl mb-2 d-block text-slate-300"></i>
+                                    Chưa có nhóm sinh viên nào đăng ký đề tài của bạn.
+                                </td>
+                            </tr>
+                            <tr th:each="g : ${groups}" class="filterable-row" th:data-period="${g.period != null ? g.period.id : 'all'}" th:data-status="${g.status}">
+                                <td>
+                                    <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold mb-1 d-inline-block" th:text="${g.groupCode}">GRP-123456</span>
+                                    <div class="font-bold text-slate-900 text-xs" th:text="${g.groupName}">Tên nhóm</div>
+                                    <span class="text-slate-400 text-xs" th:text="'Ngày tạo: ' + ${#temporals.format(g.createdAt, 'dd/MM/yyyy')}"></span>
+                                </td>
+                                <td>
+                                    <div class="font-bold text-slate-900 text-xs line-clamp-1 hover:text-blue-600" th:text="${g.topic != null ? g.topic.title : 'Chưa chọn'}"></div>
+                                    <span class="text-slate-400 text-xs font-mono" th:text="${g.topic != null ? g.topic.code : ''}"></span>
+                                </td>
+                                <td>
+                                    <div class="font-medium text-slate-900 text-xs" th:text="${g.leader != null && g.leader.user != null ? g.leader.user.fullName : 'N/A'}"></div>
+                                    <span class="text-slate-400 text-xs font-mono" th:text="${g.leader != null ? g.leader.studentCode : ''}"></span>
+                                </td>
+                                <td>
+                                    <div class="space-y-1">
+                                        <div th:each="m : ${g.members}" class="text-xs d-flex align-items-center gap-1.5">
+                                            <span class="text-slate-700" th:text="${m.student != null && m.student.user != null ? m.student.user.fullName : 'SV'}"></span>
+                                            <span th:if="${m.roleInGroup == 'LEADER'}" class="badge-pill-approved" style="font-size: 11px; padding: 2px 8px;">Trưởng nhóm</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                         <div>
+                                             <span th:if="${g.status == 'REGISTERED' || g.status == 'DRAFT'}" class="badge-pill-pending font-semibold">
+                                                 <i class="fa-regular fa-clock text-xs"></i> Chờ duyệt
+                                             </span>
+                                             <span th:if="${g.status == 'APPROVED'}" class="badge-pill-approved font-semibold">
+                                                 <i class="fa-solid fa-check text-xs"></i> Đã chấp thuận
+                                             </span>
+                                             <span th:if="${g.status == 'REJECTED'}" class="badge-pill-rejected font-semibold">
+                                                 <i class="fa-solid fa-xmark text-xs"></i> Đã từ chối
+                                             </span>
+                                         </div>
+
+                                         <div th:if="${g.status == 'REGISTERED' || g.status == 'DRAFT'}" class="d-flex gap-1">
+                                             <form th:action="@{/lecturer/registrations/{id}/approve(id=${g.id})}" method="post" class="d-inline" onsubmit="return confirm('Chấp thuận hướng dẫn nhóm sinh viên này?');">
+                                                 <button type="submit" class="btn btn-sm btn-dark rounded-xl px-2.5 py-1 text-xs font-semibold" title="Chấp thuận">
+                                                     <i class="fa-solid fa-check"></i>
+                                                 </button>
+                                             </form>
+                                             <form th:action="@{/lecturer/registrations/{id}/reject(id=${g.id})}" method="post" class="d-inline" onsubmit="return confirm('Từ chối nhóm sinh viên này?');">
+                                                 <button type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-2.5 py-1 text-xs font-semibold" title="Từ chối">
+                                                     <i class="fa-solid fa-xmark"></i>
+                                                 </button>
+                                             </form>
+                                         </div>
+
+                                         <!-- Nút Chấm điểm quá trình (GVHD) khi nhóm đã được duyệt -->
+                                         <div th:if="${g.status == 'APPROVED' && g.topic != null}" class="d-flex flex-column align-items-end gap-1">
+                                             <div class="d-flex align-items-center gap-1.5">
+                                                 <span class="text-xs text-slate-500 font-medium">Đánh giá GVHD:</span>
+                                                 <span th:if="${g.topic.advisorScore != null}" class="score-pill score-high" th:text="${#numbers.formatDecimal(g.topic.advisorScore, 1, 1)} + ' đ'">8.5 đ</span>
+                                                 <span th:unless="${g.topic.advisorScore != null}" class="badge bg-slate-100 text-slate-400 border border-slate-200 text-xs px-2 py-0.5 rounded-md">Chưa chấm</span>
+                                             </div>
+                                             <th:block th:if="${g.topic.isFinalized}">
+                                                 <span class="badge-pill-approved font-semibold text-xs" title="Đã công bố kết quả điểm chính thức - Khóa sửa điểm">
+                                                     <i class="fa-solid fa-lock me-1"></i>Đã công bố (Khóa điểm)
+                                                 </span>
+                                             </th:block>
+                                             <th:block th:unless="${g.topic.isFinalized}">
+                                                 <button type="button" class="btn btn-sm btn-dark rounded-xl px-2.5 py-1 text-xs font-semibold" data-bs-toggle="modal" th:data-bs-target="'#gradeAdvisorModal-' + ${g.id}" title="Phiếu chấm điểm tổng kết quá trình của GVHD cho đề tài">
+                                                     <i class="fa-solid fa-pen-to-square me-1"></i> <span th:text="${g.topic.advisorScore != null ? 'Sửa phiếu điểm' : 'Nhập phiếu điểm GVHD'}">Nhập phiếu điểm GVHD</span>
+                                                 </button>
+                                             </th:block>
+                                         </div>
+                                     </div>
+                                 </td>
+                             </tr>
+                         </tbody>
+                     </table>
+                 </div>
+             </div>
+
+         </main>
+     </div>
+
+     <!-- Modals for Advisor Grading (outside saas-main-wrapper to prevent backdrop stacking bugs) -->
+     <th:block th:each="g : ${groups}">
+         <div th:if="${g.status == 'APPROVED' && g.topic != null}" class="modal fade text-start" th:id="'gradeAdvisorModal-' + ${g.id}" tabindex="-1" aria-hidden="true">
+             <div class="modal-dialog modal-dialog-centered">
+                 <div class="modal-content rounded-2xl border-0 shadow-xl">
+                     <form th:action="@{/lecturer/topics/{topicId}/grade-advisor(topicId=${g.topic.id})}" method="post">
+                         <div class="modal-header border-b border-slate-100 p-4">
+                             <h2 class="modal-title font-bold text-slate-900 text-sm">
+                                 <i class="fa-solid fa-chalkboard-user text-blue-600 me-1.5"></i>Phiếu Chấm Điểm Quá Trình Hướng Dẫn (GVHD)
+                             </h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
+                        </div>
+                        <div class="modal-body p-4 space-y-3">
+                            <div th:if="${g.topic.isFinalized}" class="alert alert-warning text-xs p-2.5 rounded-xl border border-amber-200">
+                                <i class="fa-solid fa-lock text-amber-600 me-1"></i> <strong>Đã công bố điểm:</strong> Đề tài đã công bố kết quả cho sinh viên. Vui lòng liên hệ Trưởng bộ môn/Khoa thu hồi công bố trước khi sửa điểm.
+                            </div>
+                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
+                                <div class="text-xs text-slate-500">Đề tài: <strong class="text-slate-900" th:text="${g.topic.title}">Tên đề tài</strong></div>
+                                <div class="text-xs text-slate-500">Nhóm SV: <strong class="text-slate-900" th:text="${g.groupName}">Tên nhóm</strong></div>
+                                <div class="text-xs text-emerald-700 font-medium">Điểm tổng kết tính theo Trung bình cộng (TBC) các điểm thành phần</div>
+                            </div>
+
+                            <div>
+                                <label class="form-label text-xs font-semibold text-slate-700">Điểm quá trình GVHD (Thang 10) <span class="text-rose-600">*</span></label>
+                                <input type="number" step="0.1" min="0" max="10" name="score" class="form-control text-xs rounded-xl" th:value="${g.topic.advisorScore}" th:disabled="${g.topic.isFinalized}" placeholder="vd: 8.5" required title="Điểm quá trình GVHD (Thang 10)" aria-label="Điểm quá trình GVHD (Thang 10)">
+                            </div>
+
+                            <div>
+                                <label class="form-label text-xs font-semibold text-slate-700">Nhận xét quá trình thực hiện & thái độ</label>
+                                <textarea name="comments" class="form-control text-xs rounded-xl" rows="3" th:disabled="${g.topic.isFinalized}" placeholder="Nhập nhận xét về tinh thần làm việc, tiến độ hoàn thành..." title="Nhận xét quá trình thực hiện &amp; thái độ" aria-label="Nhận xét quá trình thực hiện &amp; thái độ"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-t border-slate-100 p-3">
+                            <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Đóng</button>
+                            <button type="submit" th:disabled="${g.topic.isFinalized}" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">Lưu phiếu chấm GVHD</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <!-- Scripts Fragment -->
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+</body>
+</html>

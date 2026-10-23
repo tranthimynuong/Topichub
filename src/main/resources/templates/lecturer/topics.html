@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
+<head th:replace="~{fragments/head :: head('Đề tài của Tôi')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
+
+<body class="workspace-page">
+
+    <!-- Left Sidebar -->
+    <aside th:replace="~{fragments/sidebar :: sidebar('topics', ${user})}"></aside>
+
+    <!-- Main Wrapper -->
+    <div class="saas-main-wrapper">
+        <!-- Topbar -->
+        <header
+            th:replace="~{fragments/topbar :: topbar('Đề tài của Tôi', 'Giảng Viên', '/lecturer/dashboard', ${user})}">
+        </header>
+
+        <!-- Main Content View -->
+        <main class="saas-content">
+
+            <!-- Flash Messages -->
+            <div th:if="${successMessage}"
+                class="alert alert-success alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-emerald-200"
+                role="alert">
+                <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span
+                    th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"
+                    aria-label="Đóng" title="Đóng"></button>
+            </div>
+            <div th:if="${errorMessage}"
+                class="alert alert-danger alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-rose-200"
+                role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-1.5 text-rose-600"></i> <span
+                    th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"
+                    aria-label="Đóng" title="Đóng"></button>
+            </div>
+
+            <!-- Page Header -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <h1 class="text-lg font-bold text-slate-900 mb-0">Danh Sách Đề Tài Của Tôi</h1>
+                    <span
+                        class="badge-pill-neutral font-semibold text-xs text-indigo-700 bg-indigo-50 border-indigo-200"
+                        th:text="${lecturer != null && lecturer.department != null ? lecturer.department.name : 'Khoa CNTT'}">Khoa
+                        CNTT</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <a th:href="@{/lecturer/topics/create}"
+                        class="btn btn-sm btn-dark rounded-xl px-3 py-1.5 text-xs font-semibold shadow-sm d-inline-flex align-items-center gap-1.5">
+                        <i class="fa-solid fa-plus text-xs"></i> Đề xuất đề tài mới
+                    </a>
+                </div>
+            </div>
+
+            <!-- Universal 1-Row Toolbar -->
+            <div class="saas-card p-3 mb-4 workspace-filterbar">
+                <div class="d-flex flex-column flex-xl-row align-items-xl-center justify-content-between gap-3">
+                    <!-- Quick Status Segmented Control -->
+                    <div class="segmented-control">
+                        <button type="button" class="segmented-tab active"
+                            onclick="filterByLecturerCriteria('STATUS', 'ALL', this)">
+                            Tất cả (<span th:text="${topics != null ? topics.size() : 0}">0</span>)
+                        </button>
+                        <button type="button" class="segmented-tab"
+                            onclick="filterByLecturerCriteria('STATUS', 'APPROVED', this)">
+                            <i class="fa-solid fa-check text-emerald-500"></i> Đã duyệt
+                        </button>
+                        <button type="button" class="segmented-tab"
+                            onclick="filterByLecturerCriteria('STATUS', 'PENDING', this)">
+                            <i class="fa-regular fa-clock text-amber-500"></i> Chờ duyệt
+                        </button>
+                        <button type="button" class="segmented-tab"
+                            onclick="filterByLecturerCriteria('STATUS', 'REJECTED', this)">
+                            <i class="fa-solid fa-xmark text-rose-500"></i> Từ chối
+                        </button>
+                    </div>
+
+                    <!-- Dropdown Filters & Search & Reset -->
+                    <div class="d-flex flex-wrap align-items-center gap-2 flex-grow-1 justify-content-xl-end">
+                        <!-- Filter: Period -->
+                        <div th:if="${periods != null && !periods.isEmpty()}" style="min-width: 160px;">
+                            <select id="filterPeriodSelect"
+                                class="form-select form-select-sm text-xs rounded-xl border-slate-200"
+                                onchange="applyLecturerCombinedFilters()" title="filterPeriodSelect"
+                                aria-label="filterPeriodSelect">
+                                <option value="ALL">Tất cả các đợt</option>
+                                <option th:each="p : ${periods}" th:value="${p.name}" th:text="${p.name}">Đợt 1</option>
+                            </select>
+                        </div>
+
+
+                        <!-- Search -->
+                        <div class="relative" style="min-width: 200px; flex-grow: 1; max-width: 280px;">
+                            <input type="text" id="lecturerKeywordInput"
+                                class="form-control form-control-sm rounded-xl pl-8 text-xs bg-slate-50 focus:bg-white"
+                                placeholder="Tìm tên đề tài, mã..." onkeyup="applyLecturerCombinedFilters()"
+                                title="Tìm tên đề tài, mã..." aria-label="Tìm tên đề tài, mã...">
+                            <i
+                                class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs"></i>
+                        </div>
+
+                        <span id="filteredRowCount" class="badge-pill-neutral font-medium text-xs whitespace-nowrap"
+                            th:text="'Tổng: ' + (${topics != null ? topics.size() : 0}) + ' đề tài'"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Topics Table Card with Overflow Protection -->
+            <div class="table-saas-container mb-4">
+                <div class="w-full overflow-x-auto">
+                    <table class="table table-saas mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 14%;" scope="col">Mã đề tài</th>
+                                <th style="width: 46%;" scope="col">Tên đề tài & Mô tả</th>
+                                <th style="width: 20%;" scope="col">Khoa / Đợt</th>
+                                <th style="width: 10%;" scope="col">Chỉ tiêu</th>
+                                <th style="width: 10%;" class="text-end" scope="col">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${topics == null or topics.isEmpty()}">
+                                <td colspan="5" class="text-center py-5 text-muted text-xs">
+                                    <i class="fa-regular fa-folder-open text-2xl mb-2 d-block text-slate-300"></i>
+                                    Bạn chưa tạo đề tài nào trong đợt này.
+                                    <div class="mt-2">
+                                        <a th:href="@{/lecturer/topics/create}"
+                                            class="btn btn-sm btn-dark rounded-xl px-3 text-xs">Đề xuất đề tài ngay</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:each="t : ${topics}"
+                                class="filterable-row topic-item-row hover:bg-slate-50/80 transition cursor-pointer"
+                                th:data-status="${t.status}" th:data-period="${t.period != null ? t.period.id : 'all'}"
+                                th:data-topic-id="${t.id}" th:data-topic-code="${t.code}"
+                                th:data-topic-title="${t.title}"
+                                th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}"
+                                th:data-topic-major="${t.department != null ? t.department.name : 'Khoa CNTT'}"
+                                th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Tôi'}"
+                                th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}"
+                                th:data-topic-reviewer="${t.reviewer != null && t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}"
+                                th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}"
+                                th:data-topic-max-students="${t.maxStudents}" th:data-topic-status="${t.status}"
+                                th:data-topic-rejection-reason="${t.rejectionReason}"
+                                th:data-topic-description="${t.description}"
+                                th:data-topic-requirements="${t.requirements}" th:data-topic-role="LECTURER"
+                                onclick="openTopicDrawer(this)" title="Nhấp để xem chi tiết & thao tác" tabindex="0"
+                                onkeydown="if (event.target === this && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); this.click(); }">
+                                <td>
+                                    <span
+                                        class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold"
+                                        th:text="${t.code}">DT-001</span>
+                                </td>
+                                <td>
+                                    <div class="font-bold text-slate-900 text-xs line-clamp-1 hover:text-blue-600 transition"
+                                        th:text="${t.title}">Xây dựng ứng dụng quản lý</div>
+                                    <span class="text-xs text-slate-400 line-clamp-1 truncate-cell"
+                                        th:text="${t.description}">Mô tả tóm tắt</span>
+                                    <!-- Rejection Reason mini tag -->
+                                    <div th:if="${t.status == 'REJECTED' && t.rejectionReason != null}"
+                                        class="mt-1 text-xs text-rose-600 font-medium line-clamp-1">
+                                        <i class="fa-solid fa-triangle-exclamation me-1"></i> <span
+                                            th:text="'Lý do: ' + ${t.rejectionReason}"></span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="font-medium text-slate-800 text-xs truncate-cell"
+                                        th:text="${t.department != null ? t.department.name : 'Khoa CNTT'}">Khoa CNTT
+                                    </div>
+                                    <span class="text-xs text-slate-400 d-block truncate-cell"
+                                        th:text="${t.period != null ? t.period.name : 'Chung'}">KLTN</span>
+                                </td>
+                                <td>
+                                    <span class="badge-pill-neutral font-semibold text-xs"
+                                        th:text="'Tối đa ' + ${t.maxStudents} + ' SV'">3 SV</span>
+                                </td>
+                                <td class="text-end">
+                                    <span th:if="${t.status == 'APPROVED'}" class="badge-pill-approved font-semibold">
+                                        <i class="fa-solid fa-check text-xs"></i> Đã duyệt
+                                    </span>
+                                    <span th:if="${t.status == 'PENDING'}" class="badge-pill-pending font-semibold">
+                                        <i class="fa-regular fa-clock text-xs"></i> Chờ duyệt
+                                    </span>
+                                    <span th:if="${t.status == 'REJECTED'}" class="badge-pill-rejected font-semibold">
+                                        <i class="fa-solid fa-xmark text-xs"></i> Từ chối
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Scripts Fragment (Includes Global Centered Topic Detail Modal) -->
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+
+    <script>
+        let currentLecturerStatus = 'ALL';
+
+        function filterByLecturerCriteria(type, value, element) {
+            if (type === 'STATUS') {
+                currentLecturerStatus = value;
+                document.querySelectorAll('.segmented-tab').forEach(b => b.classList.remove('active'));
+                if (element) element.classList.add('active');
+            }
+            applyLecturerCombinedFilters();
+        }
+
+        function applyLecturerCombinedFilters() {
+            const kwInput = document.getElementById('lecturerKeywordInput');
+            const keyword = (kwInput ? kwInput.value : '').toLowerCase().trim();
+            const status = currentLecturerStatus;
+
+            const pSel = document.getElementById('filterPeriodSelect');
+            const selectedPeriod = pSel ? pSel.value : 'ALL';
+
+            const rows = document.querySelectorAll('.topic-item-row');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const rowStatus = (row.getAttribute('data-status') || '').toUpperCase();
+                const rowPeriod = row.getAttribute('data-topic-period') || '';
+                const text = row.textContent.toLowerCase();
+
+                const matchStatus = (status === 'ALL' || rowStatus === status);
+                const matchPeriod = (selectedPeriod === 'ALL' || rowPeriod === selectedPeriod);
+                const matchKeyword = !keyword || text.includes(keyword);
+
+                if (matchStatus && matchPeriod && matchKeyword) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            const counter = document.getElementById('filteredRowCount');
+            if (counter) {
+                counter.textContent = 'Hiển thị: ' + visibleCount + ' đề tài';
+            }
+        }
+    </script>
+</body>
+
+</html>

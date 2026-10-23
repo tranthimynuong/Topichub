@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:replace="~{fragments/head :: head('Quản lý Nhóm Sinh viên & Đăng ký Đề tài')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
+<body class="workspace-page">
+
+    <!-- Left Sidebar -->
+    <aside th:replace="~{fragments/sidebar :: sidebar('students', ${user})}"></aside>
+
+    <!-- Main Wrapper -->
+    <div class="saas-main-wrapper">
+        <!-- Topbar -->
+        <header th:replace="~{fragments/topbar :: topbar('Quản lý Nhóm Sinh viên', ${user != null && user.role != null ? user.role.name : 'Trưởng Khoa'}, '/department-head/dashboard', ${user})}"></header>
+
+        <!-- Main Content View -->
+        <main class="saas-content">
+
+            <!-- Flash Messages -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-emerald-200" role="alert">
+                <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-rose-200" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-1.5 text-rose-600"></i> <span th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
+            </div>
+
+            <!-- Page Header -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <h1 class="text-lg font-bold text-slate-900 mb-0">Quản Lý Nhóm Sinh Viên</h1>
+                    <span class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200" th:text="${department != null ? department.name : 'Khoa CNTT'}">Khoa CNTT</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge-pill-neutral font-medium text-xs" th:text="'Tổng số: ' + ${totalGroups != null ? totalGroups : 0} + ' nhóm'"></span>
+                    <button type="button" class="btn btn-sm btn-dark rounded-xl px-3 py-1.5 text-xs font-semibold shadow-xs" data-bs-toggle="modal" data-bs-target="#modalMergeGroups">
+                        <i class="fa-solid fa-code-merge me-1.5 text-amber-400"></i> Gộp nhóm thiếu người
+                    </button>
+                </div>
+            </div>
+
+            <!-- Universal 1-Row Toolbar (Period Selector & Quick Search) -->
+            <div class="saas-card p-3 mb-4 workspace-filterbar">
+                <form th:action="@{/department-head/students}" method="get" class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                    <div class="relative flex-grow-1 max-w-lg">
+                        <input type="text" class="form-control form-control-sm rounded-xl pl-8 text-xs" placeholder="Tìm kiếm theo mã nhóm, tên nhóm, sinh viên, đề tài..." onkeyup="filterTableByKeyword(this.value)" title="Tìm kiếm theo mã nhóm, tên nhóm, sinh viên, đề tài..." aria-label="Tìm kiếm theo mã nhóm, tên nhóm, sinh viên, đề tài...">
+                        <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs"></i>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <select name="periodId" class="form-select form-select-sm rounded-xl text-xs" style="width: 240px;" onchange="this.form.submit()" title="periodId" aria-label="periodId">
+                            <option value="">-- Tất cả các đợt đăng ký --</option>
+                            <option th:each="p : ${periods}" th:value="${p.id}" th:text="${p.name}" th:selected="${selectedPeriodId == p.id}"></option>
+                        </select>
+                        <select class="form-select form-select-sm rounded-xl text-xs" style="width: 170px;" onchange="filterTableByAttribute('group-status', this.value)" title="Lựa chọn" aria-label="Lựa chọn">
+                            <option value="all">-- Tất cả trạng thái --</option>
+                            <option value="scored">Đã có điểm</option>
+                            <option value="submitted">Đã nộp bài</option>
+                            <option value="pending">Chưa nộp bài</option>
+                            <option value="unassigned">Chưa chọn đề tài</option>
+                        </select>
+                        <a th:href="@{/department-head/students}" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2.5 text-slate-600 hover:bg-slate-100" title="Đặt lại bộ lọc">
+                            <i class="fa-solid fa-rotate-left text-xs"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Clean Minimalist Fixed-Width Data Table Card -->
+            <div class="table-saas-container mb-4">
+                <div class="w-full">
+                    <table class="table table-saas table-fixed w-full mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 20%;" class="align-middle py-3.5 px-4" scope="col">Nhóm Sinh Viên</th>
+                                <th style="width: 20%;" class="align-middle py-3.5 px-4" scope="col">Trưởng Nhóm / Thành Viên</th>
+                                <th style="width: 35%;" class="align-middle py-3.5 px-4" scope="col">Đề Tài Đăng Ký & GVHD</th>
+                                <th style="width: 15%;" class="align-middle text-center py-3.5 px-4" scope="col">Tiến Độ</th>
+                                <th style="width: 10%;" class="align-middle text-end py-3.5 px-4 pr-6" scope="col">Chi Tiết</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${groups == null or groups.isEmpty()}">
+                                <td colspan="5" class="text-center py-5 text-muted text-xs align-middle">
+                                    <i class="fa-regular fa-folder-open text-2xl mb-2 d-block text-slate-300"></i>
+                                    Không tìm thấy nhóm sinh viên nào trong đợt đăng ký đã chọn.
+                                </td>
+                            </tr>
+                            <tr th:each="g : ${groups}" class="filterable-row cursor-pointer hover:bg-slate-50/80 transition"
+                                th:data-group-status="${g.topic == null ? 'unassigned' : (g.topic.finalScore != null ? 'scored' : (groupSubmissionsMap != null && groupSubmissionsMap.get(g.id) != null && !groupSubmissionsMap.get(g.id).isEmpty() ? 'submitted' : 'pending'))}"
+                                onclick="openGroupDetailDrawer(this)" tabindex="0" onkeydown="if (event.target === this && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); this.click(); }">
+                                
+                                <!-- Cột 1: Nhóm (20%) -->
+                                <td class="align-middle py-3.5 px-4">
+                                    <div class="d-flex align-items-center gap-1.5 mb-0.5">
+                                        <span class="font-semibold text-slate-800 text-xs truncate" th:text="${g.groupName}">Nhóm Nghiên Cứu 01</span>
+                                        <span class="badge bg-slate-100 text-slate-700 border border-slate-200 text-[10px] px-1.5 py-0.5 rounded font-mono font-medium flex-shrink-0" th:text="${g.period != null ? g.period.getPeriodTypeName() : 'KLTN'}">KLTN</span>
+                                    </div>
+                                    <span class="text-slate-400 text-xs font-mono" th:text="${g.groupCode}">GRP-001</span>
+                                </td>
+
+                                <!-- Cột 2: Thành viên (20%) -->
+                                <td class="align-middle py-3.5 px-4">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <!-- Avatar tròn -->
+                                        <div class="w-7 h-7 rounded-full bg-blue-50 text-blue-600 font-bold flex items-center justify-center text-xs flex-shrink-0"
+                                             th:text="${g.leader != null && g.leader.user != null && !g.leader.user.fullName.isEmpty() ? g.leader.user.fullName.substring(0, 1) : 'S'}">S</div>
+                                        <div class="truncate">
+                                            <div class="d-flex align-items-center gap-1">
+                                                <span class="font-medium text-slate-800 text-xs truncate" th:text="${g.leader != null && g.leader.user != null ? g.leader.user.fullName : 'Chưa có trưởng nhóm'}">Lê Hoàng Long</span>
+                                                <span th:if="${g.members != null && g.members.size() > 1}" class="badge bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.2 rounded-full font-medium flex-shrink-0" th:text="'+' + (${g.members.size() - 1}) + ' TV'">+2 TV</span>
+                                            </div>
+                                            <span class="text-slate-400 text-xs font-mono" th:text="${g.leader != null ? g.leader.studentCode : ''}">20210012</span>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Cột 3: Đề tài & GVHD (35%) -->
+                                <td class="align-middle py-3.5 px-4">
+                                    <div th:if="${g.topic != null}">
+                                        <div class="font-medium text-slate-700 text-xs truncate max-w-[320px]" th:text="${g.topic.title}">Nghiên cứu và xây dựng hệ thống quản lý</div>
+                                        <div class="text-xs text-slate-400 truncate">
+                                            GVHD: <span class="text-slate-600" th:text="${g.topic.supervisor != null && g.topic.supervisor.user != null ? g.topic.supervisor.user.fullName : 'Chưa phân công'}">TS. Nguyễn Văn A</span>
+                                        </div>
+                                    </div>
+                                    <div th:unless="${g.topic != null}" class="text-xs text-slate-400 italic">
+                                        Chưa chọn đề tài
+                                    </div>
+                                </td>
+
+                                <!-- Cột 4: Tiến độ (15%) -->
+                                <td class="align-middle text-center py-3.5 px-4">
+                                    <!-- Case 1: Đã có điểm -->
+                                    <span th:if="${g.topic != null && g.topic.finalScore != null}" class="badge-pill-approved font-semibold text-xs whitespace-nowrap">
+                                        <i class="fa-solid fa-circle-check text-xs me-0.5"></i> Đã có điểm (<span th:text="${#numbers.formatDecimal(g.topic.finalScore, 1, 2)}">8.83</span>)
+                                    </span>
+                                    <!-- Case 2: Đã nộp bài -->
+                                    <span th:if="${g.topic != null && g.topic.finalScore == null && groupSubmissionsMap != null && groupSubmissionsMap.get(g.id) != null && !groupSubmissionsMap.get(g.id).isEmpty()}" class="badge-pill-neutral font-semibold text-blue-700 bg-blue-50 border-blue-200 text-xs whitespace-nowrap">
+                                        <i class="fa-solid fa-file-arrow-up text-xs me-0.5"></i> Đã nộp bài
+                                    </span>
+                                    <!-- Case 3: Chưa nộp bài -->
+                                    <span th:if="${g.topic != null && g.topic.finalScore == null && (groupSubmissionsMap == null || groupSubmissionsMap.get(g.id) == null || groupSubmissionsMap.get(g.id).isEmpty())}" class="badge-pill-pending font-semibold text-xs whitespace-nowrap">
+                                        <i class="fa-regular fa-clock text-xs me-0.5"></i> Chưa nộp bài
+                                    </span>
+                                    <!-- Case 4: Chưa đăng ký -->
+                                    <span th:if="${g.topic == null}" class="badge-pill-neutral text-xs whitespace-nowrap">
+                                        Chưa đăng ký
+                                    </span>
+                                </td>
+
+                                <!-- Cột 5: Thao tác (10%) -->
+                                <td class="align-middle text-end py-3.5 px-4 pr-6" onclick="event.stopPropagation()">
+                                    <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-full w-8 h-8 p-0 inline-flex items-center justify-center text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition shadow-xs"
+                                            title="Xem chi tiết nhóm & đề tài"
+                                            onclick="openGroupDetailDrawer(this.closest('tr'))">
+                                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                                    </button>
+
+                                    <!-- Hidden Drawer Payload Content for Instant Rendering -->
+                                    <div class="group-drawer-payload d-none">
+                                        <!-- Header Data -->
+                                        <div class="drawer-header-data" 
+                                             th:data-group-name="${g.groupName}"
+                                             th:data-group-code="${g.groupCode}"
+                                             th:data-period-name="${g.period != null ? g.period.name : 'Chung'}"
+                                             th:data-created-at="${#temporals.format(g.createdAt, 'dd/MM/yyyy')}"></div>
+
+                                        <!-- Section 1: Thông tin nhóm -->
+                                        <div class="p-3.5 bg-slate-50/80 rounded-xl border border-slate-100 space-y-2 text-xs mb-4">
+                                            <div class="d-flex justify-content-between">
+                                                <span class="text-slate-500"><i class="fa-solid fa-hashtag text-slate-400 me-1"></i> Mã nhóm:</span>
+                                                <strong class="font-mono text-slate-900" th:text="${g.groupCode}">GRP-001</strong>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <span class="text-slate-500"><i class="fa-regular fa-calendar text-slate-400 me-1"></i> Ngày tạo:</span>
+                                                <strong class="text-slate-900" th:text="${#temporals.format(g.createdAt, 'dd/MM/yyyy HH:mm')}">20/08/2026</strong>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <span class="text-slate-500"><i class="fa-solid fa-bookmark text-blue-500 me-1"></i> Đợt đăng ký:</span>
+                                                <strong class="text-slate-900" th:text="${g.period != null ? g.period.name : 'Chung'}">Đợt KLTN HK1</strong>
+                                            </div>
+                                        </div>
+
+                                        <!-- Section 2: Danh sách thành viên -->
+                                        <div class="mb-4">
+                                            <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2.5">
+                                                <i class="fa-solid fa-users text-blue-600 me-1"></i> Danh sách thành viên (<span th:text="${g.members.size()}"></span> SV):
+                                            </h6>
+                                            <div class="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden bg-white shadow-xs">
+                                                <div th:each="m : ${g.members}" class="p-3 d-flex align-items-center justify-content-between">
+                                                    <div class="d-flex align-items-center gap-2.5">
+                                                        <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 font-bold flex items-center justify-center text-xs flex-shrink-0"
+                                                             th:text="${m.student != null && m.student.user != null && !m.student.user.fullName.isEmpty() ? m.student.user.fullName.substring(0, 1) : 'S'}">S</div>
+                                                        <div>
+                                                            <div class="d-flex align-items-center gap-1.5">
+                                                                <strong class="text-slate-900 text-xs" th:text="${m.student != null && m.student.user != null ? m.student.user.fullName : 'SV'}"></strong>
+                                                                <span class="font-mono text-slate-500 text-xs" th:text="'(' + (${m.student != null ? m.student.studentCode : ''}) + ')'"></span>
+                                                                <span th:if="${g.leader != null && m.student.id.equals(g.leader.id)}" class="badge-pill-pending font-bold" style="font-size: 0.65rem; padding: 1px 6px;">
+                                                                    <i class="fa-solid fa-crown text-amber-500 me-0.5"></i> Trưởng nhóm
+                                                                </span>
+                                                            </div>
+                                                            <span class="text-slate-400 text-xs" th:text="${m.student != null && m.student.user != null ? m.student.user.email : ''}"></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-end text-xs text-slate-500">
+                                                        <span class="d-block font-medium text-slate-700" th:text="${m.student != null && m.student.department != null ? m.student.department.name : 'Khoa CNTT'}"></span>
+                                                        <span th:if="${m.student != null && m.student.gpa != null}" class="text-slate-400 font-mono" th:text="'GPA: ' + ${m.student.gpa}"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Section 3: Chi tiết đề tài -->
+                                        <div class="mb-4">
+                                            <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2.5">
+                                                <i class="fa-solid fa-book-bookmark text-indigo-600 me-1"></i> Chi tiết đề tài nghiên cứu:
+                                            </h6>
+                                            <div th:if="${g.topic != null}" class="p-3.5 bg-white border border-slate-100 rounded-xl shadow-xs space-y-3">
+                                                <div>
+                                                    <div class="d-flex align-items-center gap-1.5 mb-1">
+                                                        <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-bold" th:text="${g.topic.code}">DT-01</span>
+                                                        <span class="badge-pill-neutral font-medium text-xs" th:text="${g.topic.department != null ? g.topic.department.name : 'Khoa CNTT'}">Khoa CNTT</span>
+                                                    </div>
+                                                    <h6 class="font-bold text-slate-900 text-sm mb-1 leading-snug" th:text="${g.topic.title}">Tên đề tài nghiên cứu</h6>
+                                                </div>
+
+                                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1.5 text-xs">
+                                                    <div class="d-flex justify-content-between">
+                                                        <span class="text-slate-500"><i class="fa-solid fa-chalkboard-user text-blue-600 me-1"></i> GV Hướng dẫn chính:</span>
+                                                        <strong class="text-slate-900" th:text="${g.topic.supervisor != null && g.topic.supervisor.user != null ? g.topic.supervisor.user.fullName : 'Chưa phân công'}"></strong>
+                                                    </div>
+                                                    <div th:if="${g.topic.coSupervisor != null && g.topic.coSupervisor.user != null}" class="d-flex justify-content-between">
+                                                        <span class="text-slate-500"><i class="fa-solid fa-user-plus text-slate-400 me-1"></i> GV Hướng dẫn phụ:</span>
+                                                        <strong class="text-slate-900" th:text="${g.topic.coSupervisor.user.fullName}"></strong>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between">
+                                                        <span class="text-slate-500"><i class="fa-solid fa-user-check text-indigo-600 me-1"></i> GV Phản biện:</span>
+                                                        <strong class="text-slate-900" th:text="${g.topic.reviewer != null && g.topic.reviewer.user != null ? g.topic.reviewer.user.fullName : 'Chưa phân công'}"></strong>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between">
+                                                        <span class="text-slate-500"><i class="fa-solid fa-users-rectangle text-purple-600 me-1"></i> Hội đồng bảo vệ:</span>
+                                                        <strong class="text-slate-900" th:text="${g.topic.council != null ? g.topic.council.name : 'Chưa phân hội đồng'}"></strong>
+                                                    </div>
+                                                </div>
+
+                                                <div th:if="${g.topic.description != null && !g.topic.description.isEmpty()}">
+                                                    <span class="text-slate-500 text-xs font-semibold d-block mb-1">Mục tiêu & Mô tả:</span>
+                                                    <div class="text-xs text-slate-700 p-2.5 bg-slate-50/60 rounded-lg border border-slate-100" style="white-space: pre-line;" th:text="${g.topic.description}"></div>
+                                                </div>
+
+                                                <!-- Action Unassign -->
+                                                <div class="pt-2 border-t border-slate-100 d-flex justify-content-end">
+                                                    <form th:action="@{/department-head/students/groups/{id}/unassign-topic(id=${g.id})}" method="post" onsubmit="return confirm('Bạn có chắc muốn HỦY GÁN đề tài này khỏi nhóm?');">
+                                                        <input type="hidden" name="periodId" th:value="${selectedPeriodId}">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-3 py-1.5 text-xs font-semibold">
+                                                            <i class="fa-solid fa-link-slash me-1"></i> Hủy gán đề tài này
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                            <div th:unless="${g.topic != null}" class="p-4 bg-slate-50 rounded-xl border border-slate-100 text-center text-slate-400 text-xs">
+                                                <i class="fa-regular fa-circle-question text-xl mb-1 d-block text-slate-300"></i>
+                                                Nhóm này hiện chưa đăng ký đề tài nào.
+                                            </div>
+                                        </div>
+
+                                        <!-- Section 4: Bảng điểm & Đánh giá -->
+                                        <div class="mb-4" th:if="${g.topic != null}">
+                                            <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2.5">
+                                                <i class="fa-solid fa-award text-amber-500 me-1"></i> Bảng điểm & Phiếu đánh giá:
+                                            </h6>
+                                            <div class="p-3.5 bg-white border border-slate-100 rounded-xl shadow-xs space-y-3">
+                                                <!-- Final Score Summary -->
+                                                <div class="d-flex align-items-center justify-content-between p-3 bg-blue-50/50 rounded-xl border border-blue-100">
+                                                    <div>
+                                                        <span class="text-slate-500 text-xs d-block">Điểm Tổng Kết:</span>
+                                                        <span class="text-lg font-black text-blue-700 font-mono" th:text="${g.topic.finalScore != null ? #numbers.formatDecimal(g.topic.finalScore, 1, 2) + ' / 10' : 'Chưa tổng kết điểm'}">8.83 / 10</span>
+                                                    </div>
+                                                    <div>
+                                                        <span th:if="${g.topic.isFinalized}" class="badge-pill-approved font-semibold">Đã công bố cho SV</span>
+                                                        <span th:unless="${g.topic.isFinalized}" class="badge-pill-pending font-semibold">Chưa công bố</span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Individual Evaluations -->
+                                                <div class="space-y-2">
+                                                    <div th:each="e : ${topicEvaluationsMap != null && topicEvaluationsMap.get(g.topic.id) != null ? topicEvaluationsMap.get(g.topic.id) : #lists.emptyList()}"
+                                                         class="p-2.5 bg-slate-50 rounded-lg border border-slate-100 text-xs">
+                                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                                            <div class="d-flex align-items-center gap-1.5">
+                                                                <span class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200" th:text="${e.getEvaluationTypeName()}">GVPB</span>
+                                                                <strong class="text-slate-800" th:text="${e.lecturer != null && e.lecturer.user != null ? e.lecturer.user.fullName : 'Cán bộ chấm'}"></strong>
+                                                            </div>
+                                                            <span class="font-bold text-blue-700 font-mono" th:text="${e.score != null ? #numbers.formatDecimal(e.score, 1, 1) + ' đ' : '--'}">8.5 đ</span>
+                                                        </div>
+                                                        <p class="text-slate-600 mb-0 italic" th:text="${e.comments != null && !e.comments.isEmpty() ? e.comments : 'Không có nhận xét thêm.'}"></p>
+                                                    </div>
+                                                    <div th:if="${topicEvaluationsMap == null || topicEvaluationsMap.get(g.topic.id) == null || topicEvaluationsMap.get(g.topic.id).isEmpty()}" class="text-slate-400 text-xs italic text-center py-2">
+                                                        Chưa có phiếu chấm điểm nào được gửi.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Section 5: Bài nộp tiến độ -->
+                                        <div th:if="${groupSubmissionsMap != null && groupSubmissionsMap.get(g.id) != null && !groupSubmissionsMap.get(g.id).isEmpty()}">
+                                            <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2.5">
+                                                <i class="fa-solid fa-file-arrow-up text-emerald-600 me-1"></i> Lịch sử bài nộp tiến độ (<span th:text="${groupSubmissionsMap.get(g.id).size()}"></span> bài):
+                                            </h6>
+                                            <div class="space-y-2">
+                                                <div th:each="s : ${groupSubmissionsMap.get(g.id)}" class="p-3 bg-white border border-slate-100 rounded-xl shadow-xs d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <span class="badge-pill-neutral font-semibold text-xs mb-1 d-inline-block" th:text="'Đợt ' + ${s.submissionRound}">Đợt 1</span>
+                                                        <div class="font-semibold text-slate-900 text-xs" th:text="${s.title}">Tiêu đề báo cáo</div>
+                                                        <span class="text-slate-400 text-xs" th:text="${#temporals.format(s.submittedAt, 'dd/MM/yyyy HH:mm')}"></span>
+                                                    </div>
+                                                    <div>
+                                                        <span th:if="${s.grade != null}" class="font-bold text-emerald-600 font-mono text-xs" th:text="${s.grade} + ' đ'">8.5 đ</span>
+                                                        <span th:unless="${s.grade != null}" class="badge-pill-pending font-medium text-xs">Chờ chấm</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Footer Bar -->
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 p-3.5 border-t border-slate-100 bg-slate-50/50">
+                    <span class="text-xs text-slate-500 font-medium">
+                        Hiển thị <strong class="text-slate-900" th:text="${groups != null ? groups.size() : 0}"></strong> / <strong class="text-slate-900" th:text="${totalGroups}"></strong> nhóm sinh viên
+                    </span>
+                    <div class="d-flex align-items-center gap-2">
+                        <a th:if="${hasPrevious}" th:href="@{/department-head/students(periodId=${selectedPeriodId}, page=${currentPage - 1})}" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-white shadow-xs">
+                            <i class="fa-solid fa-chevron-left text-xs me-1"></i> Trước
+                        </a>
+                        <span th:unless="${hasPrevious}" class="btn btn-sm btn-light border border-slate-100 rounded-xl px-3 py-1 text-xs text-slate-300 disabled">
+                            <i class="fa-solid fa-chevron-left text-xs me-1"></i> Trước
+                        </span>
+
+                        <span class="badge-pill-neutral font-semibold text-xs px-3 py-1" th:text="'Trang ' + ${currentPage} + ' / ' + ${totalPages}">Trang 1 / 1</span>
+
+                        <a th:if="${hasNext}" th:href="@{/department-head/students(periodId=${selectedPeriodId}, page=${currentPage + 1})}" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-white shadow-xs">
+                            Sau <i class="fa-solid fa-chevron-right text-xs ms-1"></i>
+                        </a>
+                        <span th:unless="${hasNext}" class="btn btn-sm btn-light border border-slate-100 rounded-xl px-3 py-1 text-xs text-slate-300 disabled">
+                            Sau <i class="fa-solid fa-chevron-right text-xs ms-1"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Slide-over Group & Topic Detail Drawer -->
+    <div id="groupDrawerBackdrop" class="saas-drawer-backdrop" onclick="closeGroupDetailDrawer()"></div>
+    <div id="groupDrawerPanel" class="saas-drawer-panel" style="max-width: 580px;">
+        <div class="drawer-header">
+            <div class="d-flex align-items-center gap-2">
+                <span id="groupDrawerCode" class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-bold">GRP-01</span>
+                <h5 id="groupDrawerTitle" class="text-sm font-bold text-slate-900 mb-0">Chi Tiết Nhóm Sinh Viên</h5>
+            </div>
+            <button type="button" class="btn-close text-xs" onclick="closeGroupDetailDrawer()" aria-label="Close" title="Đóng"></button>
+        </div>
+
+        <div id="groupDrawerBodyContent" class="drawer-body">
+            <!-- Dynamic Content Injected via openGroupDetailDrawer() -->
+        </div>
+
+        <div class="drawer-footer">
+            <button type="button" class="btn btn-sm btn-light border rounded-xl px-4 text-xs font-medium" onclick="closeGroupDetailDrawer()">Đóng</button>
+        </div>
+    </div>
+
+    <!-- Modal Gộp Nhóm Thiếu Sĩ Số (Administrative Merge Groups) -->
+    <div class="modal fade" id="modalMergeGroups" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-2xl border-0 shadow-lg p-3">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title font-bold text-slate-900 text-sm"><i class="fa-solid fa-code-merge text-amber-500 me-1.5"></i> Gộp Nhóm Thiếu Sĩ Số Hành Chính</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
+                </div>
+                <form th:action="@{/department-head/groups/merge}" method="post">
+                    <div class="modal-body text-xs">
+                        <input type="hidden" name="periodId" th:value="${selectedPeriodId}">
+                        <div class="alert alert-info rounded-xl text-xs py-2 px-3 mb-3 border border-blue-200 bg-blue-50 text-blue-900">
+                            <i class="fa-solid fa-circle-info me-1 text-blue-600"></i> Tính năng hỗ trợ Trưởng khoa gộp 2 nhóm thiếu người thành 1 nhóm chuẩn. Toàn bộ thành viên nhóm nguồn sẽ được chuyển sang nhóm đích, đề tài nhóm nguồn (nếu có) được giải phóng về <strong>APPROVED</strong>.
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label font-semibold text-slate-700" for="field-department-head-students-5">Chọn Nhóm Nguồn (Sẽ bị giải tán sau khi chuyển SV) *</label>
+                            <select name="sourceGroupId" class="form-select text-xs rounded-xl" required title="Chọn Nhóm Nguồn (Sẽ bị giải tán sau khi chuyển SV)" aria-label="Chọn Nhóm Nguồn (Sẽ bị giải tán sau khi chuyển SV)" id="field-department-head-students-5">
+                                <option value="">-- Chọn nhóm nguồn --</option>
+                                <option th:each="g : ${groups}" th:value="${g.id}" th:text="${g.groupName + ' (' + g.groupCode + ') - ' + g.members.size() + ' SV - TT: ' + g.status}"></option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label font-semibold text-slate-700" for="field-department-head-students-6">Chọn Nhóm Đích (Nhận toàn bộ SV nhóm nguồn) *</label>
+                            <select name="targetGroupId" class="form-select text-xs rounded-xl" required title="Chọn Nhóm Đích (Nhận toàn bộ SV nhóm nguồn)" aria-label="Chọn Nhóm Đích (Nhận toàn bộ SV nhóm nguồn)" id="field-department-head-students-6">
+                                <option value="">-- Chọn nhóm đích --</option>
+                                <option th:each="g : ${groups}" th:value="${g.id}" th:text="${g.groupName + ' (' + g.groupCode + ') - ' + g.members.size() + ' SV - TT: ' + g.status}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-sm btn-light rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-sm btn-dark rounded-xl px-3 text-xs font-semibold">Xác nhận gộp nhóm</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Fragment -->
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+
+    <script>
+        function openGroupDetailDrawer(row) {
+            if (!row) return;
+            const payload = row.querySelector('.group-drawer-payload');
+            if (!payload) return;
+
+            const headerData = payload.querySelector('.drawer-header-data');
+            if (headerData) {
+                document.getElementById('groupDrawerCode').textContent = headerData.dataset.groupCode || 'GRP';
+                document.getElementById('groupDrawerTitle').textContent = headerData.dataset.groupName || 'Chi Tiết Nhóm';
+            }
+
+            document.getElementById('groupDrawerBodyContent').innerHTML = payload.innerHTML;
+
+            const backdrop = document.getElementById('groupDrawerBackdrop');
+            const panel = document.getElementById('groupDrawerPanel');
+            if (backdrop) backdrop.classList.add('show');
+            if (panel) panel.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeGroupDetailDrawer() {
+            const backdrop = document.getElementById('groupDrawerBackdrop');
+            const panel = document.getElementById('groupDrawerPanel');
+            if (backdrop) backdrop.classList.remove('show');
+            if (panel) panel.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+    </script>
+</body>
+</html>

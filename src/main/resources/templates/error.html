@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi" th:fragment="errorPage">
+
+<head th:replace="~{fragments/head :: head('Không thể hiển thị trang')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
+
+<body class="workspace-page error-page min-h-screen d-flex align-items-center justify-content-center p-4">
+
+    <div class="saas-card max-w-lg w-100 p-5 text-center shadow-wellnest border border-slate-200/80 rounded-3xl bg-white" style="border-radius: 28px;">
+        <div
+            class="w-16 h-16 rounded-full bg-teal-50 text-teal-600 d-inline-flex align-items-center justify-content-center text-2xl mb-4 shadow-xs">
+            <i class="fa-solid fa-shapes"></i>
+        </div>
+
+        <h1 class="text-2xl font-black text-slate-900 mb-2" style="font-family: 'Plus Jakarta Sans', sans-serif;"
+            th:text="${status == 404 || status == null ? 'Trang không tồn tại (404)' : (status == 403 ? 'Không có quyền truy cập (403)' : (status == 500 ? 'Lỗi máy chủ (500)' : (status >= 400 ? 'Có lỗi xảy ra (' + status + ')' : 'Không thể hiển thị trang')))}">
+            Trang không tồn tại (404)</h1>
+        <p class="text-xs text-slate-500 mb-4 leading-relaxed"
+            th:text="${errorMessage != null ? errorMessage : (message != null && !message.isEmpty() && message != 'No message available' ? message : (status == 403 ? 'Bạn không có quyền truy cập vào chức năng hoặc trang này.' : (status == 404 || status == null ? 'Đường dẫn bạn vừa truy cập không tồn tại hoặc đã được chuyển sang địa chỉ khác trong hệ thống Quản lý Đề tài TopicHub.' : 'Hệ thống chưa thể hiển thị trang. Vui lòng thử lại sau.')))}">
+            Đường dẫn bạn vừa truy cập không tồn tại hoặc đã được chuyển sang địa chỉ khác trong hệ thống Quản lý Đề tài
+            TopicHub.
+        </p>
+
+        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-500 mb-4 text-start font-mono"
+            th:if="${path}">
+            <span class="text-slate-400">Đường dẫn: </span><span class="text-slate-800 font-semibold"
+                th:text="${path}">/url</span>
+        </div>
+
+        <div class="error-actions">
+            <a th:href="@{/dashboard}"
+                class="btn bg-slate-900 hover:bg-slate-800 text-teal-300 rounded-full px-5 py-2.5 text-xs font-bold shadow-wellnest d-inline-flex align-items-center gap-2 transition border-0">
+                <i class="fa-solid fa-house text-xs"></i>
+                <span>Về Bảng điều khiển</span>
+            </a>
+            <a th:href="@{/login}"
+                class="btn bg-white hover:bg-slate-50 border border-slate-200/90 rounded-full px-5 py-2.5 text-xs font-bold text-slate-700 shadow-2xs transition">
+                <i class="fa-solid fa-arrow-right-to-bracket text-xs me-1"></i>
+                <span>Đăng nhập</span>
+            </a>
+        </div>
+    </div>
+
+</body>
+
+</html>

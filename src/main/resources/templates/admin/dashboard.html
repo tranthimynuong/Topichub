@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+    <head th:replace="~{fragments/head :: head('Bảng điều khiển Quản trị')}">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>TopicHub</title>
+    </head>
+    <body class="dashboard-page workspace-page">
+        <a class="db-skip" href="#dashboard-main">Đến nội dung chính</a>
+        <!-- Left Sidebar -->
+        <aside th:replace="~{fragments/sidebar :: sidebar('dashboard', ${user})}"></aside>
+        <!-- Main Wrapper -->
+        <div class="saas-main-wrapper">
+            <!-- Topbar -->
+            <header th:replace="~{fragments/topbar :: topbar('Bảng điều khiển', 'Quản trị', '/admin/dashboard', ${user})}"></header>
+            <!-- Main Content View -->
+            <main class="saas-content" id="dashboard-main" tabindex="-1">
+                <div th:if="${successMessage}" class="db-alert" role="status">
+                    <span>
+                        <i class="fa-solid fa-check me-2" aria-hidden="true"></i>
+                        <span th:text="${successMessage}"></span>
+                    </span>
+                </div>
+                <div th:if="${errorMessage}" class="db-alert" role="alert">
+                    <span>
+                        <i class="fa-solid fa-circle-exclamation me-2" aria-hidden="true"></i>
+                        <span th:text="${errorMessage}"></span>
+                    </span>
+                </div>
+                <header class="db-header">
+                    <div>
+                        <div class="db-eyebrow">Quản trị hệ thống</div>
+                        <h1>Tổng quan hệ thống</h1>
+                        <p>Quản lý người dùng, phân quyền và cơ cấu đào tạo trong một không gian làm việc.</p>
+                    </div>
+                    <div class="db-actions">
+                        <button type="button" class="db-button db-button-primary" data-bs-toggle="modal" data-bs-target="#modalCreateUser">
+                            <i class="fa-solid fa-plus" aria-hidden="true"></i>Thêm tài khoản</button>
+                    </div>
+                </header>
+                <div class="db-metrics" aria-label="Thống kê hệ thống">
+                    <a class="db-metric" th:href="@{/admin/users}">
+                        <span class="db-metric-label">Tài khoản<i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        </span>
+                        <strong class="db-metric-value" th:text="${stats != null &amp;&amp; stats['totalUsers'] != null ? stats['totalUsers'] : '—'}">—</strong>
+                        <span class="db-metric-note">Toàn bộ người dùng</span>
+                    </a>
+                    <a class="db-metric" th:href="@{/admin/users}">
+                        <span class="db-metric-label">Đang hoạt động<i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        </span>
+                        <strong class="db-metric-value" th:text="${stats != null &amp;&amp; stats['activeUsers'] != null ? stats['activeUsers'] : '—'}">—</strong>
+                        <span class="db-metric-note">Tài khoản được phép truy cập</span>
+                    </a>
+                    <a class="db-metric" th:href="@{/admin/departments}">
+                        <span class="db-metric-label">Khoa đào tạo<i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        </span>
+                        <strong class="db-metric-value" th:text="${stats != null &amp;&amp; stats['totalDepartments'] != null ? stats['totalDepartments'] : '—'}">—</strong>
+                        <span class="db-metric-note">Cơ cấu tổ chức</span>
+                    </a>
+                    <a class="db-metric" th:href="@{/admin/users?role=LECTURER}">
+                        <span class="db-metric-label">Giảng viên<i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        </span>
+                        <strong class="db-metric-value" th:text="${stats != null &amp;&amp; stats['lecturerCount'] != null ? stats['lecturerCount'] : '—'}">—</strong>
+                        <span class="db-metric-note">Cán bộ hướng dẫn &amp; phản biện</span>
+                    </a>
+                </div>
+                <div class="db-layout">
+                    <div class="db-stack">
+                        <section class="db-panel">
+                            <div class="db-panel-header">
+                                <div>
+                                    <h2>Danh sách tài khoản</h2>
+                                    <p>Xem trạng thái và chỉnh sửa quyền truy cập.</p>
+                                </div>
+                                <a th:href="@{/admin/users}" class="db-button">
+                                    <span>Tất cả tài khoản</span>
+                                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                                </a>
+                            </div>
+                            <div class="db-table-scroll" tabindex="0" role="region" aria-label="Danh sách tài khoản" th:if="${recentUsers != null &amp;&amp; !recentUsers.isEmpty()}">
+                                <table class="db-table">
+                                    <caption>Tối đa 5 tài khoản trong danh sách hiện tại.</caption>
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Người dùng</th>
+                                            <th scope="col">Vai trò</th>
+                                            <th scope="col">Trạng thái</th>
+                                            <th scope="col" class="db-cell-actions">Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="u : ${recentUsers}">
+                                            <td>
+                                                <span class="db-cell-title" th:text="${u.fullName}"></span>
+                                                <span class="db-cell-meta" th:text="${u.email}"></span>
+                                            </td>
+                                            <td>
+                                                <span th:text="${u.role != null ? u.role.name : 'Chưa phân quyền'}"></span>
+                                                <span class="db-cell-meta" th:text="${u.username}"></span>
+                                            </td>
+                                            <td>
+                                                <span class="db-tag" th:text="${u.isActive == true ? 'Đang hoạt động' : 'Đã khóa'}"></span>
+                                            </td>
+                                            <td class="db-cell-actions">
+                                                <button type="button" class="db-button db-button-small" data-bs-toggle="modal" th:data-bs-target="${'#editUserModal-' + u.id}" th:aria-label="${'Chỉnh sửa tài khoản ' + u.username}">Chỉnh sửa<i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div th:if="${recentUsers == null || recentUsers.isEmpty()}">
+                                <div class="db-empty">
+                                    <i class="fa-regular fa-user" aria-hidden="true"></i>
+                                    <h3>Chưa có tài khoản để hiển thị</h3>
+                                    <p>Quản lý tài khoản và phân quyền tại một nơi.</p>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="db-panel">
+                            <div class="db-panel-header">
+                                <div>
+                                    <h2>Cơ cấu đào tạo</h2>
+                                </div>
+                            </div>
+                            <div class="db-panel-body">
+                                <p class="db-note">Quản lý danh sách Khoa đào tạo. Danh mục Khoa được sử dụng thống nhất trong hồ sơ người dùng và đợt đăng ký.</p>
+                                <div class="db-actions mt-3">
+                                    <a th:href="@{/admin/departments}" class="db-button">
+                                        <span>Quản lý Khoa đào tạo</span>
+                                        <i class="fa-solid fa-building-columns" aria-hidden="true"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <aside class="db-stack" aria-label="Công cụ quản trị">
+                        <section class="db-panel">
+                            <div class="db-panel-header">
+                                <div>
+                                    <h2>Truy cập nhanh</h2>
+                                </div>
+                            </div>
+                            <ul class="db-list">
+                                <li>
+                                    <a class="db-quick-link" th:href="@{/admin/users}">
+                                        <span>
+                                            <i class="fa-solid fa-users-gear" aria-hidden="true"></i>Quản lý tài khoản</span>
+                                        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="db-quick-link" th:href="@{/admin/departments}">
+                                        <span>
+                                            <i class="fa-solid fa-building-columns" aria-hidden="true"></i>Khoa đào tạo</span>
+                                        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </section>
+                        <section class="db-panel">
+                            <div class="db-panel-header">
+                                <div>
+                                    <h2>Người dùng theo vai trò</h2>
+                                </div>
+                            </div>
+                            <div class="db-panel-body">
+                                <dl class="db-definition">
+                                    <dt>Quản trị viên</dt>
+                                    <dd th:text="${stats != null ? stats['adminCount'] : '—'}">—</dd>
+                                    <dt>Trưởng khoa</dt>
+                                    <dd th:text="${stats != null ? stats['deptHeadCount'] : '—'}">—</dd>
+                                    <dt>Giảng viên</dt>
+                                    <dd th:text="${stats != null ? stats['lecturerCount'] : '—'}">—</dd>
+                                    <dt>Sinh viên</dt>
+                                    <dd th:text="${stats != null ? stats['studentCount'] : '—'}">—</dd>
+                                </dl>
+                            </div>
+                        </section>
+                    </aside>
+                </div>
+            </main>
+        </div>
+        <!-- Modal Create User -->
+        <div class="modal fade" id="modalCreateUser" tabindex="-1" aria-hidden="true" aria-labelledby="admin-dialog-0-title">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content rounded-2xl border-0 shadow-xl">
+                    <form th:action="@{/admin/users/create}" method="post">
+                        <input type="hidden" name="redirectUrl" value="/admin/dashboard">
+                        <div class="modal-header border-b border-slate-100 p-4">
+                            <h2 class="modal-title font-bold text-slate-900 text-sm" id="admin-dialog-0-title">
+                                <i class="fa-solid fa-user-plus text-blue-600 me-1.5"></i> Thêm tài khoản người dùng mới
+                        </h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
+                        </div>
+                        <div class="modal-body p-4 space-y-3">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-xs font-semibold text-slate-700" for="admin-dialog-0-username">Tên đăng nhập <span class="text-rose-600">*</span>
+                                    </label>
+                                    <input type="text" name="username" class="form-control text-xs rounded-xl" placeholder="vd: nguyen.vana" required id="admin-dialog-0-username" aria-label="Tên đăng nhập" title="Tên đăng nhập">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-xs font-semibold text-slate-700" for="admin-dialog-0-passwordHash">Mật khẩu ban đầu <span class="text-rose-600">*</span>
+                                    </label>
+                                    <input type="password" name="passwordHash" autocomplete="new-password" class="form-control text-xs rounded-xl" placeholder="••••••••" required id="admin-dialog-0-passwordHash" aria-label="Mật khẩu ban đầu" title="Mật khẩu ban đầu">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-xs font-semibold text-slate-700" for="admin-dialog-0-fullName">Họ và Tên đầy đủ <span class="text-rose-600">*</span>
+                                    </label>
+                                    <input type="text" name="fullName" class="form-control text-xs rounded-xl" placeholder="vd: Nguyễn Văn A" required id="admin-dialog-0-fullName" aria-label="Họ và Tên đầy đủ" title="Họ và Tên đầy đủ">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-xs font-semibold text-slate-700" for="admin-dialog-0-email">Địa chỉ Email <span class="text-rose-600">*</span>
+                                    </label>
+                                    <input type="email" name="email" class="form-control text-xs rounded-xl" placeholder="vana@university.edu.vn" required id="admin-dialog-0-email" aria-label="Địa chỉ Email" title="Địa chỉ Email">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-xs font-semibold text-slate-700" for="admin-dialog-0-phone">Số điện thoại</label>
+                                    <input type="text" name="phone" class="form-control text-xs rounded-xl" placeholder="0901234567" id="admin-dialog-0-phone" aria-label="Số điện thoại" title="Số điện thoại">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-xs font-semibold text-slate-700" for="admin-dialog-0-roleId">Vai trò hệ thống <span class="text-rose-600">*</span>
+                                    </label>
+                                    <select name="roleId" class="form-select text-xs rounded-xl" required id="admin-dialog-0-roleId" aria-label="Vai trò hệ thống" title="Vai trò hệ thống">
+                                        <option value="">-- Chọn vai trò --</option>
+                                        <option th:each="r : ${roles}" th:if="${r.code != 'DIVISION_HEAD'}" th:value="${r.id}" th:text="${r.name + ' (' + r.code + ')'}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-t border-slate-100 p-3">
+                            <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">
+                                <i class="fa-solid fa-check me-1"></i> Tạo tài khoản
+                        </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- Modals for Editing Recent Users Directly from Dashboard -->
+        <th:block th:each="u : ${recentUsers}">
+            <div class="modal fade text-start" th:id="'editUserModal-' + ${u.id}" tabindex="-1" aria-hidden="true" th:aria-labelledby="${'admin-dialog-1-title-' + u.id}">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content rounded-2xl border-0 shadow-xl">
+                        <form th:action="@{/admin/users/{id}/edit(id=${u.id})}" method="post">
+                            <input type="hidden" name="redirectUrl" value="/admin/dashboard">
+                            <div class="modal-header border-b border-slate-100 p-4">
+                                <h2 class="modal-title font-bold text-slate-900 text-sm" th:id="${'admin-dialog-1-title-' + u.id}">Chỉnh sửa Tài khoản: <span th:text="${u.username}"></span>
+                                </h2>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
+                            </div>
+                            <div class="modal-body p-4 space-y-3">
+                                <div>
+                                    <label class="form-label text-xs font-semibold text-slate-700" th:for="${'admin-dialog-1-fullName-' + u.id}">Họ và tên <span class="text-rose-600">*</span>
+                                    </label>
+                                    <input type="text" name="fullName" th:value="${u.fullName}" class="form-control text-xs rounded-xl" required th:id="${'admin-dialog-1-fullName-' + u.id}" aria-label="Họ và tên" title="Họ và tên">
+                                </div>
+                                <div>
+                                    <label class="form-label text-xs font-semibold text-slate-700" th:for="${'admin-dialog-1-email-' + u.id}">Email <span class="text-rose-600">*</span>
+                                    </label>
+                                    <input type="email" name="email" th:value="${u.email}" class="form-control text-xs rounded-xl" required th:id="${'admin-dialog-1-email-' + u.id}" aria-label="Email" title="Email">
+                                </div>
+                                <div>
+                                    <label class="form-label text-xs font-semibold text-slate-700" th:for="${'admin-dialog-1-phone-' + u.id}">Số điện thoại</label>
+                                    <input type="text" name="phone" th:value="${u.phone}" class="form-control text-xs rounded-xl" placeholder="VD: 0912345678" th:id="${'admin-dialog-1-phone-' + u.id}" aria-label="Số điện thoại" title="Số điện thoại">
+                                </div>
+                                <div>
+                                    <label class="form-label text-xs font-semibold text-slate-700" th:for="${'admin-dialog-1-roleId-' + u.id}">Vai trò hệ thống <span class="text-rose-600">*</span>
+                                    </label>
+                                    <select name="roleId" class="form-select text-xs rounded-xl" required th:id="${'admin-dialog-1-roleId-' + u.id}" aria-label="Vai trò hệ thống" title="Vai trò hệ thống">
+                                        <option th:each="r : ${roles}" th:if="${r.code != 'DIVISION_HEAD'}" th:value="${r.id}" th:text="${r.name + ' (' + r.code + ')'}" th:selected="${u.role != null and u.role.id == r.id}"></option>
+                                    </select>
+                                </div>
+                                <div class="form-check form-switch pt-1">
+                                    <input class="form-check-input" type="checkbox" name="isActive" value="true" th:checked="${u.isActive}" th:id="${'admin-dialog-1-isActive-' + u.id}" placeholder="isActive" aria-label="Kích hoạt tài khoản" title="Kích hoạt tài khoản">
+                                    <label class="form-check-label text-xs font-semibold text-slate-700" th:for="${'admin-dialog-1-isActive-' + u.id}">Kích hoạt tài khoản</label>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-t border-slate-100 p-3">
+                                <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                                <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">Lưu thay đổi</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </th:block>
+        <!-- Scripts Fragment -->
+        <div th:replace="~{fragments/scripts :: scripts}"></div>
+    </body>
+</html>

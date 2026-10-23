@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub Pagination</title>
+</head>
+<body>
+
+<!-- Reusable Pagination Component -->
+<!-- Usage: <div th:replace="~{fragments/pagination :: pager(${pageData}, '/department-head/topics')}"></div> -->
+<div th:fragment="pager(pageObj, baseUrl)" th:if="${pageObj != null && pageObj.totalElements > 0}" class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 p-3 bg-white border border-slate-200 rounded-2xl mt-4 shadow-sm">
+    <!-- Total Summary -->
+    <div class="text-xs text-slate-500 font-medium">
+        Hiển thị <span class="font-bold text-slate-800" th:text="${pageObj.number * pageObj.size + 1}">1</span>
+        - <span class="font-bold text-slate-800" th:text="${(pageObj.number + 1) * pageObj.size > pageObj.totalElements ? pageObj.totalElements : (pageObj.number + 1) * pageObj.size}">10</span>
+        trong tổng số <span class="font-bold text-blue-600" th:text="${pageObj.totalElements}">50</span> kết quả
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div th:if="${pageObj.totalPages > 1}" class="d-flex align-items-center gap-1">
+        <!-- First Page -->
+        <a th:href="@{${baseUrl}(page=1, size=${pageObj.size}, status=${selectedStatus}, periodId=${selectedPeriodId}, keyword=${keyword}, role=${selectedRole})}"
+           class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
+           th:classappend="${pageObj.first} ? 'disabled opacity-50 pointer-events-none' : ''"
+           title="Trang đầu">
+            <i class="fa-solid fa-angles-left text-xs"></i>
+        </a>
+
+        <!-- Previous Page -->
+        <a th:href="@{${baseUrl}(page=${pageObj.number}, size=${pageObj.size}, status=${selectedStatus}, periodId=${selectedPeriodId}, keyword=${keyword}, role=${selectedRole})}"
+           class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
+           th:classappend="${!pageObj.hasPrevious()} ? 'disabled opacity-50 pointer-events-none' : ''">
+            <i class="fa-solid fa-chevron-left me-1 text-xs"></i> Trước
+        </a>
+
+        <!-- Page Numbers -->
+        <span class="d-flex align-items-center gap-1 px-1">
+            <th:block th:each="i : ${#numbers.sequence(
+                pageObj.number - 2 < 0 ? 0 : pageObj.number - 2,
+                pageObj.number + 2 >= pageObj.totalPages ? pageObj.totalPages - 1 : pageObj.number + 2
+            )}">
+                <a th:href="@{${baseUrl}(page=${i + 1}, size=${pageObj.size}, status=${selectedStatus}, periodId=${selectedPeriodId}, keyword=${keyword}, role=${selectedRole})}"
+                   class="btn btn-sm rounded-xl px-3 py-1 text-xs font-bold"
+                   th:classappend="${i == pageObj.number} ? 'btn-primary bg-blue-600 text-white shadow-sm' : 'btn-light border border-slate-200 text-slate-700 hover:bg-slate-50'"
+                   th:text="${i + 1}">1</a>
+            </th:block>
+        </span>
+
+        <!-- Next Page -->
+        <a th:href="@{${baseUrl}(page=${pageObj.number + 2}, size=${pageObj.size}, status=${selectedStatus}, periodId=${selectedPeriodId}, keyword=${keyword}, role=${selectedRole})}"
+           class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
+           th:classappend="${!pageObj.hasNext()} ? 'disabled opacity-50 pointer-events-none' : ''">
+            Sau <i class="fa-solid fa-chevron-right ms-1 text-xs"></i>
+        </a>
+
+        <!-- Last Page -->
+        <a th:href="@{${baseUrl}(page=${pageObj.totalPages}, size=${pageObj.size}, status=${selectedStatus}, periodId=${selectedPeriodId}, keyword=${keyword}, role=${selectedRole})}"
+           class="btn btn-sm btn-light border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
+           th:classappend="${pageObj.last} ? 'disabled opacity-50 pointer-events-none' : ''"
+           title="Trang cuối">
+            <i class="fa-solid fa-angles-right text-xs"></i>
+        </a>
+    </div>
+</div>
+
+</body>
+</html>

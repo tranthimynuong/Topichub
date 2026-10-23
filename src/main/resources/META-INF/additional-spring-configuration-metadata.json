@@ -1,0 +1,24 @@
+{
+  "properties": [
+    {
+      "name": "google.oauth2.client-id",
+      "type": "java.lang.String",
+      "description": "Google OAuth2 Client ID for Single Sign-On"
+    },
+    {
+      "name": "google.oauth2.client-secret",
+      "type": "java.lang.String",
+      "description": "Google OAuth2 Client Secret"
+    },
+    {
+      "name": "google.oauth2.redirect-uri",
+      "type": "java.lang.String",
+      "description": "Google OAuth2 Redirect Callback URI"
+    },
+    {
+      "name": "app.auth.student-email-domains",
+      "type": "java.lang.String",
+      "description": "Allowed email domains for Student Google Sign-In"
+    }
+  ]
+}

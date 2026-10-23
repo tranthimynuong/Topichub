@@ -1,0 +1,1040 @@
+/* Shared components for every authenticated role workspace. */
+html body.workspace-page {
+    --ui-bg: #f6f6f5;
+    --ui-surface: #fff;
+    --ui-soft: #f1f1ef;
+    --ui-ink: #202020;
+    --ui-muted: #656565;
+    --ui-line: #dededb;
+    --ui-inverse: #fff;
+    --bg-body: var(--ui-bg);
+    --card-bg: var(--ui-surface);
+    --text-main: var(--ui-ink);
+    --text-secondary: var(--ui-muted);
+    --text-muted: var(--ui-muted);
+    --border-color: var(--ui-line);
+    --border-light: var(--ui-line);
+    --brand-primary: var(--ui-ink);
+    --brand-primary-light: var(--ui-soft);
+    --card-radius: 8px;
+    --card-shadow: none;
+    background: var(--ui-bg) !important;
+    color: var(--ui-ink) !important;
+    font-family: 'Inter', sans-serif;
+    font-size: .875rem;
+    color-scheme: light;
+}
+
+html[data-theme="dark"] body.workspace-page {
+    --ui-bg: #151515;
+    --ui-surface: #1e1e1e;
+    --ui-soft: #2a2a2a;
+    --ui-ink: #f1f1ef;
+    --ui-muted: #b0b0aa;
+    --ui-line: #3c3c39;
+    --ui-inverse: #171717;
+    color-scheme: dark;
+}
+
+html body.workspace-page .saas-main-wrapper {
+    background: var(--ui-bg) !important;
+}
+
+html body.workspace-page .saas-content {
+    width: 100%;
+    max-width: 1600px;
+    padding: 1.25rem 1.75rem 2.5rem;
+    margin: 0 auto;
+}
+
+html body.workspace-page .saas-content h1 {
+    color: var(--ui-ink) !important;
+    font-size: 1.625rem;
+    line-height: 1.3;
+    font-weight: 650;
+    letter-spacing: -.04em;
+}
+
+html body.workspace-page :is(.saas-card, .table-saas-container, .modal-content, .db-panel, .db-surface, .results-toolbar-card, .results-table-card) {
+    background: var(--ui-surface) !important;
+    border: 1px solid var(--ui-line) !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+}
+
+html body.workspace-page :is(.saas-card:hover, .kanban-card:hover) {
+    transform: none;
+    box-shadow: none !important;
+}
+
+html body.workspace-page :is(.modal-header, .modal-footer, .saas-card-header, .saas-card-footer, .drawer-header, .drawer-footer) {
+    background: var(--ui-surface) !important;
+    border-color: var(--ui-line) !important;
+}
+
+html body.workspace-page :is(.modal-header, .modal-footer) {
+    padding: 1rem 1.25rem !important;
+}
+
+html body.workspace-page .modal-body {
+    padding: 1.25rem 1.25rem 2rem !important;
+}
+
+html body.workspace-page :is(.modal-title, .drawer-title) {
+    color: var(--ui-ink) !important;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+html body.workspace-page :is(.form-control, .form-select, .input-group-text) {
+    min-height: 40px;
+    border: 1px solid var(--ui-line) !important;
+    border-radius: 6px !important;
+    background-color: var(--ui-surface) !important;
+    color: var(--ui-ink) !important;
+    box-shadow: none !important;
+    font: 400 .8125rem/1.5 'Inter', sans-serif;
+    padding: .5625rem .75rem;
+    transform: none !important;
+}
+
+html body.workspace-page .form-select {
+    padding-right: 2.25rem;
+}
+
+html body.workspace-page textarea.form-control {
+    min-height: 112px;
+    resize: vertical;
+}
+
+html body.workspace-page .form-label {
+    margin-bottom: .5rem;
+    color: var(--ui-ink) !important;
+    font-size: .8125rem !important;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+html body.workspace-page :is(.form-control, .form-select):focus {
+    border-color: var(--ui-ink) !important;
+    outline: 2px solid var(--ui-ink);
+    outline-offset: 2px;
+}
+
+html body.workspace-page :is(.form-control, .form-select):disabled,
+html body.workspace-page .form-control[readonly] {
+    background: var(--ui-soft) !important;
+    color: var(--ui-muted) !important;
+    opacity: 1;
+}
+
+html body.workspace-page .form-control::placeholder {
+    color: var(--ui-muted);
+    opacity: 1;
+}
+
+html body.workspace-page .form-control[type="file"]::file-selector-button {
+    height: 100%;
+    background: var(--ui-soft);
+    color: var(--ui-ink);
+    border-color: var(--ui-line);
+}
+
+html body.workspace-page :is(.form-text, .text-muted) {
+    color: var(--ui-muted) !important;
+}
+
+html body.workspace-page .form-check-input {
+    accent-color: var(--ui-ink);
+    border-color: var(--ui-muted);
+}
+
+html body.workspace-page .form-check-input:checked {
+    background-color: var(--ui-ink);
+    border-color: var(--ui-ink);
+}
+
+html body.workspace-page :is(.is-invalid, .was-validated :invalid) {
+    border-color: #b53939 !important;
+}
+
+html body.workspace-page .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    border-radius: 6px !important;
+    font-size: .8125rem !important;
+    font-weight: 500;
+    line-height: 1.4;
+    box-shadow: none !important;
+    transition: background-color .15s, border-color .15s;
+}
+
+html body.workspace-page .btn-sm {
+    min-height: 34px;
+    font-size: .785rem !important;
+    padding: .375rem .75rem !important;
+}
+
+html body.workspace-page .btn-xs {
+    min-height: 28px;
+    font-size: .75rem !important;
+    padding: .2rem .5rem !important;
+}
+
+html body.workspace-page :is(.btn-light, .btn-outline-secondary, .btn-saas-secondary) {
+    background: var(--ui-surface) !important;
+    color: var(--ui-ink) !important;
+    border: 1px solid var(--ui-line) !important;
+}
+
+html body.workspace-page :is(.btn-light, .btn-outline-secondary, .btn-saas-secondary):hover {
+    background: var(--ui-soft) !important;
+    border-color: var(--ui-muted) !important;
+}
+
+html body.workspace-page :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--ui-ink);
+    outline-offset: 3px;
+}
+
+html body.workspace-page .table-saas-container {
+    overflow-x: auto;
+}
+
+html body.workspace-page :is(.table-saas, .saas-table, .table, .db-table) {
+    --bs-table-bg: var(--ui-surface) !important;
+    --bs-table-color: var(--ui-ink) !important;
+    --bs-table-border-color: var(--ui-line);
+    --bs-table-hover-bg: var(--ui-soft);
+    width: 100%;
+    color: var(--ui-ink) !important;
+    border-color: var(--ui-line) !important;
+    font-size: .8125rem;
+}
+
+html body.workspace-page :is(.table-saas, .saas-table, .table, .db-table) th {
+    padding: .875rem 1rem;
+    background: var(--ui-soft) !important;
+    color: var(--ui-muted) !important;
+    border-bottom: 1px solid var(--ui-line);
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: .75rem;
+    font-weight: 550;
+    white-space: nowrap;
+}
+
+html body.workspace-page :is(.table-saas, .saas-table, .table, .db-table) td {
+    padding: 1rem;
+    color: var(--ui-ink);
+    border-bottom: 1px solid var(--ui-line);
+    vertical-align: middle;
+    line-height: 1.6;
+}
+
+html body.workspace-page :is(.table-saas, .saas-table, .db-table) tbody tr:hover>td {
+    background-color: var(--ui-soft) !important;
+}
+
+html body.workspace-page :is(.table-saas, .saas-table, .db-table) td .text-xs {
+    font-size: .8125rem !important;
+}
+
+html body.workspace-page :is(.badge, [class*="badge-pill-"]) {
+    border-radius: 4px !important;
+    font-size: .6875rem;
+    line-height: 1.5;
+    font-weight: 500;
+    box-shadow: none !important;
+}
+
+html body.workspace-page :is(.bg-white, .bg-slate-50, .bg-slate-100) {
+    background-color: var(--ui-surface) !important;
+}
+
+html body.workspace-page :is(.text-slate-900, .text-slate-850, .text-slate-800, .text-slate-700) {
+    color: var(--ui-ink) !important;
+}
+
+html body.workspace-page :is(.text-slate-600, .text-slate-500, .text-slate-400) {
+    color: var(--ui-muted) !important;
+}
+
+html body.workspace-page :is(.border-slate-100, .border-slate-200, .border-slate-300, .border-b, .border-t) {
+    border-color: var(--ui-line) !important;
+}
+
+html body.workspace-page :is(.rounded-xl, .rounded-2xl, .rounded-3xl) {
+    border-radius: 8px !important;
+}
+
+html body.workspace-page :is(.shadow-sm, .shadow-md, .shadow-xl, .shadow-2xl) {
+    box-shadow: none !important;
+}
+
+/* Map legacy decorative colors to the same neutral component palette. */
+html body.workspace-page :is(.text-blue-500, .text-blue-600, .text-blue-700, .text-blue-800, .text-indigo-500, .text-indigo-600, .text-indigo-700, .text-purple-500, .text-purple-600, .text-purple-700, .text-teal-600, .text-teal-700) {
+    color: var(--ui-ink) !important;
+}
+
+html body.workspace-page :is(.bg-blue-50, .bg-blue-100, .bg-indigo-50, .bg-indigo-100, .bg-purple-50, .bg-purple-100, .bg-teal-50, .bg-teal-100) {
+    background-color: var(--ui-soft) !important;
+}
+
+html body.workspace-page :is(.border-blue-100, .border-blue-200, .border-indigo-100, .border-indigo-200, .border-purple-100, .border-purple-200, .border-teal-200) {
+    border-color: var(--ui-line) !important;
+}
+
+html body.workspace-page :is(.btn-primary, .btn-dark, .btn-saas-primary, .bg-blue-600, .bg-blue-700, .bg-slate-900, .bg-indigo-600, .bg-purple-600, .btn-success, .btn.bg-emerald-600) {
+    background: var(--ui-ink) !important;
+    color: var(--ui-inverse) !important;
+    border-color: var(--ui-ink) !important;
+}
+
+html body.workspace-page :is(.btn-primary, .btn-dark, .btn-saas-primary):hover {
+    opacity: .85;
+}
+
+html body.workspace-page .btn :is(i, span) {
+    color: inherit !important;
+}
+
+html body.workspace-page :is(.btn-outline-primary, .btn.bg-blue-50, .btn.bg-purple-50, .btn.bg-amber-50, .btn.bg-emerald-50) {
+    color: var(--ui-ink) !important;
+    background: var(--ui-surface) !important;
+    border-color: var(--ui-line) !important;
+}
+
+html body.workspace-page :is(.btn-outline-primary, .btn.bg-blue-50, .btn.bg-purple-50, .btn.bg-amber-50, .btn.bg-emerald-50):hover {
+    background: var(--ui-soft) !important;
+    border-color: var(--ui-muted) !important;
+}
+
+html body.workspace-page :is(.badge-pill-neutral, .badge-pill-info) {
+    background: var(--ui-soft) !important;
+    border-color: var(--ui-line) !important;
+    color: var(--ui-muted) !important;
+}
+
+html body.workspace-page :is(.badge-pill-approved, .bg-emerald-50) {
+    background-color: #f0f5f1 !important;
+    color: #356047 !important;
+    border-color: #d2dfd5 !important;
+}
+
+html body.workspace-page :is(.badge-pill-pending, .bg-amber-50) {
+    background-color: #faf5e9 !important;
+    color: #805d23 !important;
+    border-color: #e7dac0 !important;
+}
+
+html body.workspace-page :is(.badge-pill-rejected, .bg-rose-50) {
+    background-color: #faf0ef !important;
+    color: #9a3f3f !important;
+    border-color: #e8d0cd !important;
+}
+
+html[data-theme="dark"] body.workspace-page :is(.badge-pill-approved, .bg-emerald-50) {
+    background-color: #24342a !important;
+    color: #b2d3bb !important;
+    border-color: #3b5543 !important;
+}
+
+html[data-theme="dark"] body.workspace-page :is(.badge-pill-pending, .bg-amber-50) {
+    background-color: #383020 !important;
+    color: #e0c891 !important;
+    border-color: #5c4c2c !important;
+}
+
+html[data-theme="dark"] body.workspace-page :is(.badge-pill-rejected, .bg-rose-50) {
+    background-color: #392727 !important;
+    color: #e2b6b1 !important;
+    border-color: #604040 !important;
+}
+
+html body.workspace-page :is(.alert-success, .alert-danger, .alert-warning, .alert-info) {
+    border-radius: 6px !important;
+    box-shadow: none;
+}
+
+html body.workspace-page :is(.saas-header-group, .saas-topbar, .topbar-island, .saas-drawer-panel, .saas-drawer-content, .drawer-body) {
+    background: var(--ui-surface) !important;
+    color: var(--ui-ink) !important;
+    border-color: var(--ui-line) !important;
+    box-shadow: none !important;
+}
+
+html body.workspace-page .topbar-island {
+    border-radius: 6px;
+}
+
+html body.workspace-page .topbar-search-wrapper {
+    border-radius: 6px !important;
+    background: var(--ui-surface) !important;
+    box-shadow: none !important;
+}
+
+html body.workspace-page .topbar-search-wrapper input {
+    min-height: 28px;
+    min-width: 0;
+    padding: 0;
+    border: 0 !important;
+    outline: 0;
+    background: transparent !important;
+    color: var(--ui-ink) !important;
+    box-shadow: none !important;
+}
+
+html body.workspace-page .topbar-search-wrapper:focus-within {
+    border-color: var(--ui-ink) !important;
+    outline: 2px solid var(--ui-ink);
+    outline-offset: 2px;
+}
+
+html body.workspace-page [style*="linear-gradient"] {
+    background: var(--ui-soft) !important;
+}
+
+html body.workspace-page .workspace-filterbar {
+    padding: 1rem !important;
+}
+
+html body.workspace-page .workspace-filterbar :is(form, .d-flex) {
+    row-gap: .75rem !important;
+}
+
+html body.workspace-page .workspace-filterbar .search-box-wrapper {
+    min-width: 180px;
+}
+
+html body.workspace-page .nav-pills {
+    gap: .5rem;
+}
+
+html body.workspace-page .nav-pills .nav-link {
+    min-height: 40px;
+    border: 1px solid transparent;
+    border-radius: 6px !important;
+    color: var(--ui-muted) !important;
+    font-size: .8125rem;
+}
+
+html body.workspace-page .nav-pills .nav-link.active {
+    background: var(--ui-soft) !important;
+    color: var(--ui-ink) !important;
+    border-color: var(--ui-line) !important;
+}
+
+html body.workspace-page .segmented-control {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: .25rem;
+    padding: .25rem;
+    background: var(--ui-soft) !important;
+    border: 1px solid var(--ui-line);
+    border-radius: 6px !important;
+}
+
+html body.workspace-page .segmented-tab {
+    min-height: 36px;
+    padding: .5rem .75rem;
+    color: var(--ui-muted) !important;
+    font-size: .8125rem;
+    border: 0;
+    border-radius: 4px !important;
+    background: transparent;
+    box-shadow: none !important;
+}
+
+html body.workspace-page .segmented-tab.active {
+    background: var(--ui-surface) !important;
+    color: var(--ui-ink) !important;
+}
+
+html body.workspace-page .page-link {
+    border-color: var(--ui-line);
+    background: var(--ui-surface);
+    color: var(--ui-ink);
+}
+
+html body.workspace-page .page-item.active .page-link {
+    background: var(--ui-ink);
+    color: var(--ui-inverse);
+}
+
+html body.workspace-page :is(.btn-cal-view, .cal-nav-btn) {
+    background: var(--ui-surface);
+    border: 1px solid var(--ui-line);
+    border-radius: 6px;
+    color: var(--ui-ink);
+    box-shadow: none;
+}
+
+html body.workspace-page .btn-cal-view.active-cal-view {
+    background: var(--ui-ink) !important;
+    color: var(--ui-inverse) !important;
+}
+
+html body.workspace-page .saas-content .saas-card:has(> form[method="post"]) {
+    padding: 1.5rem !important;
+}
+
+html body.workspace-page .page-loader-bar {
+    background: var(--ui-ink);
+    box-shadow: none;
+}
+
+html body.workspace-page .workspace-toolbar {
+    background: var(--ui-surface);
+    border: 1px solid var(--ui-line);
+    border-radius: 8px;
+}
+
+html body.error-page {
+    min-height: 100dvh;
+    padding: 1rem !important;
+}
+
+html .error-page>.saas-card {
+    width: min(100%, 480px) !important;
+    padding: 2rem !important;
+}
+
+html .error-page h1 {
+    font: 600 1.5rem/1.3 'Inter', sans-serif !important;
+    letter-spacing: -.035em;
+}
+
+html .error-page .error-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+}
+
+html .error-page .error-actions>a {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: .5rem;
+    padding: .75rem !important;
+}
+
+html body.workspace-page .workspace-toolbar-stages {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--ui-line);
+    overflow-x: auto;
+}
+
+html body.workspace-page .workspace-toolbar-caption {
+    margin-right: .5rem;
+    color: var(--ui-muted);
+    font-size: .75rem;
+    white-space: nowrap;
+}
+
+html body.workspace-page .workflow-kpi-pill {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: .5rem;
+    min-height: 36px;
+    padding: .5rem .75rem;
+    border: 1px solid transparent;
+    border-color: transparent !important;
+    border-radius: 6px;
+    background: transparent !important;
+    color: var(--ui-muted) !important;
+    font: 500 .75rem/1.4 'Inter', sans-serif;
+    box-shadow: none !important;
+    cursor: pointer;
+}
+
+html body.workspace-page .workflow-kpi-pill:hover {
+    background: var(--ui-soft);
+    transform: none;
+}
+
+html body.workspace-page .workflow-kpi-pill.active {
+    border-color: var(--ui-line) !important;
+    background: var(--ui-soft) !important;
+    color: var(--ui-ink) !important;
+}
+
+html body.workspace-page .workflow-kpi-pill i {
+    display: none;
+}
+
+html body.workspace-page .workflow-kpi-pill .badge {
+    min-width: 1.25rem;
+    padding: .125rem .375rem;
+    background: var(--ui-surface) !important;
+    color: var(--ui-muted) !important;
+}
+
+html body.workspace-page .workflow-kpi-pill.active .badge {
+    background: var(--ui-ink) !important;
+    color: var(--ui-inverse) !important;
+}
+
+html body.workspace-page .workspace-toolbar-controls {
+    display: grid;
+    grid-template-columns: 156px minmax(140px, 1fr) minmax(170px, 1.1fr) minmax(200px, 1.5fr) 40px;
+    align-items: end;
+    gap: .75rem;
+    padding: 1rem;
+}
+
+html body.workspace-page .workspace-filter {
+    min-width: 0;
+}
+
+html body.workspace-page .workspace-filter>.form-label {
+    display: block;
+    margin-bottom: .375rem;
+    font-size: .75rem !important;
+    color: var(--ui-muted) !important;
+}
+
+html body.workspace-page .view-mode-toggle {
+    display: flex;
+    height: 40px;
+    padding: 3px;
+    border: 1px solid var(--ui-line);
+    border-radius: 6px;
+    background: var(--ui-soft);
+}
+
+html body.workspace-page .view-toggle-btn {
+    display: inline-flex;
+    flex: 1;
+    justify-content: center;
+    align-items: center;
+    gap: .375rem;
+    min-height: 0;
+    padding: .375rem .5rem;
+    border: 0;
+    background: transparent;
+    color: var(--ui-muted);
+    font-size: .75rem !important;
+    white-space: nowrap;
+}
+
+html body.workspace-page .view-toggle-btn.active {
+    background: var(--ui-surface);
+    color: var(--ui-ink);
+    box-shadow: none;
+}
+
+html body.workspace-page .workspace-reset {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: .5rem;
+    width: 40px;
+    padding: .5rem;
+}
+
+html body.workspace-page .workspace-reset>span {
+    display: none;
+}
+
+html body.workspace-page .search-box-wrapper .form-control {
+    padding-left: 2.25rem;
+}
+
+html body.workspace-page .workspace-filter .search-box-wrapper {
+    max-width: none;
+}
+
+html body.workspace-page .search-box-icon {
+    color: var(--ui-muted) !important;
+}
+
+html body.workspace-page .kanban-column {
+    min-height: 320px;
+    background: var(--ui-soft) !important;
+    border-radius: 8px !important;
+}
+
+html body.workspace-page .kanban-cards-wrapper {
+    max-height: calc(100vh - 350px);
+    overflow-y: auto;
+    padding-right: 2px;
+    scrollbar-width: thin;
+}
+
+html body.workspace-page .kanban-card {
+    background: var(--ui-surface) !important;
+    border: 1px solid var(--ui-line) !important;
+    border-radius: 6px !important;
+}
+
+html[data-theme="dark"] body.workspace-page :is(.table, .table-saas, .saas-table, .db-table) td {
+    background: var(--ui-surface) !important;
+    color: var(--ui-ink) !important;
+    border-color: var(--ui-line) !important;
+}
+
+html[data-theme="dark"] body.workspace-page :is(.table, .table-saas, .saas-table, .db-table) th {
+    background: var(--ui-soft) !important;
+    color: var(--ui-muted) !important;
+    border-color: var(--ui-line) !important;
+}
+
+html[data-theme="dark"] body.workspace-page .badge.bg-slate-100 {
+    background: var(--ui-soft) !important;
+    color: var(--ui-ink) !important;
+    border-color: var(--ui-line) !important;
+}
+
+html[data-theme="dark"] body.workspace-page :is(.btn.bg-amber-50, .btn.bg-emerald-50) {
+    background: var(--ui-surface) !important;
+    color: var(--ui-ink) !important;
+    border-color: var(--ui-line) !important;
+}
+
+@media (max-width: 991.98px) {
+    html body.workspace-page .saas-main-wrapper {
+        margin-left: 0;
+        transition: none;
+    }
+}
+
+@media (max-width: 1199.98px) {
+    html body.workspace-page .workspace-toolbar-controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    html body.workspace-page .workspace-reset {
+        width: auto;
+        gap: .5rem;
+    }
+
+    html body.workspace-page .workspace-reset>span {
+        display: inline;
+    }
+}
+
+@media (max-width: 767.98px) {
+    html body.workspace-page .saas-content {
+        padding: 1.25rem 1rem 2rem;
+    }
+
+    html body.workspace-page #sidebarMobileToggle {
+        width: 44px !important;
+        flex-shrink: 0;
+    }
+
+    html body.workspace-page .saas-content .saas-card:has(> form[method="post"]) {
+        padding: 1rem !important;
+    }
+
+    html body.workspace-page .saas-content h1 {
+        font-size: 1.375rem;
+    }
+
+    html body.workspace-page :is(.form-control, .form-select, .btn) {
+        min-height: 44px;
+    }
+
+    html body.workspace-page :is(.form-control, .form-select) {
+        font-size: 1rem;
+    }
+
+    html body.workspace-page :is(.table-saas, .saas-table) {
+        min-width: 680px;
+    }
+
+    html body.workspace-page :is(.modal-header, .modal-body, .modal-footer) {
+        padding: 1rem !important;
+    }
+
+    html body.workspace-page .workspace-toolbar-controls {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    html body.workspace-page .workspace-toolbar-stages {
+        padding: .75rem;
+    }
+
+    html body.workspace-page .workspace-toolbar-caption {
+        display: none;
+    }
+
+    html body.workspace-page :is(.workflow-kpi-pill, .view-mode-toggle, .segmented-tab) {
+        min-height: 44px;
+    }
+
+    html body.workspace-page .view-toggle-btn {
+        min-height: 0;
+    }
+
+    html body.workspace-page .workspace-filterbar [style*="width:"] {
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    html body.workspace-page .workspace-filterbar :is(.flex-shrink-0, .search-box-wrapper) {
+        min-width: 0;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 479.98px) {
+    html .error-page .error-actions {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html body.workspace-page *, html body.workspace-page *::before, html body.workspace-page *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+/* Student & Workspace Text Overflow Safeguards */
+html body.workspace-page .text-break {
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+}
+
+html body.workspace-page .saas-card {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+html body.workspace-page .topic-item-row .saas-card {
+    overflow: hidden;
+}
+
+html body.workspace-page .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Multi-line text clamping without Tailwind CDN */
+html body.workspace-page .line-clamp-1 {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 1 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+html body.workspace-page .line-clamp-2 {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+html body.workspace-page .line-clamp-3 {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 3 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+html body.workspace-page .line-clamp-4 {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 4 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* Universal Spacing & Utility Bridge (Fixing cramped/collapsing elements) */
+html body.workspace-page .space-y-1> :not([hidden])~ :not([hidden]) {
+    margin-top: 0.25rem !important;
+}
+
+html body.workspace-page .space-y-1\.5> :not([hidden])~ :not([hidden]) {
+    margin-top: 0.375rem !important;
+}
+
+html body.workspace-page .space-y-2> :not([hidden])~ :not([hidden]) {
+    margin-top: 0.5rem !important;
+}
+
+html body.workspace-page .space-y-2\.5> :not([hidden])~ :not([hidden]) {
+    margin-top: 0.625rem !important;
+}
+
+html body.workspace-page .space-y-3> :not([hidden])~ :not([hidden]) {
+    margin-top: 0.75rem !important;
+}
+
+html body.workspace-page .space-y-4> :not([hidden])~ :not([hidden]) {
+    margin-top: 1rem !important;
+}
+
+html body.workspace-page .space-x-1> :not([hidden])~ :not([hidden]) {
+    margin-left: 0.25rem !important;
+}
+
+html body.workspace-page .space-x-2> :not([hidden])~ :not([hidden]) {
+    margin-left: 0.5rem !important;
+}
+
+html body.workspace-page .space-x-3> :not([hidden])~ :not([hidden]) {
+    margin-left: 0.75rem !important;
+}
+
+html body.workspace-page .p-1\.5 {
+    padding: 0.375rem !important;
+}
+
+html body.workspace-page .p-2\.5 {
+    padding: 0.625rem !important;
+}
+
+html body.workspace-page .p-3\.5 {
+    padding: 0.875rem !important;
+}
+
+html body.workspace-page .px-1\.5 {
+    padding-left: 0.375rem !important;
+    padding-right: 0.375rem !important;
+}
+
+html body.workspace-page .px-2\.5 {
+    padding-left: 0.625rem !important;
+    padding-right: 0.625rem !important;
+}
+
+html body.workspace-page .px-3\.5 {
+    padding-left: 0.875rem !important;
+    padding-right: 0.875rem !important;
+}
+
+html body.workspace-page .py-1\.5 {
+    padding-top: 0.375rem !important;
+    padding-bottom: 0.375rem !important;
+}
+
+html body.workspace-page .py-2\.5 {
+    padding-top: 0.625rem !important;
+    padding-bottom: 0.625rem !important;
+}
+
+html body.workspace-page .mb-0\.5 {
+    margin-bottom: 0.125rem !important;
+}
+
+html body.workspace-page .mb-1\.5 {
+    margin-bottom: 0.375rem !important;
+}
+
+html body.workspace-page .mb-2\.5 {
+    margin-bottom: 0.625rem !important;
+}
+
+html body.workspace-page .mb-3\.5 {
+    margin-bottom: 0.875rem !important;
+}
+
+html body.workspace-page .mt-1\.5 {
+    margin-top: 0.375rem !important;
+}
+
+html body.workspace-page .mt-2\.5 {
+    margin-top: 0.625rem !important;
+}
+
+html body.workspace-page .me-1\.5 {
+    margin-right: 0.375rem !important;
+}
+
+html body.workspace-page .gap-1\.5 {
+    gap: 0.375rem !important;
+}
+
+html body.workspace-page .gap-2\.5 {
+    gap: 0.625rem !important;
+}
+
+html body.workspace-page .gap-3\.5 {
+    gap: 0.875rem !important;
+}
+
+html body.workspace-page .border-b {
+    border-bottom: 1px solid var(--ui-line) !important;
+}
+
+html body.workspace-page .border-t {
+    border-top: 1px solid var(--ui-line) !important;
+}
+
+html body.workspace-page .border-l {
+    border-left: 1px solid var(--ui-line) !important;
+}
+
+html body.workspace-page .border-r {
+    border-right: 1px solid var(--ui-line) !important;
+}
+
+html body.workspace-page .w-6 {
+    width: 1.5rem !important;
+    min-width: 1.5rem !important;
+}
+
+html body.workspace-page .h-6 {
+    height: 1.5rem !important;
+    min-height: 1.5rem !important;
+}
+
+html body.workspace-page .w-8 {
+    width: 2rem !important;
+    min-width: 2rem !important;
+}
+
+html body.workspace-page .h-8 {
+    height: 2rem !important;
+    min-height: 2rem !important;
+}
+
+html body.workspace-page .w-10 {
+    width: 2.5rem !important;
+    min-width: 2.5rem !important;
+}
+
+html body.workspace-page .h-10 {
+    height: 2.5rem !important;
+    min-height: 2.5rem !important;
+}
+
+html body.workspace-page .w-11 {
+    width: 2.75rem !important;
+    min-width: 2.75rem !important;
+}
+
+html body.workspace-page .h-11 {
+    height: 2.75rem !important;
+    min-height: 2.75rem !important;
+}
+
+html body.workspace-page .w-12 {
+    width: 3rem !important;
+    min-width: 3rem !important;
+}
+
+html body.workspace-page .h-12 {
+    height: 3rem !important;
+    min-height: 3rem !important;
+}
+
+/* Enhanced line height to prevent text from sticking together */
+html body.workspace-page p,
+html body.workspace-page .text-xs,
+html body.workspace-page .alert {
+    line-height: 1.55;
+}
+
+html body.workspace-page .alert {
+    padding: 0.75rem 1rem !important;
+}

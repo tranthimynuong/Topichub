@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:replace="~{fragments/head :: head('Danh mục Đề tài')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
+<body class="workspace-page">
+
+    <!-- Left Sidebar -->
+    <aside th:replace="~{fragments/sidebar :: sidebar('topics', ${user})}"></aside>
+
+    <!-- Main Wrapper -->
+    <div class="saas-main-wrapper">
+        <!-- Topbar -->
+        <header th:replace="~{fragments/topbar :: topbar('Danh mục Đề tài', 'Sinh Viên', '/student/dashboard', ${user})}"></header>
+
+        <!-- Main Content View -->
+        <main class="saas-content">
+
+            <!-- Flash Messages -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-emerald-200" role="alert">
+                <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-rose-200" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-1.5 text-rose-600"></i> <span th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
+            </div>
+
+            <!-- Page Header -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <h1 class="text-lg font-bold text-slate-900 mb-0">Danh Mục Đề Tài Đã Công Bố</h1>
+                    <span th:if="${studentDepartment != null}" class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200"
+                        th:text="${studentDepartment.name}">Khoa CNTT</span>
+                </div>
+                <div th:if="${group == null}">
+                    <a th:href="@{/student/group}" class="btn btn-sm btn-outline-secondary rounded-xl px-3 py-1.5 text-xs font-semibold">
+                        <i class="fa-solid fa-users me-1 text-slate-600"></i> Quản lý nhóm sinh viên
+                    </a>
+                </div>
+            </div>
+
+            <!-- Clean Universal 1-Row Toolbar -->
+            <div class="saas-card p-3 mb-4 workspace-filterbar">
+                <div class="d-flex flex-column flex-xl-row align-items-xl-center justify-content-between gap-3">
+                    <!-- Segmented Control: Tình trạng -->
+                    <div class="segmented-control flex-wrap">
+                        <button type="button" class="segmented-tab active" onclick="filterByStudentCriteria('AVAILABILITY', 'ALL', this)">
+                            Tất cả (<span th:text="${topics != null ? topics.size() : 0}">0</span>)
+                        </button>
+                        <button type="button" class="segmented-tab" onclick="filterByStudentCriteria('AVAILABILITY', 'AVAILABLE', this)">
+                            <i class="fa-solid fa-circle-check text-emerald-500"></i> Còn trống chỗ
+                        </button>
+                        <button type="button" class="segmented-tab" onclick="filterByStudentCriteria('AVAILABILITY', 'TAKEN', this)">
+                            <i class="fa-solid fa-ban text-rose-500"></i> Đã có nhóm
+                        </button>
+                    </div>
+
+                    <!-- Dropdowns & Search -->
+                    <div class="d-flex flex-wrap align-items-center gap-2 flex-grow-1 justify-content-xl-end">
+
+                        <!-- Filter: Period -->
+                        <div th:if="${periods != null && !periods.isEmpty()}" style="min-width: 160px;">
+                            <select id="filterPeriodSelect" class="form-select form-select-sm text-xs rounded-xl border-slate-200" onchange="applyStudentCombinedFilters()" title="filterPeriodSelect" aria-label="filterPeriodSelect">
+                                <option value="ALL">Tất cả các đợt</option>
+                                <option th:each="p : ${periods}" th:value="${p.name}" th:text="${p.name}">Đợt 1</option>
+                            </select>
+                        </div>
+
+                        <!-- Search -->
+                        <div class="relative" style="min-width: 200px; flex-grow: 1; max-width: 280px;">
+                            <input type="text" id="studentKeywordInput" class="form-control form-control-sm rounded-xl pl-8 text-xs bg-slate-50 focus:bg-white" placeholder="Tìm theo tên đề tài, mã, GVHD..." onkeyup="applyStudentCombinedFilters()" title="Tìm theo tên đề tài, mã, GVHD..." aria-label="Tìm theo tên đề tài, mã, GVHD...">
+                            <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs"></i>
+                        </div>
+
+                        <span id="filteredRowCount" class="badge-pill-neutral font-medium text-xs whitespace-nowrap" th:text="'Tổng: ' + (${topics != null ? topics.size() : 0}) + ' đề tài'"></span>
+                    </div>
+                </div>
+            </div>
+
+                    <!-- Topics Cards Grid -->
+                    <div class="row g-3 mb-4">
+                        <div th:if="${topics == null || #lists.isEmpty(topics)}" class="col-12 text-center py-5 text-muted text-xs">
+                            <i class="fa-regular fa-folder-open text-3xl mb-2 d-block text-slate-300"></i>
+                            Không tìm thấy đề tài nào phù hợp với bộ lọc.
+                        </div>
+
+                        <!-- th:with: phân biệt chính xác đề tài của nhóm mình (isMyTopic) vs đề tài đã bị nhóm khác đăng ký (isTaken) -->
+                        <div th:each="t : ${topics}" class="col-lg-6 filterable-row topic-item-row"
+                             th:with="isMyTopic=${group != null and group.topic != null and group.topic.id == t.id},
+                                      isTaken=${!isMyTopic and takenTopicIds != null and takenTopicIds.contains(t.id)}"
+                             th:data-topic-id="${t.id}"
+                             th:data-topic-code="${t.code}"
+                             th:data-topic-title="${t.title}"
+                             th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}"
+                             th:data-topic-major="${t.department != null ? t.department.name : 'Khoa CNTT'}"
+                             th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa phân công'}"
+                             th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}"
+                             th:data-topic-reviewer="${t.reviewer != null && t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}"
+                             th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}"
+                             th:data-topic-max-students="${t.maxStudents}"
+                             th:data-topic-status="${t.status}"
+                             th:data-topic-is-taken="${isTaken}"
+                             th:data-topic-is-my-topic="${isMyTopic}"
+                             th:data-topic-has-group-topic="${group != null and group.topic != null}"
+                             th:data-topic-group-topic-title="${group != null and group.topic != null ? group.topic.title : ''}"
+                             th:data-topic-description="${t.description}"
+                             th:data-topic-requirements="${t.requirements}"
+                             th:data-topic-role="STUDENT"
+                             th:data-topic-department="${t.department != null ? t.department.name : 'Khoa CNTT'}">
+                            <!-- Card: Nổi bật nếu là đề tài của nhóm mình; mờ nếu đã có nhóm khác; bình thường nếu còn trống -->
+                            <div class="saas-card p-3 h-100 d-flex flex-column justify-content-between transition cursor-pointer"
+                                 style="overflow: hidden; min-height: 200px;"
+                                 th:classappend="${isMyTopic ? 'border-emerald-500 bg-emerald-50/15 shadow-sm' : (isTaken ? 'opacity-60 bg-slate-50' : 'hover:border-blue-300 hover:shadow-md')}"
+                                 onclick="openTopicDrawer(this.closest('.filterable-row'))">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center gap-1.5 mb-2">
+                                        <div class="d-flex align-items-center gap-1.5 min-w-0 flex-grow-1 flex-nowrap">
+                                            <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-bold flex-shrink-0" th:text="${t.code}">DT-01</span>
+                                            <span class="badge bg-slate-50 text-slate-600 border border-slate-200 text-xs px-2 py-0.5 rounded-md text-truncate" style="max-width: 140px;" th:title="${t.period != null ? t.period.name : 'Chung'}" th:text="${t.period != null ? t.period.name : 'Chung'}">Đợt</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-1.5 flex-shrink-0">
+                                            <!-- Badge: Đề tài của nhóm mình -->
+                                            <span th:if="${isMyTopic}" class="badge bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs px-2 py-0.5 rounded-pill fw-semibold text-nowrap">
+                                                <i class="fa-solid fa-circle-check me-1 text-emerald-600"></i>Đề tài của nhóm
+                                            </span>
+                                            <!-- Badge: Đề tài đã có nhóm khác -->
+                                            <span th:if="${isTaken}" class="badge bg-rose-100 text-rose-700 border border-rose-200 text-xs px-2 py-0.5 rounded-pill fw-semibold text-nowrap">
+                                                <i class="fa-solid fa-lock me-1 text-xs"></i>Đã có nhóm
+                                            </span>
+                                            <!-- Badge: Khoa ngắn gọn -->
+                                            <span class="badge-pill-neutral font-medium text-xs text-nowrap" th:text="${t.department != null ? (t.department.code != null and !t.department.code.isEmpty() ? t.department.code : (t.department.name.contains('Thông tin') ? 'CNTT' : (t.department.name.contains('Kinh doanh') ? 'QTKD' : 'Khoa'))) : 'CNTT'}">CNTT</span>
+                                        </div>
+                                    </div>
+                                    <h2 class="text-sm font-bold text-slate-900 mb-1"
+                                        style="overflow-wrap: anywhere; word-break: break-word; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; min-height: 2.5rem; max-height: 2.7rem;"
+                                        th:classappend="${isMyTopic ? 'text-emerald-900' : ''}"
+                                        th:title="${t.title}"
+                                        th:text="${t.title}">Tên đề tài</h2>
+                                    <p class="text-xs text-slate-600 mb-2"
+                                       style="overflow-wrap: anywhere; word-break: break-word; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; min-height: 2.3rem; max-height: 2.7rem;"
+                                       th:text="${t.description}">Mô tả đề tài...</p>
+
+                                    <div class="p-2 bg-slate-50 rounded-xl border border-slate-100 text-xs mb-2 space-y-0.5">
+                                        <div class="text-truncate"><span class="text-slate-500">GVHD chính:</span> <strong class="text-slate-800" th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'N/A'}"></strong></div>
+                                        <div th:if="${t.coSupervisor != null && t.coSupervisor.user != null}" class="text-truncate"><span class="text-slate-500">GVHD phụ:</span> <strong class="text-slate-800" th:text="${t.coSupervisor.user.fullName}"></strong></div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-t border-slate-100" onclick="event.stopPropagation()">
+                                    <span class="text-xs text-slate-500">
+                                        <i class="fa-solid fa-users me-1 text-slate-400"></i> <span th:text="'Tối đa ' + ${t.maxStudents} + ' SV'">Tối đa 3 SV</span>
+                                    </span>
+
+                                    <!-- Case 1: Đề tài của nhóm mình -->
+                                    <div th:if="${isMyTopic}">
+                                        <a th:href="@{/student/my-topic}" class="btn btn-xs btn-success rounded-xl px-2.5 py-1 text-xs font-semibold">
+                                            <i class="fa-solid fa-check me-1"></i>Đang thực hiện
+                                        </a>
+                                    </div>
+
+                                    <!-- Case 2: Đề tài bị nhóm khác chiếm -->
+                                    <div th:if="${isTaken}">
+                                        <button type="button" class="btn btn-xs rounded-xl px-2.5 py-1 text-xs font-semibold bg-slate-100 text-slate-400 border border-slate-200" disabled>
+                                            <i class="fa-solid fa-ban me-1"></i>Đã có nhóm
+                                        </button>
+                                    </div>
+
+                                    <!-- Case 3: Đề tài còn trống -->
+                                    <div th:if="${!isMyTopic and !isTaken}">
+                                        <!-- Nhóm đã có đề tài khác -->
+                                        <div th:if="${group != null and group.topic != null}">
+                                            <span class="badge bg-slate-100 text-slate-500 border border-slate-200 text-xs px-2 py-1 rounded-md font-normal">
+                                                <i class="fa-solid fa-circle-info text-blue-500 me-1"></i>Nhóm đã có đề tài
+                                            </span>
+                                        </div>
+                                        <!-- Nhóm chưa có đề tài -->
+                                        <div th:if="${group != null and group.topic == null}">
+                                            <div th:if="${group.isLeader(student)}">
+                                                <form th:action="@{/student/topics/{id}/register(id=${t.id})}" method="post" onsubmit="return confirm('Bạn có chắc muốn đăng ký đề tài này cho nhóm?');">
+                                                    <button type="submit" class="btn btn-xs btn-dark rounded-xl px-2.5 py-1 text-xs font-semibold">
+                                                        <i class="fa-solid fa-paper-plane me-1"></i> Đăng ký
+                                                    </button>
+                                                </form>
+                                            </div>
+                                            <div th:if="${!group.isLeader(student)}">
+                                                <span class="text-xs text-slate-400 italic">Chỉ nhóm trưởng đăng ký</span>
+                                            </div>
+                                        </div>
+                                        <!-- Sinh viên chưa có nhóm: tự động tạo nhóm -->
+                                        <div th:if="${group == null}">
+                                            <form th:action="@{/student/topics/{id}/register(id=${t.id})}" method="post" onsubmit="return confirm('Bạn chưa tạo nhóm. Hệ thống sẽ tự động khởi tạo nhóm mới và đăng ký đề tài này cho bạn. Bạn có muốn tiếp tục?');">
+                                                <button type="submit" class="btn btn-xs btn-dark rounded-xl px-2.5 py-1 text-xs font-semibold">
+                                                    <i class="fa-solid fa-paper-plane me-1"></i> Đăng ký
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+        </main>
+    </div>
+
+    <!-- Scripts Fragment (Includes Global Centered Topic Detail Modal) -->
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+
+    <script>
+        let currentStudentAvailability = 'ALL';
+
+        function filterByStudentCriteria(type, value, element) {
+            if (type === 'AVAILABILITY') {
+                currentStudentAvailability = value;
+                document.querySelectorAll('.segmented-tab').forEach(b => b.classList.remove('active'));
+                if (element) element.classList.add('active');
+            }
+            applyStudentCombinedFilters();
+        }
+
+        function applyStudentCombinedFilters() {
+            const kwInput = document.getElementById('studentKeywordInput');
+            const keyword = (kwInput ? kwInput.value : '').toLowerCase().trim();
+            const avail = currentStudentAvailability;
+
+            const pSel = document.getElementById('filterPeriodSelect');
+            const selectedPeriod = pSel ? pSel.value : 'ALL';
+
+            const rows = document.querySelectorAll('.topic-item-row');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const isTaken = row.getAttribute('data-topic-is-taken') === 'true';
+                const rowPeriod = row.getAttribute('data-topic-period') || '';
+                const text = row.textContent.toLowerCase();
+
+                let matchAvail = true;
+                if (avail === 'AVAILABLE') matchAvail = !isTaken;
+                else if (avail === 'TAKEN') matchAvail = isTaken;
+
+                const matchPeriod = (selectedPeriod === 'ALL' || rowPeriod === selectedPeriod);
+                const matchKeyword = !keyword || text.includes(keyword);
+
+                if (matchAvail && matchPeriod && matchKeyword) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            const counter = document.getElementById('filteredRowCount');
+            if (counter) {
+                counter.textContent = 'Hiển thị: ' + visibleCount + ' đề tài';
+            }
+        }
+    </script>
+</body>
+</html>

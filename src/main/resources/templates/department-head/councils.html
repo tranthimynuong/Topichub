@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:replace="~{fragments/head :: head('Hội Đồng Bảo Vệ')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
+<body class="workspace-page">
+
+    <!-- Left Sidebar -->
+    <aside th:replace="~{fragments/sidebar :: sidebar('councils', ${user})}"></aside>
+
+    <!-- Main Wrapper -->
+    <div class="saas-main-wrapper">
+        <!-- Topbar -->
+        <header th:replace="~{fragments/topbar :: topbar('Hội Đồng Bảo Vệ', ${user != null && user.role != null ? user.role.name : 'Trưởng Khoa'}, '/department-head/dashboard', ${user})}"></header>
+
+        <!-- Main Content View -->
+        <main class="saas-content">
+
+            <!-- Flash messages -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-emerald-200" role="alert">
+                <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-rose-200" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-1.5 text-rose-600"></i> <span th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
+            </div>
+
+            <!-- Page Header -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <h1 class="text-lg font-bold text-slate-900 mb-0">Hội Đồng Bảo Vệ Đề Tài</h1>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <a th:href="@{/lecturer/councils}" class="btn btn-sm btn-outline-primary rounded-xl px-3 py-1.5 text-xs font-semibold shadow-sm d-inline-flex align-items-center gap-1.5" title="Chuyển tới khu vực chấm điểm hội đồng cho Giảng viên/Trưởng khoa">
+                        <i class="fa-solid fa-clipboard-check text-xs"></i> Đi chấm điểm hội đồng
+                    </a>
+                    <button class="btn btn-sm btn-dark rounded-xl px-3 py-1.5 text-xs font-semibold shadow-sm d-inline-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#createCouncilModal">
+                        <i class="fa-solid fa-plus text-xs"></i> Thành lập Hội đồng
+                    </button>
+                </div>
+            </div>
+
+            <!-- Universal 1-Row Toolbar (Rộng rãi, thoáng mắt, khoảng cách chuẩn SaaS) -->
+            <div class="saas-card mb-4 workspace-filterbar" style="padding: 12px 16px;">
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                    <div class="relative flex-grow-1" style="max-width: 420px;">
+                        <input type="text" class="form-control form-control-sm rounded-xl text-xs" style="height: 36px; padding-left: 36px; font-size: 13px;" placeholder="Tìm kiếm hội đồng, giảng viên, địa điểm..." onkeyup="filterTableByKeyword(this.value)" title="Tìm kiếm hội đồng, giảng viên, địa điểm..." aria-label="Tìm kiếm hội đồng, giảng viên, địa điểm...">
+                        <i class="fa-solid fa-magnifying-glass text-slate-400 absolute text-xs pointer-events-none" style="left: 12px; top: 50%; transform: translateY(-50%);"></i>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-2.5">
+                        <select class="form-select form-select-sm rounded-xl text-xs" style="height: 36px; width: 220px; font-size: 12.5px; padding-left: 12px;" onchange="filterTableByAttribute('period', this.value)" title="Lựa chọn" aria-label="Lựa chọn">
+                            <option value="all">-- Tất cả các đợt --</option>
+                            <option th:each="p : ${periods}" th:value="${p.id}" th:text="${p.name}"></option>
+                        </select>
+                        <span id="filteredRowCount" class="badge-pill-neutral font-semibold text-xs shadow-2xs d-inline-flex align-items-center px-3" style="height: 36px;" th:text="'Tổng số: ' + (${councils != null ? councils.size() : 0}) + ' hội đồng'"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Council Cards Grid -->
+            <div class="row g-4 mb-4">
+                <div th:if="${councils == null || #lists.isEmpty(councils)}" class="col-12">
+                    <div class="saas-card text-center py-5 text-muted text-xs">
+                        <i class="fa-solid fa-users-rectangle text-3xl mb-2 d-block text-slate-300"></i>
+                        Chưa có hội đồng bảo vệ nào được thành lập. Hãy nhấn nút <strong>Thành lập Hội đồng mới</strong>.
+                    </div>
+                </div>
+
+                <div th:each="c : ${councils}" class="col-lg-6 filterable-row" th:data-period="${c.period != null ? c.period.id : 'all'}">
+                    <div class="saas-card p-4 h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold mb-1 d-inline-block" th:text="${c.code != null ? c.code : 'HD-' + c.id}">HD-01</span>
+                                    <h2 class="text-base font-bold text-slate-900 mb-0" th:text="${c.name}">Hội đồng KLTN Hội trường A</h2>
+                                </div>
+                                <span class="badge-pill-approved" th:text="${c.status}">ESTABLISHED</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-3">
+                                <i class="fa-regular fa-calendar me-1"></i> <span th:text="${c.defenseDate != null ? #temporals.format(c.defenseDate, 'dd/MM/yyyy HH:mm') : 'Chưa định ngày'}"></span> |
+                                <i class="fa-solid fa-location-dot me-1"></i> <span th:text="${c.location != null ? c.location : 'Phòng bảo vệ Khoa'}"></span>
+                            </p>
+
+                            <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
+                                Danh sách thành viên hội đồng (<span th:text="${c.members.size()}"></span> GV):
+                            </h6>
+                            <div class="divide-y divide-slate-100 border border-slate-100 rounded-xl mb-3 overflow-hidden bg-slate-50/50">
+                                <div th:each="m : ${c.members}" class="d-flex justify-content-between align-items-center py-2 px-3 bg-white">
+                                    <div>
+                                        <span class="font-semibold text-slate-900 text-xs" th:text="${m.lecturer != null && m.lecturer.user != null ? m.lecturer.user.fullName : 'GV'}">TS. Nguyễn Văn A</span>
+                                        <span th:if="${m.lecturer != null && m.lecturer.user != null && user != null && m.lecturer.user.id == user.id}" class="badge bg-blue-100 text-blue-700 text-2xs px-1.5 py-0.5 rounded-md font-semibold ms-1">Bạn</span>
+                                        <span class="text-slate-400 text-xs d-block" th:text="${m.lecturer != null ? (m.lecturer.degree != null ? m.lecturer.degree : (m.lecturer.academicTitle != null ? m.lecturer.academicTitle : 'GV')) + ' - ' + (m.lecturer.lecturerCode != null ? m.lecturer.lecturerCode : '') : ''}"></span>
+                                    </div>
+                                    <div>
+                                        <span th:if="${m.councilRole == 'PRESIDENT'}" class="badge-pill-pending font-semibold">
+                                            <i class="fa-solid fa-crown text-amber-500 me-1"></i>Chủ tịch
+                                        </span>
+                                        <span th:if="${m.councilRole == 'SECRETARY'}" class="badge-pill-neutral font-semibold text-blue-700 bg-blue-50 border-blue-200">
+                                            <i class="fa-solid fa-pen-fancy me-1"></i>Thư ký
+                                        </span>
+                                        <span th:if="${m.councilRole == 'MEMBER'}" class="badge-pill-neutral">
+                                            Ủy viên
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Assigned Topics Section -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1.5">
+                                    <h6 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-0">
+                                        <i class="fa-solid fa-book-bookmark text-purple-600 me-1"></i> Đề tài bảo vệ (<span th:text="${councilTopicsMap != null && councilTopicsMap.get(c.id) != null ? councilTopicsMap.get(c.id).size() : 0}">0</span>):
+                                    </h6>
+                                </div>
+                                <div th:if="${councilTopicsMap != null && councilTopicsMap.get(c.id) != null && !#lists.isEmpty(councilTopicsMap.get(c.id))}" class="space-y-1.5">
+                                    <div th:each="tp : ${councilTopicsMap.get(c.id)}" class="p-2 rounded-xl bg-purple-50/50 border border-purple-100/80 d-flex justify-content-between align-items-center text-xs">
+                                        <div class="pe-2">
+                                            <div class="font-mono text-xs font-bold text-purple-700" th:text="${tp.code}">DT-01</div>
+                                            <div class="font-semibold text-slate-800 text-xs line-clamp-1" th:text="${tp.title}">Tên đề tài</div>
+                                            <div class="text-slate-500 text-2xs mt-0.5">
+                                                GVHD: <span th:text="${tp.supervisor != null && tp.supervisor.user != null ? tp.supervisor.user.fullName : 'N/A'}"></span>
+                                            </div>
+                                        </div>
+                                        <form th:action="@{/department-head/councils/{id}/unassign-topic(id=${c.id})}" method="post" class="d-inline">
+                                            <input type="hidden" name="topicId" th:value="${tp.id}">
+                                            <button type="submit" class="btn btn-xs btn-outline-danger rounded-lg px-2 py-1 text-2xs" title="Gỡ khỏi hội đồng" onclick="return confirm('Bạn có chắc muốn gỡ đề tài này khỏi hội đồng?')">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div th:if="${councilTopicsMap == null || councilTopicsMap.get(c.id) == null || #lists.isEmpty(councilTopicsMap.get(c.id))}" class="p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-center text-slate-400 text-xs">
+                                    Chưa có đề tài nào được phân công vào hội đồng này.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-t border-slate-100">
+                            <span class="text-xs text-slate-400" th:text="'Đợt: ' + (${c.period != null ? c.period.name : 'Tất cả'})"></span>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <a th:if="${c.hasMember(user)}" th:href="@{/lecturer/councils}" class="btn btn-sm btn-outline-primary rounded-xl px-2.5 py-1 text-xs font-semibold shadow-2xs d-inline-flex align-items-center gap-1" title="Bạn là thành viên của Hội đồng này - Đi tới trang chấm điểm">
+                                    <i class="fa-solid fa-clipboard-check text-xs"></i> Đi chấm điểm
+                                </a>
+                                <button type="button" class="btn btn-sm bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-3 text-xs font-semibold shadow-sm transition"
+                                        data-bs-toggle="modal" th:data-bs-target="'#assignTopicsModal-' + ${c.id}">
+                                    <i class="fa-solid fa-list-check me-1"></i> Phân công đề tài
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modals Assign Topics to Council -->
+    <th:block th:each="c : ${councils}">
+        <div class="modal fade text-start" th:id="'assignTopicsModal-' + ${c.id}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content rounded-2xl border-0 shadow-2xl overflow-hidden">
+                    <div class="modal-header border-b border-slate-100 p-4" style="background: linear-gradient(135deg, #f5f3ff 0%, #eef2ff 100%);">
+                        <h6 class="modal-title font-bold text-slate-900 text-sm d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-users-rectangle text-purple-600"></i>
+                            Phân công Đề tài vào Hội đồng: <span class="text-purple-700" th:text="${c.name}"></span>
+                        </h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
+                    </div>
+                    <div class="modal-body p-4 d-flex flex-column gap-3">
+                        <!-- Council Info summary -->
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-xs text-slate-700 d-flex flex-wrap gap-3 align-items-center">
+                            <div><i class="fa-solid fa-tag text-slate-400 me-1"></i> Mã: <strong th:text="${c.code != null ? c.code : 'HD-' + c.id}"></strong></div>
+                            <div><i class="fa-regular fa-calendar text-slate-400 me-1"></i> Thời gian: <strong th:text="${c.defenseDate != null ? #temporals.format(c.defenseDate, 'dd/MM/yyyy HH:mm') : 'Chưa định'}"></strong></div>
+                            <div><i class="fa-solid fa-location-dot text-slate-400 me-1"></i> Phòng: <strong th:text="${c.location != null ? c.location : 'Chưa có'}"></strong></div>
+                        </div>
+
+                        <!-- Add topic form (Batch Multi-Select) -->
+                        <div class="p-3.5 bg-purple-50/50 rounded-xl border border-purple-100">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="text-xs font-bold text-purple-900 mb-0">Thêm Đề tài / Nhóm vào Hội đồng này:</h6>
+                                <span class="text-2xs text-slate-500 italic">* Tự động loại trừ các đề tài có GVHD thuộc Hội đồng</span>
+                            </div>
+                            <form th:action="@{/department-head/councils/{id}/assign-topics-batch(id=${c.id})}" method="post">
+                                <div class="border border-slate-200 rounded-xl overflow-y-auto p-2 bg-white mb-2.5" style="max-height: 200px;">
+                                    <th:block th:each="at : ${allApprovedTopics}">
+                                        <div th:if="${(at.council == null || at.council.id != c.id) && (councilLecturerIdsMap == null || councilLecturerIdsMap.get(c.id) == null || ((at.supervisor == null || !councilLecturerIdsMap.get(c.id).contains(at.supervisor.id)) && (at.coSupervisor == null || !councilLecturerIdsMap.get(c.id).contains(at.coSupervisor.id))))}"
+                                             class="p-2 rounded-lg border border-slate-100 hover:bg-slate-50 transition d-flex align-items-center gap-2 mb-1.5 text-xs">
+                                            <input type="checkbox" name="selectedTopicIds" th:value="${at.id}" th:id="'batch-check-' + ${c.id} + '-' + ${at.id}" class="form-check-input mt-0 flex-shrink-0">
+                                            <label th:for="'batch-check-' + ${c.id} + '-' + ${at.id}" class="flex-grow-1 cursor-pointer mb-0">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="font-mono font-bold text-purple-700 text-2xs" th:text="'[' + ${at.code} + ']'"></span>
+                                                    <span class="font-semibold text-slate-800 line-clamp-1" th:text="${at.title}"></span>
+                                                </div>
+                                                <div class="text-2xs text-slate-500 mt-0.5 d-flex gap-2">
+                                                    <span>GVHD: <strong class="text-slate-700" th:text="${at.supervisor != null && at.supervisor.user != null ? at.supervisor.user.fullName : 'N/A'}"></strong></span>
+                                                    <span th:if="${approvedTopicsGroupsMap != null && approvedTopicsGroupsMap.get(at.id) != null}" class="text-blue-600">
+                                                        | <i class="fa-solid fa-users me-0.5"></i> <span th:text="${approvedTopicsGroupsMap.get(at.id).groupName}"></span>
+                                                    </span>
+                                                    <span th:if="${at.council != null}" class="text-amber-600">
+                                                        | (Đang ở HĐ: <span th:text="${at.council.name}"></span>)
+                                                    </span>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </th:block>
+                                    <div th:if="${allApprovedTopics == null || #lists.isEmpty(allApprovedTopics)}" class="p-3 text-center text-xs text-slate-400">
+                                        Không có đề tài khả dụng để phân công.
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <button type="submit" class="btn btn-sm bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-4 text-xs font-semibold shadow-sm transition">
+                                        <i class="fa-solid fa-plus me-1"></i> Gán các đề tài đã chọn
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Current list in modal -->
+                        <div>
+                            <h6 class="text-xs font-bold text-slate-800 mb-2">Danh sách đề tài hiện tại trong Hội đồng (<span th:text="${councilTopicsMap != null && councilTopicsMap.get(c.id) != null ? councilTopicsMap.get(c.id).size() : 0}">0</span>):</h6>
+                            <div th:if="${councilTopicsMap != null && councilTopicsMap.get(c.id) != null && !#lists.isEmpty(councilTopicsMap.get(c.id))}" class="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
+                                <div th:each="tp : ${councilTopicsMap.get(c.id)}" class="p-3 d-flex justify-content-between align-items-center bg-white hover:bg-slate-50 transition">
+                                    <div>
+                                        <span class="text-xs font-mono font-bold text-purple-700" th:text="${tp.code}">DT-01</span>
+                                        <h6 class="text-xs font-bold text-slate-800 mb-0.5" th:text="${tp.title}">Tên đề tài</h6>
+                                        <div class="text-2xs text-slate-500">
+                                            GVHD: <strong class="text-slate-700" th:text="${tp.supervisor != null && tp.supervisor.user != null ? tp.supervisor.user.fullName : 'N/A'}"></strong> |
+                                            Khoa: <span class="text-slate-600 font-medium" th:text="${tp.department != null ? tp.department.name : 'Khoa CNTT'}"></span>
+                                        </div>
+                                    </div>
+                                    <form th:action="@{/department-head/councils/{id}/unassign-topic(id=${c.id})}" method="post">
+                                        <input type="hidden" name="topicId" th:value="${tp.id}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-2.5 py-1 text-xs font-medium" onclick="return confirm('Bạn có chắc muốn hủy phân công đề tài này khỏi hội đồng?')">
+                                            <i class="fa-solid fa-xmark me-1"></i> Gỡ
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div th:if="${councilTopicsMap == null || councilTopicsMap.get(c.id) == null || #lists.isEmpty(councilTopicsMap.get(c.id))}" class="p-4 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-slate-200">
+                                Hội đồng chưa có đề tài nào. Hãy chọn đề tài ở khung phía trên và nhấn <strong>Gán các đề tài đã chọn</strong>.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-t border-slate-100 bg-slate-50/50 p-3">
+                        <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-4 text-xs font-medium" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <!-- Modal Create Council (2-Step Smart Wizard) -->
+    <div class="modal fade" id="createCouncilModal" tabindex="-1" aria-labelledby="createCouncilModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content rounded-2xl border-0 shadow-2xl overflow-hidden">
+                <form th:action="@{/department-head/councils/create}" method="post" id="councilWizardForm">
+                    <!-- Modal Header with 2-Step Stepper -->
+                    <div class="modal-header border-b border-slate-100 p-4 bg-slate-50/70 d-flex justify-content-between align-items-center">
+                        <h6 class="modal-title font-bold text-slate-900 text-sm mb-0 d-flex align-items-center gap-2">
+                            <span class="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 d-inline-flex align-items-center justify-content-center flex-shrink-0">
+                                <i class="fa-solid fa-scale-balanced text-xs"></i>
+                            </span>
+                            <span>Thành Lập Hội Đồng & Phân Công Nhóm Bảo Vệ</span>
+                        </h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
+                    </div>
+
+                    <!-- Stepper Bar -->
+                    <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-200/80 d-flex align-items-center justify-content-center gap-3">
+                        <div id="stepperPill1" class="d-flex align-items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs">
+                            <i id="stepperPill1Icon" class="fa-solid fa-1"></i>
+                            <span>1. Thông tin & Thành viên HĐ</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-300 text-xs"></i>
+                        <div id="stepperPill2" class="d-flex align-items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-slate-400 border border-slate-200">
+                            <i id="stepperPill2Icon" class="fa-solid fa-2"></i>
+                            <span>2. Gán Đề tài & Nhóm bảo vệ</span>
+                        </div>
+                    </div>
+
+                    <!-- WIZARD STEP 1: Council Info & Members -->
+                    <div id="wizardStep1" class="modal-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-council-name">Tên Hội đồng <span class="text-rose-500">*</span></label>
+                                <input type="text" name="name" id="field-council-name" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Hội đồng Khóa luận Tốt nghiệp 01" required title="Tên Hội đồng" aria-label="Tên Hội đồng">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-council-code">Mã Hội đồng</label>
+                                <input type="text" name="code" id="field-council-code" class="form-control text-xs rounded-xl" placeholder="Ví dụ: HD-CNTT-01" title="Mã Hội đồng" aria-label="Mã Hội đồng">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-council-period">Gắn với Đợt đăng ký <span class="text-rose-500">*</span></label>
+                                <select name="periodId" id="field-council-period" class="form-select text-xs rounded-xl" required title="Gắn với Đợt đăng ký" aria-label="Gắn với Đợt đăng ký">
+                                    <option value="">-- Chọn đợt đăng ký áp dụng --</option>
+                                    <option th:each="p : ${periods}" th:value="${p.id}" th:text="${p.name}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-council-location">Địa điểm / Phòng bảo vệ</label>
+                                <input type="text" name="location" id="field-council-location" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Phòng A101 / Online Zoom" title="Địa điểm / Phòng bảo vệ" aria-label="Địa điểm / Phòng bảo vệ">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-council-defensedate">Ngày giờ bảo vệ</label>
+                                <input type="datetime-local" name="defenseDate" id="field-council-defensedate" class="form-control text-xs rounded-xl" title="Ngày giờ bảo vệ" aria-label="Ngày giờ bảo vệ">
+                            </div>
+
+                            <div class="col-12"><hr class="my-1 border-slate-100"></div>
+                            <div class="col-12">
+                                <span class="text-xs font-bold text-slate-900 uppercase tracking-wider d-block mb-1">
+                                    <i class="fa-solid fa-users-gear text-blue-600 me-1"></i> Bầu chọn thành viên Hội đồng (Bắt buộc 3 - 5 Giảng viên)
+                                </span>
+                                <p class="text-xs text-slate-400 mb-0">Ràng buộc Rubric: Giảng viên sẽ tự động bị loại khỏi quyền chấm đề tài do chính mình hướng dẫn.</p>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label text-xs font-semibold text-amber-700" for="field-council-president"><i class="fa-solid fa-crown me-1 text-amber-500"></i> Chủ tịch Hội đồng <span class="text-rose-500">*</span></label>
+                                <select name="presidentId" id="field-council-president" class="form-select text-xs rounded-xl border-amber-200 bg-amber-50/20" required title="Chủ tịch Hội đồng" aria-label="Chủ tịch Hội đồng">
+                                    <option value="">-- Chọn Chủ tịch --</option>
+                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${(l.user != null ? l.user.fullName : 'GV') + ' (' + (l.lecturerCode != null ? l.lecturerCode : '') + ')'}"></option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label text-xs font-semibold text-blue-700" for="field-council-secretary"><i class="fa-solid fa-pen-fancy me-1 text-blue-500"></i> Thư ký Hội đồng <span class="text-rose-500">*</span></label>
+                                <select name="secretaryId" id="field-council-secretary" class="form-select text-xs rounded-xl border-blue-200 bg-blue-50/20" required title="Thư ký Hội đồng" aria-label="Thư ký Hội đồng">
+                                    <option value="">-- Chọn Thư ký --</option>
+                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${(l.user != null ? l.user.fullName : 'GV') + ' (' + (l.lecturerCode != null ? l.lecturerCode : '') + ')'}"></option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-council-member1">Ủy viên 1 <span class="text-rose-500">*</span></label>
+                                <select name="member1Id" id="field-council-member1" class="form-select text-xs rounded-xl" required title="Ủy viên 1" aria-label="Ủy viên 1">
+                                    <option value="">-- Chọn Ủy viên 1 --</option>
+                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${(l.user != null ? l.user.fullName : 'GV') + ' (' + (l.lecturerCode != null ? l.lecturerCode : '') + ')'}"></option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-council-member2">Ủy viên 2 (Tùy chọn)</label>
+                                <select name="member2Id" id="field-council-member2" class="form-select text-xs rounded-xl" title="Ủy viên 2 (Tùy chọn)" aria-label="Ủy viên 2 (Tùy chọn)">
+                                    <option value="">-- Không chọn --</option>
+                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${(l.user != null ? l.user.fullName : 'GV') + ' (' + (l.lecturerCode != null ? l.lecturerCode : '') + ')'}"></option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-council-member3">Ủy viên 3 (Tùy chọn)</label>
+                                <select name="member3Id" id="field-council-member3" class="form-select text-xs rounded-xl" title="Ủy viên 3 (Tùy chọn)" aria-label="Ủy viên 3 (Tùy chọn)">
+                                    <option value="">-- Không chọn --</option>
+                                    <option th:each="l : ${lecturers}" th:value="${l.id}" th:text="${(l.user != null ? l.user.fullName : 'GV') + ' (' + (l.lecturerCode != null ? l.lecturerCode : '') + ')'}"></option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-4 mt-3 border-t border-slate-100">
+                            <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                            <button type="button" class="btn btn-sm bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-4 text-xs font-semibold shadow-sm transition d-inline-flex align-items-center gap-1.5" onclick="goToCouncilStep2()">
+                                <span>Tiếp tục: Phân công Nhóm Đề tài</span> <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- WIZARD STEP 2: Assign Topics & Groups -->
+                    <div id="wizardStep2" class="modal-body p-4 d-none">
+                        <!-- Summary Banner -->
+                        <div class="p-3 bg-purple-50/70 rounded-xl border border-purple-200/80 mb-3 text-xs">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1.5">
+                                <div><span class="text-slate-500">Hội đồng:</span> <strong id="summaryCouncilName" class="text-purple-900 text-sm"></strong></div>
+                                <div><span class="text-slate-500">Đợt áp dụng:</span> <span id="summaryCouncilPeriod" class="badge bg-purple-100 text-purple-800 font-medium"></span></div>
+                            </div>
+                            <div class="text-slate-600 pt-1.5 border-t border-purple-200/60">
+                                <i class="fa-solid fa-users-gear text-purple-600 me-1"></i> Thành viên: <span id="summaryCouncilMembers" class="font-semibold text-slate-800"></span>
+                            </div>
+                        </div>
+
+                        <!-- Conflict Warning Banner -->
+                        <div class="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 d-flex align-items-center gap-2 mb-3">
+                            <i class="fa-solid fa-shield-halved text-amber-600 flex-shrink-0"></i>
+                            <span>Hệ thống tự động khóa và đánh dấu các đề tài có Giảng viên hướng dẫn (chính/phụ) nằm trong Hội đồng này để đảm bảo tính khách quan theo Quy chế.</span>
+                        </div>
+
+                        <!-- Toolbar -->
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2.5">
+                            <div class="relative flex-grow-1" style="max-width: 320px;">
+                                <input type="text" id="wizardTopicSearch" class="form-control form-control-sm rounded-xl pl-8 text-xs" placeholder="Lọc nhanh đề tài, nhóm SV, GV..." onkeyup="filterWizardTopics(this.value)">
+                                <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs"></i>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-xs btn-outline-purple rounded-lg px-2.5 py-1 text-2xs font-semibold" onclick="selectAllValidWizardTopics()">
+                                    <i class="fa-solid fa-check-double me-1"></i> Chọn tất cả hợp lệ
+                                </button>
+                                <button type="button" class="btn btn-xs btn-light border rounded-lg px-2.5 py-1 text-2xs font-semibold text-slate-600" onclick="deselectAllWizardTopics()">
+                                    Bỏ chọn
+                                </button>
+                                <span id="wizardSelectedCount" class="badge bg-purple-100 text-purple-800 font-mono text-2xs px-2.5 py-1 rounded-md">Đã chọn: 0 đề tài</span>
+                            </div>
+                        </div>
+
+                        <!-- Topics List -->
+                        <div class="border border-slate-200 rounded-xl overflow-y-auto p-2 space-y-2 bg-slate-50/50" style="max-height: 320px;">
+                            <th:block th:each="at : ${allApprovedTopics}">
+                                <div class="wizard-topic-item p-3 rounded-xl border bg-white border-slate-200 transition d-flex align-items-start gap-3"
+                                     th:data-topic-id="${at.id}"
+                                     th:data-period-id="${at.period != null ? at.period.id : ''}"
+                                     th:data-supervisor-id="${at.supervisor != null ? at.supervisor.id : ''}"
+                                     th:data-cosupervisor-id="${at.coSupervisor != null ? at.coSupervisor.id : ''}">
+                                    <input type="checkbox" name="selectedTopicIds" th:value="${at.id}" th:id="'wizard-topic-' + ${at.id}"
+                                           class="form-check-input wizard-topic-check mt-1 flex-shrink-0" onchange="updateWizardSelectedCount()">
+                                    <label th:for="'wizard-topic-' + ${at.id}" class="flex-grow-1 cursor-pointer mb-0">
+                                        <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="badge bg-slate-100 text-slate-800 font-mono text-2xs font-bold px-2 py-0.5 rounded" th:text="${at.code}">DT-01</span>
+                                                <span class="font-bold text-slate-900 text-xs" th:text="${at.title}">Tên đề tài</span>
+                                            </div>
+                                            <!-- Status badges: Conflict vs Valid -->
+                                            <span class="wizard-conflict-badge badge bg-rose-100 text-rose-700 border border-rose-200 text-2xs px-2 py-0.5 rounded font-semibold d-none">
+                                                <i class="fa-solid fa-ban me-1"></i> Xung đột GVHD
+                                            </span>
+                                            <span class="wizard-valid-badge badge bg-emerald-100 text-emerald-700 border border-emerald-200 text-2xs px-2 py-0.5 rounded font-semibold">
+                                                <i class="fa-solid fa-check me-1"></i> Hợp lệ
+                                            </span>
+                                        </div>
+                                        <div class="text-2xs text-slate-600 d-flex flex-wrap align-items-center gap-2">
+                                            <span>GVHD: <strong class="text-slate-800" th:text="${at.supervisor != null && at.supervisor.user != null ? at.supervisor.user.fullName : 'N/A'}"></strong></span>
+                                            <span th:if="${at.coSupervisor != null && at.coSupervisor.user != null}">
+                                                | Đồng HD: <strong class="text-slate-800" th:text="${at.coSupervisor.user.fullName}"></strong>
+                                            </span>
+                                            <span th:if="${approvedTopicsGroupsMap != null && approvedTopicsGroupsMap.get(at.id) != null}" class="text-blue-700 font-medium">
+                                                | <i class="fa-solid fa-users me-0.5"></i> <span th:text="${approvedTopicsGroupsMap.get(at.id).groupName + ' (' + approvedTopicsGroupsMap.get(at.id).memberCount + ' SV)'}"></span>
+                                            </span>
+                                            <span th:if="${at.council != null}" class="text-amber-700">
+                                                | (Đang thuộc HĐ: <span th:text="${at.council.name}"></span>)
+                                            </span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </th:block>
+                            <div th:if="${allApprovedTopics == null || #lists.isEmpty(allApprovedTopics)}" class="p-4 text-center text-xs text-slate-400">
+                                Chưa có đề tài đã duyệt nào trong Khoa để phân công.
+                            </div>
+                        </div>
+
+                        <!-- Step 2 Footer Buttons -->
+                        <div class="d-flex justify-content-between align-items-center pt-4 mt-3 border-t border-slate-100">
+                            <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs d-inline-flex align-items-center gap-1.5" onclick="goToCouncilStep1()">
+                                <i class="fa-solid fa-arrow-left text-xs"></i> <span>Quay lại Bước 1</span>
+                            </button>
+                            <button type="submit" class="btn btn-sm bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-4 py-2 text-xs font-semibold shadow-sm transition d-inline-flex align-items-center gap-1.5">
+                                <i class="fa-solid fa-circle-check text-xs"></i> <span>Hoàn tất & Thành lập Hội đồng</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Fragment -->
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+
+    <!-- 2-Step Council Wizard Script -->
+    <script>
+        function goToCouncilStep2() {
+            const nameInput = document.getElementById('field-council-name');
+            if (!nameInput.value || !nameInput.value.trim()) {
+                alert('Vui lòng nhập Tên Hội đồng!');
+                nameInput.focus();
+                return;
+            }
+            const presidentSelect = document.getElementById('field-council-president');
+            const secretarySelect = document.getElementById('field-council-secretary');
+            const member1Select = document.getElementById('field-council-member1');
+            const member2Select = document.getElementById('field-council-member2');
+            const member3Select = document.getElementById('field-council-member3');
+            const periodSelect = document.getElementById('field-council-period');
+
+            if (!presidentSelect.value) {
+                alert('Vui lòng chọn Chủ tịch Hội đồng!');
+                presidentSelect.focus();
+                return;
+            }
+            if (!secretarySelect.value) {
+                alert('Vui lòng chọn Thư ký Hội đồng!');
+                secretarySelect.focus();
+                return;
+            }
+            if (!member1Select.value) {
+                alert('Vui lòng chọn ít nhất Ủy viên 1!');
+                member1Select.focus();
+                return;
+            }
+
+            const lecturerIds = [];
+            const lecturerNames = [];
+            
+            function addLecturer(sel, roleName) {
+                if (sel && sel.value) {
+                    lecturerIds.push(sel.value);
+                    const text = sel.options[sel.selectedIndex].text.split('(')[0].trim();
+                    lecturerNames.push(text + ' (' + roleName + ')');
+                }
+            }
+
+            addLecturer(presidentSelect, 'Chủ tịch');
+            addLecturer(secretarySelect, 'Thư ký');
+            addLecturer(member1Select, 'Ủy viên 1');
+            if (member2Select && member2Select.value) addLecturer(member2Select, 'Ủy viên 2');
+            if (member3Select && member3Select.value) addLecturer(member3Select, 'Ủy viên 3');
+
+            // Check duplicate lecturers
+            const uniqueIds = new Set(lecturerIds);
+            if (uniqueIds.size !== lecturerIds.length) {
+                alert('Một giảng viên không thể đảm nhiệm nhiều vị trí trong cùng một Hội đồng!');
+                return;
+            }
+
+            // Populate summary banner
+            document.getElementById('summaryCouncilName').textContent = nameInput.value.trim();
+            document.getElementById('summaryCouncilPeriod').textContent = (periodSelect && periodSelect.selectedIndex > 0) ? periodSelect.options[periodSelect.selectedIndex].text : 'Tất cả các đợt';
+            document.getElementById('summaryCouncilMembers').textContent = lecturerNames.join(', ');
+
+            // Filter & validate conflict of interest for topics in Step 2
+            const selectedPeriodId = periodSelect ? periodSelect.value : '';
+            const topicItems = document.querySelectorAll('.wizard-topic-item');
+
+            topicItems.forEach(item => {
+                const itemPeriod = item.getAttribute('data-period-id');
+                const supId = item.getAttribute('data-supervisor-id');
+                const coSupId = item.getAttribute('data-cosupervisor-id');
+                const checkbox = item.querySelector('.wizard-topic-check');
+                const conflictBadge = item.querySelector('.wizard-conflict-badge');
+                const validBadge = item.querySelector('.wizard-valid-badge');
+
+                // Check period match
+                const periodMatch = !selectedPeriodId || itemPeriod === selectedPeriodId;
+                if (!periodMatch) {
+                    item.classList.add('d-none');
+                    checkbox.checked = false;
+                    checkbox.disabled = true;
+                    return;
+                }
+
+                item.classList.remove('d-none');
+
+                // Check conflict: GVHD is in council members
+                const isConflict = (supId && uniqueIds.has(supId)) || (coSupId && uniqueIds.has(coSupId));
+                if (isConflict) {
+                    checkbox.checked = false;
+                    checkbox.disabled = true;
+                    item.classList.add('bg-rose-50/50', 'border-rose-200');
+                    item.classList.remove('bg-white', 'border-slate-200');
+                    conflictBadge.classList.remove('d-none');
+                    validBadge.classList.add('d-none');
+                } else {
+                    checkbox.disabled = false;
+                    item.classList.remove('bg-rose-50/50', 'border-rose-200');
+                    item.classList.add('bg-white', 'border-slate-200');
+                    conflictBadge.classList.add('d-none');
+                    validBadge.classList.remove('d-none');
+                }
+            });
+
+            updateWizardSelectedCount();
+
+            // Switch view to Step 2
+            document.getElementById('wizardStep1').classList.add('d-none');
+            document.getElementById('wizardStep2').classList.remove('d-none');
+
+            // Update stepper UI
+            const step1Pill = document.getElementById('stepperPill1');
+            step1Pill.className = 'd-flex align-items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200';
+            document.getElementById('stepperPill1Icon').className = 'fa-solid fa-circle-check text-emerald-600';
+
+            const step2Pill = document.getElementById('stepperPill2');
+            step2Pill.className = 'd-flex align-items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-300 shadow-2xs';
+            document.getElementById('stepperPill2Icon').className = 'fa-solid fa-2 text-purple-600';
+        }
+
+        function goToCouncilStep1() {
+            document.getElementById('wizardStep2').classList.add('d-none');
+            document.getElementById('wizardStep1').classList.remove('d-none');
+
+            const step1Pill = document.getElementById('stepperPill1');
+            step1Pill.className = 'd-flex align-items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs';
+            document.getElementById('stepperPill1Icon').className = 'fa-solid fa-1 text-blue-600';
+
+            const step2Pill = document.getElementById('stepperPill2');
+            step2Pill.className = 'd-flex align-items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-slate-400 border border-slate-200';
+            document.getElementById('stepperPill2Icon').className = 'fa-solid fa-2 text-slate-400';
+        }
+
+        function updateWizardSelectedCount() {
+            const checked = document.querySelectorAll('.wizard-topic-check:checked');
+            const badge = document.getElementById('wizardSelectedCount');
+            if (badge) {
+                badge.textContent = 'Đã chọn: ' + checked.length + ' đề tài';
+            }
+        }
+
+        function selectAllValidWizardTopics() {
+            document.querySelectorAll('.wizard-topic-item:not(.d-none) .wizard-topic-check:not(:disabled)').forEach(cb => {
+                cb.checked = true;
+            });
+            updateWizardSelectedCount();
+        }
+
+        function deselectAllWizardTopics() {
+            document.querySelectorAll('.wizard-topic-check').forEach(cb => {
+                cb.checked = false;
+            });
+            updateWizardSelectedCount();
+        }
+
+        function filterWizardTopics(keyword) {
+            const kw = (keyword || '').toLowerCase().trim();
+            const periodSelect = document.getElementById('field-council-period');
+            const selectedPeriodId = periodSelect ? periodSelect.value : '';
+
+            document.querySelectorAll('.wizard-topic-item').forEach(item => {
+                const itemPeriod = item.getAttribute('data-period-id');
+                const text = item.textContent.toLowerCase();
+                const periodMatch = !selectedPeriodId || itemPeriod === selectedPeriodId;
+                const kwMatch = !kw || text.includes(kw);
+
+                if (periodMatch && kwMatch) {
+                    item.classList.remove('d-none');
+                } else {
+                    item.classList.add('d-none');
+                }
+            });
+        }
+
+        // Real-time mutual exclusion for council members dropdowns
+        function syncCouncilLecturerOptions() {
+            const selects = [
+                document.getElementById('field-council-president'),
+                document.getElementById('field-council-secretary'),
+                document.getElementById('field-council-member1'),
+                document.getElementById('field-council-member2'),
+                document.getElementById('field-council-member3')
+            ].filter(Boolean);
+
+            const selectedValues = new Set(
+                selects.map(s => s.value).filter(val => val && val.trim() !== '')
+            );
+
+            selects.forEach(currentSelect => {
+                const currentValue = currentSelect.value;
+                Array.from(currentSelect.options).forEach(opt => {
+                    if (!opt.value) return; // skip placeholder option
+                    if (opt.value !== currentValue && selectedValues.has(opt.value)) {
+                        opt.hidden = true;
+                        opt.disabled = true;
+                        opt.style.display = 'none';
+                    } else {
+                        opt.hidden = false;
+                        opt.disabled = false;
+                        opt.style.display = '';
+                    }
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const councilSelectIds = [
+                'field-council-president',
+                'field-council-secretary',
+                'field-council-member1',
+                'field-council-member2',
+                'field-council-member3'
+            ];
+            councilSelectIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('change', syncCouncilLecturerOptions);
+                }
+            });
+
+            const createCouncilModalEl = document.getElementById('createCouncilModal');
+            if (createCouncilModalEl) {
+                createCouncilModalEl.addEventListener('show.bs.modal', function() {
+                    syncCouncilLecturerOptions();
+                });
+                createCouncilModalEl.addEventListener('hidden.bs.modal', function() {
+                    goToCouncilStep1();
+                    const form = document.getElementById('councilWizardForm');
+                    if (form) form.reset();
+                    syncCouncilLecturerOptions();
+                });
+            }
+        });
+    </script>
+</body>
+</html>

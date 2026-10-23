@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:replace="~{fragments/head :: head('Bảng Tin & Thông Báo')}"></head>
+<body class="workspace-page">
+
+    <!-- Left Sidebar -->
+    <aside th:replace="~{fragments/sidebar :: sidebar('announcements', ${user})}"></aside>
+
+    <!-- Main Wrapper -->
+    <div class="saas-main-wrapper">
+        <!-- Topbar -->
+        <header th:replace="~{fragments/topbar :: topbar('Bảng tin Thông báo', ${user != null && user.role != null ? user.role.name : 'Trưởng Khoa'}, '/department-head/dashboard', ${user})}"></header>
+
+        <!-- Main Content View -->
+        <main class="saas-content">
+
+            <!-- Flash Messages -->
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                <span th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+            </div>
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-emerald-200" role="alert">
+                <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;"></button>
+            </div>
+
+            <!-- Page Header & Action Bar -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900 mb-0">Bảng Tin & Thông Báo Toàn Khoa</h1>
+                    <p class="text-xs text-slate-500 mb-0">Xem và quản lý các thông báo quan trọng gửi đến Giảng viên và Sinh viên.</p>
+                </div>
+                <button class="btn btn-sm btn-dark rounded-xl px-3.5 py-2 text-xs font-semibold shadow-sm d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#createAnnouncementModal">
+                    <i class="fa-solid fa-bullhorn text-xs"></i> Đăng thông báo mới
+                </button>
+            </div>
+
+            <!-- In-Page Search & Category Filter Toolbar -->
+            <div class="p-2.5 bg-white border border-slate-200/80 rounded-2xl shadow-xs mb-3">
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-2.5">
+                    <!-- Left: Quick Filter Category Pills -->
+                    <div class="d-flex flex-wrap align-items-center gap-1.5" id="announcementCategoryFilters">
+                        <button type="button" class="btn btn-xs rounded-xl px-3 py-1.5 text-xs font-semibold category-filter-btn active"
+                                onclick="filterAnnouncementsByCategory('ALL', this)">
+                            <i class="fa-solid fa-list-check me-1"></i> Tất cả
+                        </button>
+                        <button type="button" class="btn btn-xs rounded-xl px-3 py-1.5 text-xs font-semibold category-filter-btn"
+                                onclick="filterAnnouncementsByCategory('GENERAL', this)">
+                            <i class="fa-solid fa-bullhorn text-blue-500 me-1"></i> Chung
+                        </button>
+                        <button type="button" class="btn btn-xs rounded-xl px-3 py-1.5 text-xs font-semibold category-filter-btn"
+                                onclick="filterAnnouncementsByCategory('PERIOD', this)">
+                            <i class="fa-regular fa-calendar-check text-indigo-500 me-1"></i> Kế hoạch đợt
+                        </button>
+                        <button type="button" class="btn btn-xs rounded-xl px-3 py-1.5 text-xs font-semibold category-filter-btn"
+                                onclick="filterAnnouncementsByCategory('SCHEDULE', this)">
+                            <i class="fa-solid fa-users-rectangle text-purple-500 me-1"></i> Lịch bảo vệ
+                        </button>
+                        <button type="button" class="btn btn-xs rounded-xl px-3 py-1.5 text-xs font-semibold category-filter-btn"
+                                onclick="filterAnnouncementsByCategory('URGENT', this)">
+                            <i class="fa-solid fa-triangle-exclamation text-rose-500 me-1"></i> Khẩn cấp
+                        </button>
+                    </div>
+
+                    <!-- Right: Search Input & Dynamic Counter Badge -->
+                    <div class="d-flex align-items-center gap-2 flex-grow-1 justify-content-lg-end">
+                        <div class="relative flex-grow-1" style="max-width: 360px;">
+                            <input type="text" class="form-control form-control-sm rounded-xl pl-8 text-xs bg-slate-50 focus:bg-white" 
+                                   id="announcementSearchInput"
+                                   placeholder="Tìm kiếm thông báo theo tiêu đề, người đăng, nội dung..." 
+                                   onkeyup="applyAnnouncementFilters()"
+                                   title="Tìm kiếm thông báo theo tiêu đề, người đăng, nội dung..." aria-label="Tìm kiếm thông báo theo tiêu đề, người đăng, nội dung...">
+                            <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none"></i>
+                        </div>
+                        <span id="announcementCountBadge" class="badge-pill-neutral font-medium text-xs whitespace-nowrap"
+                              th:text="'Tổng: ' + (${announcements != null ? announcements.size() : 0}) + ' thông báo'"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Announcement Cards Grid -->
+            <div class="row g-3 mb-4" id="announcementsContainer">
+                <div th:if="${announcements == null || #lists.isEmpty(announcements)}" class="col-12" id="emptyAnnouncementMsg">
+                    <div class="saas-card text-center py-5 text-muted text-xs">
+                        <i class="fa-regular fa-newspaper text-3xl mb-2 d-block text-slate-300"></i>
+                        Chưa có thông báo nào được đăng tải. Hãy nhấn <strong>Đăng thông báo mới</strong>.
+                    </div>
+                </div>
+
+                <div th:each="a : ${announcements}" class="col-12 announcement-item-wrapper"
+                     th:data-category-code="${a.category != null ? a.category : 'GENERAL'}">
+                    <div class="saas-card p-4 position-relative cursor-pointer hover:border-slate-300 transition" 
+                         th:classappend="${a.isPinned ? 'border-amber-300 bg-amber-50/10' : ''}"
+                         onclick="showAnnouncementDetail(this)"
+                         th:data-announcement-id="${a.id}"
+                         th:data-title="${a.title}"
+                         th:data-category="${a.getCategoryName()}"
+                         th:data-author="${a.author != null ? a.author.fullName : 'Ban chủ nhiệm Khoa'}"
+                         th:data-created-at="${#temporals.format(a.createdAt, 'dd/MM/yyyy HH:mm')}"
+                         th:data-period-id="${a.period != null ? a.period.id : ''}"
+                         th:data-period="${a.period != null ? a.period.name : ''}"
+                         th:data-content="${a.content}">
+                        <div class="d-flex align-items-center justify-content-between gap-3 mb-2.5 flex-wrap">
+                            <!-- Left: badges + title -->
+                            <div class="d-flex align-items-center gap-2 flex-wrap" style="min-width:0; flex:1 1 0;">
+                                <span th:if="${a.isPinned}" class="badge-pill-pending font-bold flex-shrink-0 d-inline-flex align-items-center gap-1">
+                                    <i class="fa-solid fa-thumbtack text-amber-500"></i> Đã ghim
+                                </span>
+                                <span class="badge bg-slate-100 text-slate-700 border border-slate-200/90 rounded-full px-2.5 py-0.5 text-2xs font-semibold flex-shrink-0" th:text="${a.getCategoryName()}">Kế hoạch đợt</span>
+                                <span th:if="${a.period != null}" class="badge bg-indigo-50 text-indigo-700 border border-indigo-200/90 rounded-full px-2.5 py-0.5 text-2xs font-bold flex-shrink-0 d-inline-flex align-items-center gap-1">
+                                    <i class="fa-regular fa-calendar-check text-indigo-500"></i>HK<span th:text="${a.period.semester}">1</span> (<span th:text="${a.period.academicYear}">2026-2027</span>)
+                                </span>
+                                <h2 class="text-sm font-bold text-slate-900 mb-0 ms-1 hover:text-blue-600 transition text-truncate" style="min-width:0;" th:text="${a.title}">Thông báo nộp báo cáo tiến độ</h2>
+                            </div>
+                            <!-- Right: Actions (Toggle Pin & Delete) + Timestamp -->
+                            <div class="d-flex align-items-center gap-2 flex-shrink-0" onclick="event.stopPropagation();">
+                                <form th:action="@{/department-head/announcements/{id}/toggle-pin(id=${a.id})}" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-xs rounded-lg px-2.5 py-1 text-2xs font-semibold transition d-inline-flex align-items-center gap-1.5 shadow-none"
+                                            th:classappend="${a.isPinned ? 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}"
+                                            th:title="${a.isPinned ? 'Bấm để BỎ GHIM thông báo' : 'Bấm để GHIM thông báo lên đầu'}">
+                                        <i class="fa-solid text-[10px]" th:classappend="${a.isPinned ? 'fa-thumbtack-slash text-amber-700' : 'fa-thumbtack text-slate-500'}"></i>
+                                        <span th:text="${a.isPinned ? 'Bỏ ghim' : 'Ghim'}">Ghim</span>
+                                    </button>
+                                </form>
+                                <form th:action="@{/department-head/announcements/{id}/delete(id=${a.id})}" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa thông báo này?');">
+                                    <button type="submit" class="btn btn-xs rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200/90 hover:border-rose-200 transition d-inline-flex align-items-center justify-content-center shadow-none" 
+                                            style="width: 26px; height: 26px; padding: 0;" title="Xóa thông báo">
+                                        <i class="fa-regular fa-trash-can text-xs"></i>
+                                    </button>
+                                </form>
+                                <span class="badge bg-slate-50 text-slate-500 border border-slate-200/80 rounded-full px-2.5 py-1 text-2xs font-medium d-none d-sm-inline-flex align-items-center gap-1 ms-1">
+                                    <i class="fa-regular fa-clock text-slate-400"></i>
+                                    <span th:text="${#temporals.format(a.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-600 leading-relaxed my-2.5 line-clamp-3" th:text="${a.content}">Nội dung chi tiết thông báo...</div>
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top border-slate-200/90 text-xs">
+                            <span class="text-slate-500 d-inline-flex align-items-center gap-1.5">
+                                <i class="fa-solid fa-user-pen text-slate-400"></i> Người đăng: <strong class="text-slate-800" th:text="${a.author != null ? a.author.fullName : 'Ban chủ nhiệm Khoa'}">Trưởng khoa</strong>
+                            </span>
+                            <span th:if="${a.period != null}" class="badge bg-blue-50 text-blue-700 border border-blue-200/90 rounded-lg px-2.5 py-1 font-semibold text-xs d-inline-flex align-items-center gap-1.5">
+                                <i class="fa-solid fa-bookmark text-blue-500"></i> Đợt: <span th:text="${a.period.name}"></span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal Create Announcement -->
+    <div class="modal fade" id="createAnnouncementModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content rounded-2xl border-0 shadow-xl">
+                <form th:action="@{/department-head/announcements/create}" method="post">
+                    <div class="modal-header border-b border-slate-100 p-4">
+                        <h6 class="modal-title font-bold text-slate-900 text-sm"><i class="fa-solid fa-bullhorn text-blue-600 me-1.5"></i> Đăng Bảng Tin & Thông Báo Mới</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4 space-y-3">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-announcements-1">Tiêu đề thông báo *</label>
+                                <input type="text" name="title" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Kế hoạch Đăng ký Khóa Luận Tốt Nghiệp HK1 (2026-2027)" required aria-label="Tiêu đề thông báo" title="Tiêu đề thông báo" id="field-department-head-announcements-1">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-announcements-2">Chủ đề phân loại</label>
+                                <select name="category" class="form-select text-xs rounded-xl" aria-label="Chủ đề phân loại" title="Chủ đề phân loại" id="field-department-head-announcements-2">
+                                    <option value="GENERAL">Thông báo chung</option>
+                                    <option value="PERIOD">Kế hoạch đợt đăng ký</option>
+                                    <option value="SCHEDULE">Lịch bảo vệ hội đồng</option>
+                                    <option value="URGENT">Khẩn cấp</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-announcements-3">Gắn với Đợt đăng ký (nếu có)</label>
+                                <select name="periodId" class="form-select text-xs rounded-xl" aria-label="Gắn với Đợt đăng ký (nếu có)" title="Gắn với Đợt đăng ký (nếu có)" id="field-department-head-announcements-3">
+                                    <option value="">-- Không gắn đợt cụ thể --</option>
+                                    <option th:each="p : ${periods}" th:value="${p.id}" th:text="${p.name}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-announcements-4">Nội dung chi tiết *</label>
+                                <textarea name="content" class="form-control text-xs rounded-xl" rows="6" placeholder="Nhập nội dung thông báo, các lưu ý, quy định cho Giảng viên & Sinh viên..." required aria-label="Nội dung chi tiết" title="Nội dung chi tiết" id="field-department-head-announcements-4"></textarea>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="isPinned" id="isPinned" value="true" aria-label="Ghim thông báo này lên đầu bảng tin" title="Ghim thông báo này lên đầu bảng tin">
+                                    <label class="form-check-label text-xs font-semibold text-slate-700" for="isPinned">
+                                        <i class="fa-solid fa-thumbtack text-amber-500 me-1"></i> Ghim thông báo này lên đầu bảng tin
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-t border-slate-100 p-3">
+                        <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">Đăng thông báo</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Fragment -->
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+
+    <style>
+        .category-filter-btn {
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #475569;
+            transition: all 0.15s ease;
+        }
+        .category-filter-btn:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+        .category-filter-btn.active {
+            background: #0f172a !important;
+            color: #ffffff !important;
+            border-color: #0f172a !important;
+        }
+    </style>
+
+    <script>
+        let currentAnnouncementCategory = 'ALL';
+
+        function filterAnnouncementsByCategory(category, btn) {
+            currentAnnouncementCategory = category;
+            document.querySelectorAll('.category-filter-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            applyAnnouncementFilters();
+        }
+
+        function applyAnnouncementFilters() {
+            const searchInput = document.getElementById('announcementSearchInput');
+            const q = (searchInput ? searchInput.value : '').toLowerCase().trim();
+            const items = document.querySelectorAll('.announcement-item-wrapper');
+            let visibleCount = 0;
+
+            items.forEach(card => {
+                const itemCategory = (card.getAttribute('data-category-code') || 'GENERAL').toUpperCase();
+                const text = card.textContent.toLowerCase();
+                
+                const matchCategory = (currentAnnouncementCategory === 'ALL' || itemCategory === currentAnnouncementCategory);
+                const matchKeyword = !q || text.includes(q);
+
+                const isVisible = matchCategory && matchKeyword;
+                card.style.display = isVisible ? '' : 'none';
+                if (isVisible) visibleCount++;
+            });
+
+            const badge = document.getElementById('announcementCountBadge');
+            if (badge) {
+                badge.textContent = 'Hiển thị: ' + visibleCount + ' thông báo';
+            }
+
+            const emptyMsg = document.getElementById('emptyAnnouncementMsg');
+            if (emptyMsg) {
+                emptyMsg.style.display = (visibleCount === 0 && items.length > 0) ? 'block' : '';
+            }
+        }
+    </script>
+</body>
+</html>

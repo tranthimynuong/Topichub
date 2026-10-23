@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
+<head th:replace="~{fragments/head :: head('Hội Đồng Chấm Điểm')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
+
+<body class="workspace-page">
+
+    <!-- Left Sidebar -->
+    <aside th:replace="~{fragments/sidebar :: sidebar('councils', ${user})}"></aside>
+
+    <!-- Main Wrapper -->
+    <div class="saas-main-wrapper">
+        <!-- Topbar -->
+        <header
+            th:replace="~{fragments/topbar :: topbar('Hội Đồng Chấm Điểm', 'Giảng Viên', '/lecturer/dashboard', ${user})}">
+        </header>
+
+        <!-- Main Content View -->
+        <main class="saas-content">
+
+            <!-- Flash Messages -->
+            <div th:if="${successMessage}"
+                class="alert alert-success alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-emerald-200"
+                role="alert">
+                <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span
+                    th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
+            </div>
+            <div th:if="${errorMessage}"
+                class="alert alert-danger alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-rose-200"
+                role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-1.5 text-rose-600"></i> <span
+                    th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
+            </div>
+
+            <!-- Page Header -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900 mb-1">Hội Đồng Đánh Giá & Chấm Điểm</h1>
+                    <p class="text-xs text-slate-500 mb-0">Chấm điểm các đề tài được phân công trong hội đồng của bạn.
+                        <span class="text-rose-600 font-semibold"><i class="fa-solid fa-shield-halved me-1"></i>Quy
+                            định: Giảng viên không được chấm điểm đề tài do chính mình hướng dẫn.</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Universal 1-Row Toolbar -->
+            <div class="saas-card p-3 mb-4 workspace-filterbar">
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                    <div class="search-box-wrapper flex-grow-1 max-w-md">
+                        <i class="fa-solid fa-magnifying-glass search-box-icon text-slate-400"></i>
+                        <input type="text" class="form-control form-control-sm rounded-xl text-xs"
+                            placeholder="Tìm kiếm hội đồng, đề tài bảo vệ..."
+                            onkeyup="filterTableByKeyword(this.value)" title="Tìm kiếm hội đồng, đề tài bảo vệ..." aria-label="Tìm kiếm hội đồng, đề tài bảo vệ...">
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <select class="form-select form-select-sm rounded-xl text-xs" style="width: 200px;"
+                            onchange="filterTableByAttribute('period', this.value)" title="Lựa chọn" aria-label="Lựa chọn">
+                            <option value="all">-- Tất cả các đợt --</option>
+                            <option th:each="p : ${periods}" th:value="${p.id}" th:text="${p.name}"></option>
+                        </select>
+                        <span id="filteredRowCount" class="badge-pill-neutral font-medium text-xs ms-1"
+                            th:text="'Tổng số: ' + (${councils != null ? councils.size() : 0}) + ' hội đồng'"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Councils List -->
+            <div class="space-y-4 mb-4">
+                <div th:if="${councils == null || #lists.isEmpty(councils)}"
+                    class="saas-card text-center py-5 text-muted text-xs">
+                    <i class="fa-solid fa-users-rectangle text-3xl mb-2 d-block text-slate-300"></i>
+                    Bạn chưa tham gia hội đồng bảo vệ nào trong đợt này.
+                </div>
+
+                <div th:each="c : ${councils}" class="saas-card p-4 filterable-row"
+                    th:data-period="${c.period != null ? c.period.id : 'all'}">
+                    <div class="d-flex justify-content-between align-items-start mb-3 pb-3 border-b border-slate-100">
+                        <div>
+                            <span
+                                class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold mb-1 d-inline-block"
+                                th:text="${c.code != null ? c.code : 'HD-' + c.id}">HD-01</span>
+                            <h2 class="text-base font-bold text-slate-900 mb-1" th:text="${c.name}">Hội đồng Khóa luận
+                                01</h2>
+                            <p class="text-xs text-slate-500 mb-0">
+                                <i class="fa-regular fa-calendar me-1"></i> <span
+                                    th:text="${c.defenseDate != null ? #temporals.format(c.defenseDate, 'dd/MM/yyyy HH:mm') : 'Chưa xếp lịch'}"></span>
+                                |
+                                <i class="fa-solid fa-location-dot me-1"></i> <span
+                                    th:text="${c.location != null ? c.location : 'Phòng bảo vệ Khoa'}"></span>
+                            </p>
+                        </div>
+                        <span class="badge-pill-approved" th:text="${c.status != null ? c.status : 'ACTIVE'}">HOẠT
+                            ĐỘNG</span>
+                    </div>
+
+                    <!-- Council Members Info Chips -->
+                    <div th:if="${c.members != null && !#lists.isEmpty(c.members)}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-2.5 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                        <span class="text-slate-500 font-semibold me-1"><i class="fa-solid fa-users me-1"></i>Thành viên:</span>
+                        <span th:each="m : ${c.members}" 
+                              class="badge px-2.5 py-1 rounded-lg border font-medium"
+                              th:classappend="${m.councilRole == 'PRESIDENT' ? 'bg-amber-50 text-amber-800 border-amber-200' : (m.councilRole == 'SECRETARY' ? 'bg-blue-50 text-blue-800 border-blue-200' : 'bg-white text-slate-700 border-slate-200')}">
+                            <i th:if="${m.councilRole == 'PRESIDENT'}" class="fa-solid fa-crown text-amber-500 me-1"></i>
+                            <i th:if="${m.councilRole == 'SECRETARY'}" class="fa-solid fa-feather text-blue-500 me-1"></i>
+                            <i th:if="${m.councilRole == 'MEMBER' || m.councilRole == null}" class="fa-solid fa-user text-slate-400 me-1"></i>
+                            <span th:text="${m.lecturer != null && m.lecturer.user != null ? m.lecturer.user.fullName : 'Chưa rõ'}"></span>
+                            <span class="text-slate-400 ms-1 font-normal" th:text="'(' + ${m.roleName} + ')'"></span>
+                        </span>
+                    </div>
+
+                    <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
+                        Danh sách đề tài phân công bảo vệ tại Hội đồng này:
+                    </h3>
+
+                    <div class="table-responsive">
+                        <table class="table table-saas mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 35%;" scope="col">Mã & Tên đề tài</th>
+                                    <th style="width: 25%;" scope="col">GV Hướng dẫn</th>
+                                    <th style="width: 20%;" scope="col">Trạng thái chấm</th>
+                                    <th style="width: 20%;" class="text-end" scope="col">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <th:block
+                                    th:with="topics=${councilTopicsMap != null ? councilTopicsMap.get(c.id) : null}">
+                                    <tr th:if="${topics == null || #lists.isEmpty(topics)}">
+                                        <td colspan="4" class="text-center py-4 text-slate-400 text-xs">
+                                            Chưa có đề tài nào được phân công vào hội đồng này.
+                                        </td>
+                                    </tr>
+                                    <tr th:each="t : ${topics}">
+                                        <td>
+                                            <div class="font-semibold text-slate-900 text-xs line-clamp-1"
+                                                th:text="${t.title}">Ứng dụng AI phân tích dữ liệu thị trường</div>
+                                            <span class="text-slate-400 text-xs font-mono"
+                                                th:text="${t.code}">DT-001</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-slate-800 font-medium text-xs"
+                                                th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa rõ'}">TS.
+                                                Trần Thị B</span>
+                                            <span th:if="${t.coSupervisor != null && t.coSupervisor.user != null}"
+                                                class="text-slate-400 text-xs d-block"
+                                                th:text="'Phụ: ' + ${t.coSupervisor.user.fullName}"></span>
+                                        </td>
+                                        <td>
+                                            <!-- Check if current lecturer is supervisor or co-supervisor -->
+                                            <span th:if="${t.isSupervisorOrCoSupervisor(lecturer)}"
+                                                class="badge-pill-rejected font-semibold text-xs">
+                                                <i class="fa-solid fa-lock me-1"></i> Khóa: GVHD
+                                            </span>
+                                            <th:block th:unless="${t.isSupervisorOrCoSupervisor(lecturer)}">
+                                                <span th:if="${existingEvaluationsMap != null && existingEvaluationsMap.containsKey(t.id)}"
+                                                    class="badge-pill-approved font-semibold text-xs">
+                                                    <i class="fa-solid fa-circle-check me-1"></i> Đã chấm: <span th:text="${existingEvaluationsMap.get(t.id).score}">9.0</span> đ
+                                                </span>
+                                                <span th:unless="${existingEvaluationsMap != null && existingEvaluationsMap.containsKey(t.id)}"
+                                                    class="badge-pill-neutral font-semibold text-xs">
+                                                    <i class="fa-solid fa-hourglass-half me-1"></i> Chưa chấm
+                                                </span>
+                                            </th:block>
+                                        </td>
+                                        <td class="text-end">
+                                            <th:block th:if="${t.isFinalized}">
+                                                <span class="badge-pill-approved font-semibold text-xs" title="Đã công bố kết quả điểm chính thức - Khóa sửa điểm">
+                                                    <i class="fa-solid fa-lock me-1"></i>Đã công bố (Khóa điểm)
+                                                </span>
+                                            </th:block>
+                                            <th:block th:unless="${t.isFinalized}">
+                                                <button th:if="${!t.isSupervisorOrCoSupervisor(lecturer)}"
+                                                    class="btn btn-sm rounded-xl px-3 py-1 text-xs font-semibold"
+                                                    th:classappend="${existingEvaluationsMap != null && existingEvaluationsMap.containsKey(t.id) ? 'btn-outline-primary' : 'btn-dark'}"
+                                                    data-bs-toggle="modal"
+                                                    th:data-bs-target="'#gradeCouncilModal-' + ${t.id}">
+                                                    <i th:if="${existingEvaluationsMap != null && existingEvaluationsMap.containsKey(t.id)}" class="fa-solid fa-pen-to-square me-1"></i>
+                                                    <i th:unless="${existingEvaluationsMap != null && existingEvaluationsMap.containsKey(t.id)}" class="fa-solid fa-star me-1 text-amber-400"></i>
+                                                    <span th:text="${existingEvaluationsMap != null && existingEvaluationsMap.containsKey(t.id) ? 'Sửa điểm' : 'Chấm điểm'}"></span>
+                                                </button>
+                                                <span th:if="${t.isSupervisorOrCoSupervisor(lecturer)}"
+                                                    class="text-slate-400 text-xs italic">
+                                                    Không có quyền chấm
+                                                </span>
+                                            </th:block>
+                                        </td>
+                                    </tr>
+                                </th:block>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modals for Topic Evaluations (outside saas-main-wrapper to prevent backdrop stacking bugs) -->
+    <th:block th:each="c : ${councils}">
+    <th:block th:each="t : ${councilTopicsMap != null ? councilTopicsMap.get(c.id) : null}">
+        <div class="modal fade text-start" th:id="'gradeCouncilModal-' + ${t.id}" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-2xl border-0 shadow-xl">
+                    <form th:action="@{/lecturer/councils/{topicId}/grade(topicId=${t.id})}" method="post">
+                        <div class="modal-header border-b border-slate-100 p-4">
+                            <h2 class="modal-title font-bold text-slate-900 text-sm">
+                                <i class="fa-solid fa-star text-amber-500 me-1.5"></i>
+                                Phiếu Chấm Điểm Hội Đồng Bảo Vệ
+                            </h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
+                        </div>
+                        <div class="modal-body p-4 space-y-3">
+                            <div th:if="${t.isFinalized}" class="alert alert-warning text-xs p-2.5 rounded-xl border border-amber-200">
+                                <i class="fa-solid fa-lock text-amber-600 me-1"></i> <strong>Đã công bố điểm:</strong> Đề tài đã công bố kết quả cho sinh viên. Vui lòng liên hệ Trưởng bộ môn/Khoa thu hồi công bố trước khi sửa điểm.
+                            </div>
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                                <span class="text-slate-400 d-block">Đề tài:</span>
+                                <strong class="text-slate-900" th:text="${t.title}"></strong>
+                            </div>
+                            <div>
+                                <label class="form-label text-xs font-semibold text-slate-700">Điểm đánh giá Hội đồng (Thang điểm 10) *</label>
+                                <input type="number" step="0.1" min="0" max="10" name="score" class="form-control text-xs rounded-xl" th:value="${existingEvaluationsMap != null && existingEvaluationsMap.containsKey(t.id) ? existingEvaluationsMap.get(t.id).score : ''}" th:disabled="${t.isFinalized}" placeholder="Ví dụ: 9.0" required title="Điểm đánh giá Hội đồng (Thang điểm 10)" aria-label="Điểm đánh giá Hội đồng (Thang điểm 10)">
+                            </div>
+                            <div>
+                                <label class="form-label text-xs font-semibold text-slate-700">Nhận xét & Đánh giá buổi bảo vệ *</label>
+                                <textarea name="comments" class="form-control text-xs rounded-xl" rows="4" placeholder="Nhận xét phần trình bày của nhóm, mức độ trả lời câu hỏi và sản phẩm thực tế..." th:text="${existingEvaluationsMap != null && existingEvaluationsMap.containsKey(t.id) ? existingEvaluationsMap.get(t.id).comments : ''}" th:disabled="${t.isFinalized}" required title="Nhận xét &amp; Đánh giá buổi bảo vệ" aria-label="Nhận xét &amp; Đánh giá buổi bảo vệ"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-t border-slate-100 p-3">
+                            <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" th:disabled="${t.isFinalized}" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">Lưu & Nộp phiếu điểm</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </th:block>
+    </th:block>
+
+    <!-- Scripts Fragment -->
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+</body>
+</html>

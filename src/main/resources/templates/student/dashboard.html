@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+    <head th:replace="~{fragments/head :: head('Bảng điều khiển Sinh viên')}">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>TopicHub</title>
+    </head>
+    <body class="dashboard-page workspace-page">
+        <a class="db-skip" href="#dashboard-main">Đến nội dung chính</a>
+        <!-- Left Sidebar -->
+        <aside th:replace="~{fragments/sidebar :: sidebar('dashboard', ${user})}"></aside>
+        <!-- Main Wrapper -->
+        <div class="saas-main-wrapper">
+            <!-- Topbar -->
+            <header th:replace="~{fragments/topbar :: topbar('Bảng điều khiển', 'Sinh viên', '/student/dashboard', ${user})}"></header>
+            <!-- Main Content View -->
+            <main class="saas-content" id="dashboard-main" tabindex="-1" th:with="hasTopic=${group != null &amp;&amp; group.topic != null}, published=${hasTopic &amp;&amp; group.topic.isFinalized == true}, approved=${group != null &amp;&amp; (group.status == 'APPROVED' || group.status == 'DEFENDING' || group.status == 'COMPLETED')}, hasReports=${submissions != null &amp;&amp; !submissions.isEmpty()}, isLeader=${group != null &amp;&amp; student != null &amp;&amp; group.isLeader(student)}">
+                <div th:if="${successMessage}" class="db-alert" role="status">
+                    <span>
+                        <i class="fa-solid fa-check me-2" aria-hidden="true"></i>
+                        <span th:text="${successMessage}"></span>
+                    </span>
+                </div>
+                <div th:if="${errorMessage}" class="db-alert" role="alert">
+                    <span>
+                        <i class="fa-solid fa-circle-exclamation me-2" aria-hidden="true"></i>
+                        <span th:text="${errorMessage}"></span>
+                    </span>
+                </div>
+                <header class="db-header">
+                    <div>
+                        <div class="db-eyebrow">Không gian sinh viên</div>
+                        <h1>Hành trình đề tài của bạn</h1>
+                        <p>Theo dõi nhóm, đề tài và báo cáo. Mỗi giai đoạn đều có một bước tiếp theo rõ ràng.</p>
+                    </div>
+                    <div class="db-actions">
+                        <a th:href="@{/student/group}" class="db-button">
+                            <span>Nhóm của tôi</span>
+                            <i class="fa-solid fa-users" aria-hidden="true"></i>
+                        </a>
+                        <a th:href="@{/student/topics}" class="db-button db-button-primary">
+                            <span>Khám phá đề tài</span>
+                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                </header>
+                <div class="db-alert" th:if="${myInvitations != null &amp;&amp; !myInvitations.isEmpty()}">
+                    <span>
+                        <i class="fa-regular fa-envelope me-2" aria-hidden="true"></i>Bạn có <strong th:text="${myInvitations.size()}"></strong> lời mời tham gia nhóm đang chờ phản hồi.</span>
+                    <a th:href="@{/student/group}" class="db-button">
+                        <span>Xem lời mời</span>
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <section class="db-panel db-focus" aria-label="Bước tiếp theo">
+                    <span class="db-tag">Bước tiếp theo</span>
+                    <div th:if="${group == null}">
+                        <h2>Bắt đầu cùng một nhóm.</h2>
+                        <p>Tạo nhóm hoặc gia nhập nhóm đã có trước khi đăng ký đề tài. Bạn có thể quản lý các lời mời tại trang nhóm.</p>
+                        <button type="button" class="db-button db-button-primary" data-bs-toggle="modal" data-bs-target="#modalQuickGroup">Tạo hoặc gia nhập nhóm<i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div th:if="${group != null &amp;&amp; !hasTopic}">
+                        <h2>Cùng nhóm chọn đề tài phù hợp.</h2>
+                        <p>Xem danh sách đề tài, đối chiếu yêu cầu và thống nhất lựa chọn với nhóm trưởng.</p>
+                        <a th:href="@{/student/topics}" class="db-button db-button-primary">
+                            <span>Tìm đề tài phù hợp</span>
+                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                    <div th:if="${hasTopic &amp;&amp; !approved &amp;&amp; !published}">
+                        <h2 th:text="${group.status == 'REJECTED' ? 'Đăng ký cần được xem lại.' : 'Đang chờ giảng viên phê duyệt.'}"></h2>
+                        <p th:text="${group.status == 'REJECTED' ? 'Xem lại thông tin đề tài và trao đổi với giảng viên để cập nhật đăng ký của nhóm.' : 'Nhóm đã đăng ký đề tài. Bạn có thể xem lại thông tin trong khi chờ giảng viên phản hồi.'}"></p>
+                        <a th:href="@{/student/my-topic}" class="db-button db-button-primary">
+                            <span>Xem đăng ký của nhóm</span>
+                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                    <div th:if="${hasTopic &amp;&amp; approved &amp;&amp; !published &amp;&amp; !hasReports}">
+                        <h2 th:text="${isLeader ? 'Đã đến lúc nộp báo cáo đầu tiên.' : 'Cùng nhóm chuẩn bị báo cáo đầu tiên.'}"></h2>
+                        <p>Đề tài đã được duyệt. Chỉ nhóm trưởng được nộp báo cáo; các thành viên có thể theo dõi bài nộp và phản hồi của giảng viên.</p>
+                        <a th:href="@{/student/submissions}" class="db-button db-button-primary">
+                            <span th:text="${isLeader ? 'Nộp báo cáo đầu tiên' : 'Theo dõi báo cáo của nhóm'}">Theo dõi báo cáo</span>
+                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                    <div th:if="${hasTopic &amp;&amp; approved &amp;&amp; !published &amp;&amp; hasReports}">
+                        <h2>Tiếp tục cập nhật tiến độ của nhóm.</h2>
+                        <p>Nhóm đã có bài nộp. Theo dõi phản hồi từ giảng viên và chuẩn bị báo cáo cho giai đoạn tiếp theo.</p>
+                        <a th:href="@{/student/submissions}" class="db-button db-button-primary">
+                            <span>Xem báo cáo &amp; phản hồi</span>
+                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                    <div th:if="${published}">
+                        <h2>Kết quả của nhóm đã được công bố.</h2>
+                        <p>Xem điểm tổng kết và nhận xét từ giảng viên hướng dẫn, phản biện và hội đồng.</p>
+                        <a th:href="@{/student/results}" class="db-button db-button-primary">
+                            <span>Xem kết quả</span>
+                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                </section>
+                <div class="db-panel mt-4 mb-4">
+                    <ol class="db-steps" aria-label="Các giai đoạn thực hiện đề tài">
+                        <li th:classappend="${group != null ? 'is-done' : 'is-current'}">
+                            <strong>Tạo nhóm</strong>
+                            <span th:text="${group != null ? 'Đã có nhóm' : 'Bắt đầu tại đây'}"></span>
+                        </li>
+                        <li th:classappend="${hasTopic ? 'is-done' : (group != null ? 'is-current' : '')}">
+                            <strong>Đăng ký đề tài</strong>
+                            <span th:text="${hasTopic ? 'Đã đăng ký' : 'Chọn đề tài phù hợp'}"></span>
+                        </li>
+                        <li th:classappend="${approved || published ? 'is-done' : (hasTopic ? 'is-current' : '')}">
+                            <strong>Phê duyệt</strong>
+                            <span th:text="${approved || published ? 'Đã được duyệt' : 'Giảng viên xem xét'}"></span>
+                        </li>
+                        <li th:classappend="${hasReports || published ? 'is-done' : (approved ? 'is-current' : '')}">
+                            <strong>Nộp báo cáo</strong>
+                            <span th:text="${hasReports ? submissions.size() + ' bài nộp' : 'Cập nhật tiến độ'}"></span>
+                        </li>
+                        <li th:classappend="${published ? 'is-done' : ''}">
+                            <strong>Xem kết quả</strong>
+                            <span th:text="${published ? 'Đã công bố' : 'Chờ công bố chính thức'}"></span>
+                        </li>
+                    </ol>
+                </div>
+                <div class="db-layout">
+                    <div class="db-stack">
+                        <section class="db-panel">
+                            <div class="db-panel-header">
+                                <div>
+                                    <h2>Đề tài của nhóm</h2>
+                                </div>
+                            </div>
+                            <div th:if="${hasTopic}" class="db-panel-body">
+                                <span class="db-tag" th:text="${group.topic.code}"></span>
+                                <h3 class="db-topic-title" th:text="${group.topic.title}"></h3>
+                                <div class="db-topic-meta">
+                                    <span th:text="${group.topic.supervisor != null &amp;&amp; group.topic.supervisor.user != null ? 'Hướng dẫn: ' + group.topic.supervisor.user.fullName : 'Chưa có thông tin người hướng dẫn'}"></span>
+                                    <span th:if="${group.period != null}" th:text="${group.period.name}"></span>
+                                </div>
+                                <div class="db-actions mt-3">
+                                    <a th:href="@{/student/my-topic}" class="db-button">
+                                        <span>Chi tiết đề tài</span>
+                                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <div th:unless="${hasTopic}">
+                                <div class="db-empty">
+                                    <i class="fa-regular fa-folder-open" aria-hidden="true"></i>
+                                    <h3>Chưa đăng ký đề tài</h3>
+                                    <p>Sau khi nhóm đăng ký, thông tin đề tài và giảng viên hướng dẫn sẽ xuất hiện tại đây.</p>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="db-panel">
+                            <div class="db-panel-header">
+                                <div>
+                                    <h2>Báo cáo gần đây</h2>
+                                    <p class="text-xs text-slate-500 mb-0">Đánh giá tiến độ từng đợt nộp do GVHD chấm</p>
+                                </div>
+                                <a th:href="@{/student/submissions}" class="db-button">
+                                    <span>Tất cả báo cáo</span>
+                                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                                </a>
+                            </div>
+                            <div class="db-table-scroll" tabindex="0" role="region" aria-label="Báo cáo gần đây" th:if="${submissions != null &amp;&amp; !submissions.isEmpty()}">
+                                <table class="db-table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Báo cáo</th>
+                                            <th scope="col">Ngày nộp</th>
+                                            <th scope="col">Điểm tiến độ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="s, iter : ${submissions}" th:if="${iter.index &lt; 4}">
+                                            <td>
+                                                <span class="db-cell-title" th:text="${s.title}"></span>
+                                                <span class="db-cell-meta" th:text="${'Lần nộp ' + s.submissionRound}"></span>
+                                            </td>
+                                            <td th:text="${s.submittedAt != null ? #temporals.format(s.submittedAt, 'dd/MM/yyyy') : 'Chưa cập nhật'}"></td>
+                                            <td>
+                                                <span class="db-tag" title="Điểm đánh giá tiến độ bài nộp định kỳ bởi GVHD" th:text="${s.grade != null ? s.grade + ' / 10' : 'Chờ đánh giá'}"></span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div th:unless="${hasReports}">
+                                <div class="db-empty">
+                                    <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
+                                    <h3>Chưa có báo cáo</h3>
+                                    <p>Báo cáo do nhóm trưởng nộp sẽ được hiển thị cùng phản hồi của giảng viên.</p>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <aside class="db-stack" aria-label="Thông tin nhóm và lịch">
+                        <section class="db-panel">
+                            <div class="db-panel-header">
+                                <div>
+                                    <h2>Nhóm của tôi</h2>
+                                </div>
+                            </div>
+                            <div th:if="${group != null}" class="db-panel-body">
+                                <h3 class="db-topic-title mt-0" th:text="${group.groupName}"></h3>
+                                <dl class="db-definition">
+                                    <dt>Mã nhóm</dt>
+                                    <dd th:text="${group.groupCode}"></dd>
+                                    <dt>Thành viên</dt>
+                                    <dd th:text="${group.members != null ? group.members.size() : 0}"></dd>
+                                    <dt>Vai trò của bạn</dt>
+                                    <dd th:text="${isLeader ? 'Nhóm trưởng' : 'Thành viên'}"></dd>
+                                </dl>
+                                <div class="mt-3">
+                                    <button type="button" class="db-button" data-bs-toggle="modal" data-bs-target="#modalGroupDetailsDashboard">Chi tiết nhóm<i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div th:if="${group == null}">
+                                <div class="db-empty">
+                                    <i class="fa-regular fa-user" aria-hidden="true"></i>
+                                    <h3>Bạn chưa có nhóm</h3>
+                                    <p>Tạo nhóm mới hoặc nhận lời mời từ nhóm khác.</p>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="db-panel">
+                            <div class="db-panel-header">
+                                <div>
+                                    <h2>Đợt đăng ký</h2>
+                                </div>
+                            </div>
+                            <div th:each="p, iter : ${activePeriods}" th:if="${iter.index &lt; 3}" class="db-period">
+                                <h3 th:text="${p.name}"></h3>
+                                <p th:text="${p.periodTypeName}"></p>
+                                <p>Hạn đăng ký: <time th:text="${p.studentRegistrationEnd != null ? #temporals.format(p.studentRegistrationEnd, 'dd/MM/yyyy') : 'Chưa thiết lập'}"></time>
+                                </p>
+                            </div>
+                            <div th:if="${activePeriods == null || activePeriods.isEmpty()}">
+                                <div class="db-empty">
+                                    <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                                    <h3>Chưa có đợt đăng ký</h3>
+                                    <p>Thông tin các đợt sẽ được cập nhật tại đây.</p>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="db-panel">
+                            <div class="db-panel-header">
+                                <div>
+                                    <h2>Thông báo mới</h2>
+                                </div>
+                            </div>
+                            <details class="db-notice" th:each="a : ${announcements}">
+                                <summary>
+                                    <span th:text="${a.title}"></span>
+                                    <time th:if="${a.createdAt != null}" th:datetime="${#temporals.format(a.createdAt, 'yyyy-MM-dd')}" th:text="${#temporals.format(a.createdAt, 'dd/MM/yyyy')}"></time>
+                                </summary>
+                                <p th:text="${a.content}"></p>
+                            </details>
+                            <div th:if="${announcements == null || announcements.isEmpty()}">
+                                <div class="db-empty">
+                                    <i class="fa-regular fa-bell" aria-hidden="true"></i>
+                                    <h3>Chưa có thông báo</h3>
+                                    <p>Các thông báo mới sẽ xuất hiện tại đây.</p>
+                                </div>
+                            </div>
+                        </section>
+                    </aside>
+                </div>
+            </main>
+        </div>
+        <!-- MODAL 1: TẠO HOẶC GIA NHẬP NHÓM NHANH (DÀNH CHO SV CHƯA CÓ NHÓM) -->
+        <div th:if="${group == null}" class="modal fade" id="modalQuickGroup" tabindex="-1" aria-labelledby="student-dialog-0-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-2xl border-0 shadow-2xl overflow-hidden">
+                    <div class="modal-header bg-slate-50 border-b border-slate-100 px-4 py-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center flex-shrink-0">
+                                <i class="fa-solid fa-users text-sm"></i>
+                            </div>
+                            <div>
+                                <h2 class="modal-title font-bold text-slate-900 text-sm mb-0" id="student-dialog-0-title">Tạo nhóm hoặc Gia nhập nhóm</h2>
+                                <span class="text-xs text-slate-500">Bước 1 trong lộ trình thực hiện khóa luận / đề tài</span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <!-- Nav Tabs -->
+                        <ul class="nav nav-pills nav-fill bg-slate-100 p-1 rounded-xl mb-3 text-xs font-semibold" id="quickGroupTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active rounded-lg py-2" id="create-tab" data-bs-toggle="pill" data-bs-target="#tab-create-group" type="button" role="tab">
+                                    <i class="fa-solid fa-plus me-1 text-blue-600"></i> Tạo nhóm mới
+                            </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link rounded-lg py-2" id="join-tab" data-bs-toggle="pill" data-bs-target="#tab-join-group" type="button" role="tab">
+                                    <i class="fa-solid fa-right-to-bracket me-1 text-slate-600"></i> Gia nhập bằng mã
+                            </button>
+                            </li>
+                        </ul>
+                        <div class="tab-content" id="quickGroupTabContent">
+                            <!-- Tab 1: Tạo nhóm -->
+                            <div class="tab-pane fade show active" id="tab-create-group" role="tabpanel">
+                                <form th:action="@{/student/group/create}" method="post">
+                                    <div class="mb-3">
+                                        <label class="form-label text-xs font-semibold text-slate-700" for="student-dialog-0-periodId">Đợt đăng ký <span class="text-rose-500">*</span>
+                                        </label>
+                                        <select name="periodId" class="form-select form-select-sm text-xs rounded-xl" required id="student-dialog-0-periodId" aria-label="Đợt đăng ký" title="Đợt đăng ký">
+                                            <option th:each="p : ${activePeriods}" th:value="${p.id}" th:text="${p.name + ' (' + p.getPeriodTypeName() + ')'}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-xs font-semibold text-slate-700" for="student-dialog-0-groupName">Tên nhóm của bạn <span class="text-rose-500">*</span>
+                                        </label>
+                                        <input type="text" name="groupName" class="form-control form-control-sm text-xs rounded-xl" placeholder="Ví dụ: Nhóm AI Solution K16" required id="student-dialog-0-groupName" aria-label="Tên nhóm của bạn" title="Tên nhóm của bạn">
+                                        <span class="text-[11px] text-slate-400 mt-1 d-block">Bạn sẽ là <strong>Nhóm trưởng</strong>, có quyền mời thêm 1-2 thành viên và chọn đề tài.</span>
+                                    </div>
+                                    <div class="d-flex justify-content-end gap-2 pt-2 border-t border-slate-100">
+                                        <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                                        <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-semibold shadow-sm">
+                                            <i class="fa-solid fa-crown text-amber-400 me-1"></i> Tạo nhóm ngay
+                                    </button>
+                                    </div>
+                                </form>
+                            </div>
+                            <!-- Tab 2: Gia nhập nhóm -->
+                            <div class="tab-pane fade" id="tab-join-group" role="tabpanel">
+                                <form th:action="@{/student/group/join}" method="post">
+                                    <div class="mb-3">
+                                        <label class="form-label text-xs font-semibold text-slate-700" for="student-dialog-0-groupCode">Nhập mã nhóm (Group Code) <span class="text-rose-500">*</span>
+                                        </label>
+                                        <input type="text" name="groupCode" class="form-control text-xs rounded-xl font-mono font-bold uppercase tracking-wider text-center" placeholder="Ví dụ: GRP-ABC123" required id="student-dialog-0-groupCode" aria-label="Nhập mã nhóm (Group Code)" title="Nhập mã nhóm (Group Code)">
+                                        <span class="text-[11px] text-slate-400 mt-1 d-block">Nhập mã nhóm 6 ký tự do Nhóm trưởng cung cấp để cùng thực hiện đề tài.</span>
+                                    </div>
+                                    <div class="d-flex justify-content-end gap-2 pt-2 border-t border-slate-100">
+                                        <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                                        <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-semibold shadow-sm">
+                                            <i class="fa-solid fa-user-group me-1"></i> Gia nhập nhóm
+                                    </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- MODAL 2: XEM CHI TIẾT NHÓM & MÃ CHIA SẺ (DÀNH CHO SV ĐÃ CÓ NHÓM) -->
+        <div th:if="${group != null}" class="modal fade" id="modalGroupDetailsDashboard" tabindex="-1" aria-labelledby="student-dialog-1-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content rounded-2xl border-0 shadow-2xl overflow-hidden">
+                    <div class="modal-header bg-slate-50 border-b border-slate-100 px-4 py-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 d-flex align-items-center justify-content-center flex-shrink-0">
+                                <i class="fa-solid fa-users-viewfinder text-sm"></i>
+                            </div>
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <h2 class="modal-title font-bold text-slate-900 text-sm mb-0" th:text="${group.groupName}" id="student-dialog-1-title">Nhóm 01</h2>
+                                    <span class="badge-pill-approved text-xs" th:text="${group.members.size()} + ' / 3 thành viên'">2/3 thành viên</span>
+                                </div>
+                                <span class="text-xs text-slate-500" th:text="'Đợt: ' + (${group.period != null ? group.period.name : 'Chung'})">Đợt KLTN</span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
+                    </div>
+                    <div class="modal-body p-4 space-y-3">
+                        <!-- Share Code Box -->
+                        <div class="p-3 bg-blue-50/60 rounded-xl border border-blue-100 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+                            <div>
+                                <span class="text-xs font-semibold text-blue-900 d-block">
+                                    <i class="fa-solid fa-share-nodes text-blue-600 me-1"></i> Mã nhóm chia sẻ:</span>
+                                <strong id="dashboardGroupCode" class="font-mono text-sm text-blue-800 tracking-wider font-bold" th:text="${group.groupCode}">GRP-XYZ123</strong>
+                            </div>
+                            <button type="button" id="btnCopyGroupCode" onclick="copyGroupCode()" class="btn btn-sm bg-white hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl px-3 py-1.5 text-xs font-semibold transition d-inline-flex align-items-center gap-1.5 shadow-2xs">
+                                <i class="fa-regular fa-copy text-xs"></i>
+                                <span>Sao chép mã</span>
+                            </button>
+                        </div>
+                        <!-- Member List -->
+                        <div>
+                            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Thành viên trong nhóm:</h3>
+                            <div class="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden bg-white">
+                                <div th:each="m : ${group.members}" class="d-flex justify-content-between align-items-center py-2.5 px-3">
+                                    <div class="d-flex align-items-center gap-2.5">
+                                        <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold d-flex align-items-center justify-content-center text-xs flex-shrink-0">
+                                            <i class="fa-solid fa-user"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-slate-900 text-xs" th:text="${m.student != null &amp;&amp; m.student.user != null ? m.student.user.fullName : 'SV'}">Nguyễn Văn A</div>
+                                            <span class="text-slate-400 text-[11px]" th:text="'MSSV: ' + (${m.student != null ? m.student.studentCode : ''}) + ' | Lớp: ' + (${m.student != null ? m.student.className : 'CNTT'})"></span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span th:if="${m.roleInGroup == 'LEADER'}" class="badge-pill-pending font-bold text-xs">
+                                            <i class="fa-solid fa-crown text-amber-500 me-1"></i>Nhóm trưởng
+                                    </span>
+                                        <span th:if="${m.roleInGroup == 'MEMBER'}" class="badge-pill-neutral font-medium text-xs">
+                                        Thành viên
+                                    </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Topic Summary in Modal -->
+                        <div th:if="${group.topic != null}" class="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="text-slate-500 font-medium">Đề tài đã đăng ký:</span>
+                                <span class="badge bg-slate-200 text-slate-800 text-xs font-mono font-semibold" th:text="${group.topic.code}">DT-01</span>
+                            </div>
+                            <h4 class="font-bold text-slate-900 text-xs mb-1 line-clamp-1" th:text="${group.topic.title}">Tên đề tài</h4>
+                            <span class="text-slate-500 text-xs">
+                                <i class="fa-solid fa-chalkboard-user me-1 text-slate-400"></i> GVHD: <strong class="text-slate-800" th:text="${group.topic.supervisor != null &amp;&amp; group.topic.supervisor.user != null ? group.topic.supervisor.user.fullName : 'N/A'}"></strong>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-slate-50 border-t border-slate-100 p-3 d-flex justify-content-between">
+                        <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Đóng</button>
+                        <a th:href="@{/student/group}" class="btn btn-sm btn-dark rounded-xl px-3.5 text-xs font-semibold">
+                            <i class="fa-solid fa-gear me-1"></i> Trang Quản lý nhóm chi tiết →
+                    </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Scripts Fragment -->
+        <div th:replace="~{fragments/scripts :: scripts}"></div>
+        <script>
+        // 1-Click Copy Group Code
+        function copyGroupCode() {
+            const codeEl = document.getElementById('dashboardGroupCode');
+            if (!codeEl) return;
+            const text = codeEl.innerText.trim();
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById('btnCopyGroupCode');
+                if (btn) {
+                    const originalHTML = btn.innerHTML;
+                    btn.innerHTML = '<i class="fa-solid fa-check text-xs text-emerald-600"></i> <span class="text-emerald-700">Đã chép!</span>';
+                    setTimeout(() => { btn.innerHTML = originalHTML; }, 2000);
+                }
+            }).catch(err => {
+                console.error('Không thể sao chép mã nhóm:', err);
+            });
+        }
+    </script>
+    </body>
+</html>

@@ -1,0 +1,9 @@
+.git
+.gitignore
+.vscode
+.agents
+.antigravity
+target/
+uploads/
+*.bat
+*.ps1

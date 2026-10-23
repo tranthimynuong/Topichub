@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub Topbar</title>
+</head>
+<body>
+    <div th:fragment="topbar(pageTitle, breadcrumbParent, breadcrumbParentUrl, user)" class="saas-header-group">
+        <!-- Main Topbar -->
+        <header class="saas-topbar px-3 px-lg-4 d-flex align-items-center justify-content-between">
+            <!-- Left: Mobile Toggle & Clean Breadcrumb Pathway -->
+            <div class="d-flex align-items-center gap-2 min-w-0">
+                <!-- Mobile Toggle Only -->
+                <button class="btn btn-sm btn-light border-0 d-lg-none rounded-full" type="button" onclick="toggleSidebar()" id="sidebarMobileToggle" aria-controls="saasSidebar" aria-expanded="false" aria-label="Mở menu điều hướng" style="width: 36px; height: 36px; padding: 0;">
+                    <i class="fa-solid fa-bars text-slate-600"></i>
+                </button>
+
+                <!-- Breadcrumb Pathway -->
+                <nav class="d-flex align-items-center gap-2 text-xs py-1 text-slate-500" aria-label="breadcrumb">
+                    <a th:href="@{${user != null && user.role != null ? (user.role.code == 'ADMIN' ? '/admin/dashboard' : (user.role.code == 'DEPARTMENT_HEAD' ? '/department-head/dashboard' : (user.role.code == 'LECTURER' ? '/lecturer/dashboard' : '/student/dashboard'))) : '/login'}}"
+                       class="d-flex align-items-center gap-1.5 text-slate-500 hover:text-blue-600 font-medium text-decoration-none transition">
+                        <i class="fa-solid fa-house-chimney text-slate-400 text-xs"></i>
+                        <span class="d-none d-sm-inline">TopicHub</span>
+                    </a>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+                    <th:block th:if="${breadcrumbParent != null && breadcrumbParent != pageTitle && breadcrumbParent != 'Trưởng Khoa' && breadcrumbParent != 'Giảng Viên' && breadcrumbParent != 'Sinh Viên' && breadcrumbParent != 'Quản Trị Viên'}">
+                        <a th:href="@{${breadcrumbParentUrl != null ? breadcrumbParentUrl : '#'}}" 
+                           class="text-slate-500 hover:text-blue-600 font-medium text-decoration-none transition text-truncate"
+                           style="max-width: 140px;"
+                           th:text="${breadcrumbParent}">Danh mục</a>
+                        <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+                    </th:block>
+                    <span class="text-slate-900 font-bold text-truncate" style="max-width: 240px;" th:text="${pageTitle != null ? pageTitle : 'Bảng điều khiển'}">Bảng điều khiển</span>
+                </nav>
+            </div>
+
+            <!-- Right Controls: Semester Switcher + Search Bar + Action Buttons -->
+            <div class="d-flex align-items-center gap-2 gap-md-2.5">
+                <!-- Quick Account Switcher (Khoa CNTT: Trưởng khoa, GV, SV, Admin) -->
+                <div class="dropdown d-inline-block">
+                    <button class="btn btn-xs rounded-full bg-amber-50 hover:bg-amber-100/80 border border-amber-300 text-xs font-semibold text-amber-900 shadow-2xs d-inline-flex align-items-center gap-1.5 px-2.5 py-1.5 transition" 
+                            type="button" 
+                            id="quickAccountSwitcherDropdown" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false" 
+                            title="Chuyển nhanh tài khoản để kiểm thử quy trình Khoa CNTT">
+                        <i class="fa-solid fa-bolt text-amber-600 text-xs"></i>
+                        <span class="d-none d-md-inline font-bold">Đổi TK CNTT</span>
+                        <i class="fa-solid fa-chevron-down text-[9px] text-amber-600 ms-0.5"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-wellnest-lg border border-slate-200 rounded-2xl p-2 text-xs mt-1" aria-labelledby="quickAccountSwitcherDropdown" style="min-width: 310px; z-index: 1060;">
+                        <li class="px-3 py-2 text-2xs font-bold text-slate-400 uppercase tracking-wider d-flex align-items-center justify-content-between border-b border-slate-100 mb-1">
+                            <span class="d-flex align-items-center gap-1.5 text-slate-700">
+                                <i class="fa-solid fa-bolt text-amber-500"></i> Tài khoản Khoa CNTT
+                            </span>
+                            <span class="badge bg-amber-100 text-amber-800 rounded px-1.5 py-0.5 text-[9px]">1-Click Switch</span>
+                        </li>
+
+                        <!-- Trưởng Khoa -->
+                        <li class="px-2.5 pt-1 text-[10px] font-bold text-slate-400 uppercase">Trưởng Khoa (Duyệt ĐT & Hội đồng)</li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-2 d-flex align-items-center justify-content-between transition"
+                               th:classappend="${user != null && user.username == 'head_cntt'} ? 'bg-amber-50 font-bold text-amber-900' : 'text-slate-700 hover:bg-slate-50'"
+                               th:href="@{/switch-account(username='head_cntt')}">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 d-flex align-items-center justify-content-center flex-shrink-0">
+                                        <i class="fa-solid fa-user-tie text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-xs text-slate-800">TS. Nguyễn Văn Thắng</div>
+                                        <div class="text-[11px] text-slate-400 font-mono">head_cntt · Trưởng Khoa (Duyệt ĐT Đợt 1, Chủ tịch HĐ)</div>
+                                    </div>
+                                </div>
+                                <i th:if="${user != null && user.username == 'head_cntt'}" class="fa-solid fa-check text-xs text-amber-600"></i>
+                            </a>
+                        </li>
+
+                        <!-- Giảng viên Hướng dẫn & Phản biện & Hội đồng -->
+                        <li class="px-2.5 pt-1.5 text-[10px] font-bold text-slate-400 uppercase">Giảng Viên Hướng Dẫn & Chấm Điểm</li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-2 d-flex align-items-center justify-content-between transition"
+                               th:classappend="${user != null && user.username == 'gv_cntt01'} ? 'bg-blue-50 font-bold text-blue-900' : 'text-slate-700 hover:bg-slate-50'"
+                               th:href="@{/switch-account(username='gv_cntt01')}">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 d-flex align-items-center justify-content-center flex-shrink-0">
+                                        <i class="fa-solid fa-chalkboard-user text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-xs text-slate-800">ThS. Lê Hoàng Long</div>
+                                        <div class="text-[11px] text-slate-400 font-mono">gv_cntt01 · GVHD chính (Đề xuất ĐT Đợt 1)</div>
+                                    </div>
+                                </div>
+                                <i th:if="${user != null && user.username == 'gv_cntt01'}" class="fa-solid fa-check text-xs text-blue-600"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-2 d-flex align-items-center justify-content-between transition"
+                               th:classappend="${user != null && user.username == 'gv_cntt02'} ? 'bg-indigo-50 font-bold text-indigo-900' : 'text-slate-700 hover:bg-slate-50'"
+                               th:href="@{/switch-account(username='gv_cntt02')}">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 d-flex align-items-center justify-content-center flex-shrink-0">
+                                        <i class="fa-solid fa-chalkboard-user text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-xs text-slate-800">TS. Phạm Minh Tuấn</div>
+                                        <div class="text-[11px] text-slate-400 font-mono">gv_cntt02 · GVPB (Chấm điểm phản biện Đợt 3)</div>
+                                    </div>
+                                </div>
+                                <i th:if="${user != null && user.username == 'gv_cntt02'}" class="fa-solid fa-check text-xs text-indigo-600"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-2 d-flex align-items-center justify-content-between transition"
+                               th:classappend="${user != null && user.username == 'gv_cntt04'} ? 'bg-violet-50 font-bold text-violet-900' : 'text-slate-700 hover:bg-slate-50'"
+                               th:href="@{/switch-account(username='gv_cntt04')}">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-lg bg-violet-100 text-violet-700 d-flex align-items-center justify-content-center flex-shrink-0">
+                                        <i class="fa-solid fa-award text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-xs text-slate-800">ThS. Trần Anh Dũng</div>
+                                        <div class="text-[11px] text-slate-400 font-mono">gv_cntt04 · Ủy viên Hội đồng (Chấm bảo vệ Đợt 4)</div>
+                                    </div>
+                                </div>
+                                <i th:if="${user != null && user.username == 'gv_cntt04'}" class="fa-solid fa-check text-xs text-violet-600"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-2 d-flex align-items-center justify-content-between transition"
+                               th:classappend="${user != null && user.username == 'gv_cntt06'} ? 'bg-sky-50 font-bold text-sky-900' : 'text-slate-700 hover:bg-slate-50'"
+                               th:href="@{/switch-account(username='gv_cntt06')}">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-lg bg-sky-100 text-sky-700 d-flex align-items-center justify-content-center flex-shrink-0">
+                                        <i class="fa-solid fa-plus text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-xs text-slate-800">TS. Phạm Quốc Bảo (GV Mới)</div>
+                                        <div class="text-[11px] text-slate-400 font-mono">gv_cntt06 · Trống 100% (Test đề xuất ĐT mới)</div>
+                                    </div>
+                                </div>
+                                <i th:if="${user != null && user.username == 'gv_cntt06'}" class="fa-solid fa-check text-xs text-sky-600"></i>
+                            </a>
+                        </li>
+
+                        <!-- Sinh viên CNTT -->
+                        <li class="px-2.5 pt-1.5 text-[10px] font-bold text-slate-400 uppercase">Sinh Viên Khoa CNTT</li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-2 d-flex align-items-center justify-content-between transition"
+                               th:classappend="${user != null && user.username == 'sv_cntt01'} ? 'bg-emerald-50 font-bold text-emerald-900' : 'text-slate-700 hover:bg-slate-50'"
+                               th:href="@{/switch-account(username='sv_cntt01')}">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 d-flex align-items-center justify-content-center flex-shrink-0">
+                                        <i class="fa-solid fa-user-graduate text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-xs text-slate-800">Nguyễn Văn An (SV Mới)</div>
+                                        <div class="text-[11px] text-slate-400 font-mono">sv_cntt01 · Trống 100% (Test ĐK & tạo nhóm)</div>
+                                    </div>
+                                </div>
+                                <i th:if="${user != null && user.username == 'sv_cntt01'}" class="fa-solid fa-check text-xs text-emerald-600"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-2 d-flex align-items-center justify-content-between transition"
+                               th:classappend="${user != null && user.username == 'sv_cntt02'} ? 'bg-teal-50 font-bold text-teal-900' : 'text-slate-700 hover:bg-slate-50'"
+                               th:href="@{/switch-account(username='sv_cntt02')}">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 d-flex align-items-center justify-content-center flex-shrink-0">
+                                        <i class="fa-solid fa-user-graduate text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-xs text-slate-800">Trần Thị Bình (SV Mới)</div>
+                                        <div class="text-[11px] text-slate-400 font-mono">sv_cntt02 · Trống 100% (Test nhận lời mời nhóm)</div>
+                                    </div>
+                                </div>
+                                <i th:if="${user != null && user.username == 'sv_cntt02'}" class="fa-solid fa-check text-xs text-teal-600"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-2 d-flex align-items-center justify-content-between transition"
+                               th:classappend="${user != null && user.username == '23110001'} ? 'bg-green-50 font-bold text-green-900' : 'text-slate-700 hover:bg-slate-50'"
+                               th:href="@{/switch-account(username='23110001')}">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-lg bg-green-100 text-green-700 d-flex align-items-center justify-content-center flex-shrink-0">
+                                        <i class="fa-solid fa-users text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-xs text-slate-800">Nguyễn Minh Khang (Đã có nhóm)</div>
+                                        <div class="text-[11px] text-slate-400 font-mono">23110001 · Xem nhóm & ĐT đang thực hiện</div>
+                                    </div>
+                                </div>
+                                <i th:if="${user != null && user.username == '23110001'}" class="fa-solid fa-check text-xs text-green-600"></i>
+                            </a>
+                        </li>
+
+                        <!-- Divider -->
+                        <li><hr class="dropdown-divider my-1.5 border-slate-100"></li>
+
+                        <!-- Admin -->
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-1.5 d-flex align-items-center justify-content-between transition"
+                               th:classappend="${user != null && user.username == 'admin'} ? 'bg-purple-50 font-bold text-purple-900' : 'text-slate-700 hover:bg-slate-50'"
+                               th:href="@{/switch-account(username='admin')}">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 d-flex align-items-center justify-content-center flex-shrink-0">
+                                        <i class="fa-solid fa-shield-halved text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-xs text-slate-800">Quản Trị Viên</div>
+                                        <div class="text-[11px] text-slate-400 font-mono">admin · Quản trị toàn hệ thống</div>
+                                    </div>
+                                </div>
+                                <i th:if="${user != null && user.username == 'admin'}" class="fa-solid fa-check text-xs text-purple-600"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Current Semester & Academic Year Capsule Dropdown Switcher -->
+                <div class="dropdown d-none d-sm-inline-block">
+                    <button class="btn btn-xs rounded-full bg-white hover:bg-slate-50 border border-slate-200/90 text-xs font-semibold text-slate-700 shadow-2xs d-inline-flex align-items-center gap-1.5 px-3 py-1.5 transition" 
+                            type="button" 
+                            id="semesterSwitcherDropdown" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false" 
+                            title="Bấm để chọn/thay đổi học kỳ & năm học">
+                        <i class="fa-solid fa-calendar-check text-blue-600 text-xs"></i>
+                        <span>HK<strong class="text-slate-900" th:text="${currentSemester != null ? currentSemester : 1}">1</strong> · <span class="text-slate-600" th:text="${currentAcademicYear != null ? currentAcademicYear : '2026-2027'}">2026-2027</span></span>
+                        <i class="fa-solid fa-chevron-down text-[9px] text-slate-400 ms-0.5"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-wellnest-lg border border-slate-200 rounded-2xl p-2 text-xs mt-1" aria-labelledby="semesterSwitcherDropdown" style="min-width: 250px; z-index: 1060;">
+                        <!-- Section: Học kỳ -->
+                        <li class="px-2.5 py-1 text-2xs font-bold text-slate-400 uppercase tracking-wider d-flex align-items-center justify-content-between">
+                            <span>Học kỳ</span>
+                            <span class="badge bg-blue-50 text-blue-600 border border-blue-100 rounded text-[9px] font-semibold" th:text="'HK' + ${currentSemester != null ? currentSemester : 1}">HK1</span>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-1.5 d-flex align-items-center justify-content-between transition" 
+                               th:classappend="${(currentSemester == 1 || currentSemester == null) ? 'bg-blue-50/70 font-bold text-blue-700' : 'text-slate-700 hover:bg-slate-50'}"
+                               th:href="@{/switch-semester(semester=1, academicYear=${currentAcademicYear != null ? currentAcademicYear : '2026-2027'})}">
+                                <span><i class="fa-solid fa-graduation-cap me-2" th:classappend="${currentSemester == 1 || currentSemester == null ? 'text-blue-600' : 'text-slate-400'}"></i>Học kỳ 1</span>
+                                <i th:if="${currentSemester == 1 || currentSemester == null}" class="fa-solid fa-check text-xs text-blue-600"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-1.5 d-flex align-items-center justify-content-between transition" 
+                               th:classappend="${currentSemester == 2 ? 'bg-blue-50/70 font-bold text-blue-700' : 'text-slate-700 hover:bg-slate-50'}"
+                               th:href="@{/switch-semester(semester=2, academicYear=${currentAcademicYear != null ? currentAcademicYear : '2026-2027'})}">
+                                <span><i class="fa-solid fa-graduation-cap me-2" th:classappend="${currentSemester == 2 ? 'text-blue-600' : 'text-slate-400'}"></i>Học kỳ 2</span>
+                                <i th:if="${currentSemester == 2}" class="fa-solid fa-check text-xs text-blue-600"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-1.5 d-flex align-items-center justify-content-between transition" 
+                               th:classappend="${currentSemester == 3 ? 'bg-blue-50/70 font-bold text-blue-700' : 'text-slate-700 hover:bg-slate-50'}"
+                               th:href="@{/switch-semester(semester=3, academicYear=${currentAcademicYear != null ? currentAcademicYear : '2026-2027'})}">
+                                <span><i class="fa-solid fa-sun me-2" th:classappend="${currentSemester == 3 ? 'text-amber-500' : 'text-slate-400'}"></i>Học kỳ hè</span>
+                                <i th:if="${currentSemester == 3}" class="fa-solid fa-check text-xs text-blue-600"></i>
+                            </a>
+                        </li>
+
+                        <!-- Divider -->
+                        <li><hr class="dropdown-divider my-1.5 border-slate-100"></li>
+
+                        <!-- Section: Năm học -->
+                        <li class="px-2.5 py-1 text-2xs font-bold text-slate-400 uppercase tracking-wider d-flex align-items-center justify-content-between">
+                            <span>Năm học</span>
+                            <span class="text-slate-500 font-semibold" th:text="${currentAcademicYear != null ? currentAcademicYear : '2026-2027'}">2026-2027</span>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-1.5 d-flex align-items-center justify-content-between transition" 
+                               th:classappend="${currentAcademicYear == '2026-2027' || currentAcademicYear == null ? 'bg-blue-50/70 font-bold text-blue-700' : 'text-slate-700 hover:bg-slate-50'}"
+                               th:href="@{/switch-semester(semester=${currentSemester != null ? currentSemester : 1}, academicYear='2026-2027')}">
+                                <span><i class="fa-regular fa-calendar-days me-2" th:classappend="${currentAcademicYear == '2026-2027' || currentAcademicYear == null ? 'text-blue-600' : 'text-slate-400'}"></i>2026 - 2027 (Hiện hành)</span>
+                                <i th:if="${currentAcademicYear == '2026-2027' || currentAcademicYear == null}" class="fa-solid fa-check text-xs text-blue-600"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-xl px-2.5 py-1.5 d-flex align-items-center justify-content-between transition" 
+                               th:classappend="${currentAcademicYear == '2025-2026' ? 'bg-blue-50/70 font-bold text-blue-700' : 'text-slate-700 hover:bg-slate-50'}"
+                               th:href="@{/switch-semester(semester=${currentSemester != null ? currentSemester : 1}, academicYear='2025-2026')}">
+                                <span><i class="fa-regular fa-calendar-days me-2" th:classappend="${currentAcademicYear == '2025-2026' ? 'text-blue-600' : 'text-slate-400'}"></i>2025 - 2026</span>
+                                <i th:if="${currentAcademicYear == '2025-2026'}" class="fa-solid fa-check text-xs text-blue-600"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Search Bar Capsule -->
+                <div class="topbar-search-wrapper position-relative d-none d-md-flex align-items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 transition" style="width: 280px; box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);">
+                    <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs flex-shrink-0"></i>
+                    <input type="text"
+                           id="topbarGlobalSearchInput"
+                           name="search_query_global_clean"
+                           class="form-control form-control-sm border-0 bg-transparent p-0 text-xs shadow-none text-slate-800 flex-grow-1"
+                           placeholder="Tìm kiếm nhanh..."
+                           autocomplete="chrome-off"
+                           autocorrect="off"
+                           autocapitalize="off"
+                           spellcheck="false"
+                           readonly
+                           onfocus="this.removeAttribute('readonly');"
+                           data-lpignore="true" title="Tìm kiếm nhanh..." aria-label="Tìm kiếm nhanh...">
+                    <button type="button" id="topbarSearchClearBtn" class="border-0 bg-transparent p-0 text-slate-400 hover:text-slate-600 d-none text-xs flex-shrink-0" title="Xóa tìm kiếm" onclick="clearTopbarSearch()">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    
+                    <!-- Floating Results Dropdown Popup -->
+                    <div id="topbarSearchResultsPopup" class="d-none position-absolute start-0 mt-2 w-100 bg-white rounded-2xl border border-slate-200 shadow-wellnest-lg p-2 text-xs text-start" style="top: 100%; z-index: 1060; min-width: 360px; max-width: min(420px, calc(100vw - 32px)); max-height: 380px; overflow-y: auto;">
+                        <div id="topbarSearchResultsContent"></div>
+                    </div>
+                </div>
+
+                <!-- Right Island: Action Pills (Notifications, Theme, User Avatar) -->
+                <div class="topbar-island topbar-island-actions d-flex align-items-center gap-1.5">
+                    <!-- Notifications Dropdown -->
+                    <div class="dropdown">
+                        <button class="topbar-action-btn position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Thông báo hệ thống">
+                            <i class="fa-regular fa-bell"></i>
+                            <!-- Red Notification Count Badge -->
+                            <span class="position-absolute rounded-full bg-rose-500 text-white text-[9px] font-bold d-flex align-items-center justify-content-center shadow-xs d-none" 
+                                  id="topbarNotificationCount"
+                                  style="top: -4px; right: -4px; min-width: 16px; height: 16px; padding: 0 4px; box-shadow: 0 0 0 2px #ffffff, 0 1px 3px rgba(15,23,42,0.06);"></span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end shadow-wellnest-lg border border-slate-100 rounded-2xl p-0 mt-2" style="width: 390px; max-width: min(390px, calc(100vw - 24px)); z-index: 1050;">
+                        <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/80 rounded-t-2xl d-flex align-items-center justify-content-between gap-2">
+                            <div class="d-flex align-items-center gap-2 min-w-0 flex-grow-1">
+                                <span class="fw-bold text-slate-900 text-sm text-nowrap flex-shrink-0">Thông báo</span>
+                                <span class="badge bg-blue-100 text-blue-800 font-bold rounded-pill px-2 py-0.5 text-xs text-nowrap d-none" 
+                                      id="topbarNotificationHeaderCount"></span>
+                            </div>
+                            <button type="button" class="btn btn-link p-0 text-xs text-blue-600 text-decoration-none hover:underline font-semibold flex-shrink-0 text-nowrap" 
+                                     onclick="markAllAnnouncementsAsRead()">
+                                Đã đọc tất cả
+                            </button>
+                        </div>
+                        <div class="p-2 divide-y divide-slate-100" style="max-height: 360px; overflow-y: auto;">
+                            <!-- Option A: topbarNotifications provided (e.g. for Department Head with pending approvals & incoming notices) -->
+                            <th:block th:if="${topbarNotifications != null && !topbarNotifications.isEmpty()}">
+                                <div class="p-2.5 rounded-xl hover:bg-slate-50 transition cursor-pointer d-flex gap-2.5 align-items-start position-relative notification-item-track"
+                                     th:each="n, nStat : ${topbarNotifications}" th:if="${nStat.index < 8}"
+                                     th:data-target-url="${n.targetUrl}"
+                                     onclick="if(this.dataset.targetUrl){ window.location.href=this.dataset.targetUrl; } else { showAnnouncementDetail(this); }"
+                                     th:data-announcement-id="${n.id}"
+                                     th:data-title="${n.title}"
+                                     th:data-category="${n.category}"
+                                     th:data-author="${n.author}"
+                                     th:data-created-at="${n.createdAtFormatted}"
+                                     th:data-content="${n.content}">
+                                    <div class="w-8 h-8 rounded-xl d-flex align-items-center justify-content-center flex-shrink-0 mt-0.5"
+                                         th:classappend="${n.iconBgClass != null ? n.iconBgClass : 'bg-blue-50 text-blue-600'}">
+                                        <i th:class="${n.iconClass != null ? n.iconClass : 'fa-solid fa-bullhorn text-xs'}"></i>
+                                    </div>
+                                    <div class="text-xs min-w-0 flex-grow-1 pe-1">
+                                        <p class="mb-1 fw-semibold text-slate-800" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35; word-break: break-word;" th:text="${n.title}" th:title="${n.title}">Tiêu đề thông báo</p>
+                                        <div class="d-flex align-items-center gap-2 text-slate-400 text-[11px]">
+                                            <span th:text="${n.createdAtFormatted}">Hôm nay</span>
+                                            <span th:if="${n.category != null}" class="badge bg-slate-100 text-slate-600 rounded px-1.5 py-0.5 text-[10px]" th:text="${n.category}">Tin tức</span>
+                                        </div>
+                                    </div>
+                                    <span class="unread-dot w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-2 ms-1" title="Chưa đọc"></span>
+                                </div>
+                            </th:block>
+
+                            <!-- Option B: announcements fallback (LOẠI BỎ TRIỆT ĐỂ THÔNG BÁO DO CHÍNH NGƯỜI ĐĂNG TẠO RA VÀ THÔNG BÁO LỆCH VAI TRÒ) -->
+                            <th:block th:if="${topbarNotifications == null && announcements != null && !announcements.isEmpty()}">
+                                <th:block th:each="a, aStat : ${announcements}">
+                                    <div th:if="${(a.author == null || user == null || a.author.id != user.id) && (user == null || user.role == null || user.role.code != 'DEPARTMENT_HEAD' || (!#strings.containsIgnoreCase(a.title, 'hạn đề xuất') && !#strings.containsIgnoreCase(a.title, 'nộp đề xuất') && !#strings.containsIgnoreCase(a.title, 'đến hạn đề xuất') && !#strings.containsIgnoreCase(a.title, 'đã đến hạn')))}"
+                                         class="p-2.5 rounded-xl hover:bg-slate-50 transition cursor-pointer d-flex gap-2.5 align-items-start position-relative notification-item-track"
+                                         onclick="showAnnouncementDetail(this)"
+                                         th:data-announcement-id="${a.id}"
+                                         th:data-title="${a.title}"
+                                         th:data-category="${a.category != null ? a.category : 'THÔNG BÁO'}"
+                                         th:data-author="${a.author != null ? a.author.fullName : 'Ban chủ nhiệm Khoa'}"
+                                         th:data-created-at="${a.createdAt != null ? #temporals.format(a.createdAt, 'dd/MM/yyyy HH:mm') : ''}"
+                                         th:data-period-id="${a.period != null ? a.period.id : ''}"
+                                         th:data-period="${a.period != null ? a.period.name : ''}"
+                                         th:data-content="${a.content}">
+                                        <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center flex-shrink-0 mt-0.5">
+                                            <i class="fa-solid fa-bullhorn text-xs"></i>
+                                        </div>
+                                        <div class="text-xs min-w-0 flex-grow-1 pe-1">
+                                            <p class="mb-1 fw-semibold text-slate-800" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35; word-break: break-word;" th:text="${a.title}" th:title="${a.title}">Tiêu đề thông báo</p>
+                                            <div class="d-flex align-items-center gap-2 text-slate-400 text-[11px]">
+                                                <span th:text="${a.createdAt != null ? #temporals.format(a.createdAt, 'dd/MM/yyyy') : 'Hôm nay'}">Hôm nay</span>
+                                                <span th:if="${a.category != null}" class="badge bg-slate-100 text-slate-600 rounded px-1.5 py-0.5 text-[10px]" th:text="${a.category}">THÔNG BÁO</span>
+                                            </div>
+                                        </div>
+                                        <span class="unread-dot w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-2 ms-1" title="Chưa đọc"></span>
+                                    </div>
+                                </th:block>
+                            </th:block>
+
+                            <!-- Empty Placeholder when no notifications -->
+                            <div id="topbarNoNotificationsPlaceholder" class="p-4 text-center text-slate-400 text-xs">
+                                <i class="fa-regular fa-bell-slash text-xl mb-1 d-block opacity-40"></i>
+                                Chưa có thông báo mới nào.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Theme / Settings Toggle Button -->
+                <button class="topbar-action-btn" 
+                        id="themeToggleBtn"
+                        type="button" 
+                        onclick="toggleTheme()" 
+                        title="Chuyển đổi Sáng / Tối">
+                    <i class="fa-regular fa-moon" id="themeToggleIcon"></i>
+                </button>
+            </div>
+        </header>
+
+        <style>
+            .topbar-search-wrapper {
+                background: #FFFFFF;
+                border: 1px solid #E2E8F0;
+                border-radius: 9999px;
+                box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+                transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+            .topbar-search-wrapper:focus-within {
+                border-color: #3B82F6;
+                background: #FFFFFF;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12), 0 2px 8px rgba(15, 23, 42, 0.06);
+            }
+            .topbar-search-wrapper input::placeholder {
+                color: #94A3B8;
+                font-size: 0.775rem;
+            }
+            [data-theme="dark"] .topbar-search-wrapper {
+                background-color: #0F172A !important;
+                border-color: #1E293B !important;
+            }
+            [data-theme="dark"] .topbar-search-wrapper input {
+                color: #F8FAFC !important;
+            }
+            [data-theme="dark"] .topbar-search-wrapper kbd {
+                background-color: #1E293B !important;
+                border-color: #334155 !important;
+                color: #94A3B8 !important;
+            }
+        </style>
+
+        <script>
+            document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+                    e.preventDefault();
+                    const searchInput = document.getElementById('topbarGlobalSearchInput');
+                    if (searchInput) {
+                        searchInput.focus();
+                        searchInput.select();
+                    }
+                }
+            });
+
+            function clearTopbarSearch() {
+                const topSearch = document.getElementById('topbarGlobalSearchInput');
+                if (topSearch) {
+                    topSearch.value = '';
+                    topSearch.dispatchEvent(new Event('input'));
+                    topSearch.focus();
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const topSearch = document.getElementById('topbarGlobalSearchInput');
+                const clearBtn = document.getElementById('topbarSearchClearBtn');
+                const popup = document.getElementById('topbarSearchResultsPopup');
+                const content = document.getElementById('topbarSearchResultsContent');
+                if (!topSearch) return;
+
+                const quickLinks = [
+                    { title: 'Quản lý Đề tài', desc: 'Duyệt đề tài, phân công GVPB, phân Hội đồng', url: '/department-head/topics', icon: 'fa-book-open-reader', cat: 'Chức năng' },
+                    { title: 'Đợt đăng ký & Kế hoạch', desc: 'Thiết lập các mốc thời gian đề xuất, đăng ký', url: '/department-head/periods', icon: 'fa-calendar-plus', cat: 'Chức năng' },
+                    { title: 'Hội đồng chấm bảo vệ', desc: 'Thành lập & phân công Hội đồng KLTN / TLCN', url: '/department-head/councils', icon: 'fa-scale-balanced', cat: 'Chức năng' },
+                    { title: 'Tổng hợp Điểm & Kết quả', desc: 'Theo dõi tiến độ chấm & công bố điểm', url: '/department-head/results', icon: 'fa-square-poll-vertical', cat: 'Chức năng' },
+                    { title: 'Lịch kế hoạch & Sự kiện', desc: 'Xem lịch đợt, ngày bảo vệ trên lịch tháng/tuần', url: '/department-head/schedule', icon: 'fa-calendar-days', cat: 'Chức năng' },
+                    { title: 'Quản lý Nhân sự', desc: 'Danh sách Giảng viên, Sinh viên trong đơn vị', url: '/department-head/personnel', icon: 'fa-user-group', cat: 'Chức năng' },
+                    { title: 'Bảng tin Thông báo', desc: 'Đăng thông báo, ghim tin quan trọng toàn khoa', url: '/department-head/announcements', icon: 'fa-bullhorn', cat: 'Chức năng' }
+                ];
+
+                topSearch.addEventListener('input', function() {
+                    const query = this.value.trim().toLowerCase();
+
+                    // Toggle Clear Button
+                    if (clearBtn) {
+                        if (query.length > 0) {
+                            clearBtn.classList.remove('d-none');
+                        } else {
+                            clearBtn.classList.add('d-none');
+                        }
+                    }
+
+                    // 1. Sync with in-page input if exists
+                    const inPageSearch = document.querySelector('input[name="search"], input[name="keyword"], #tableSearchInput, #searchInput, #announcementSearchInput, .results-search-input');
+                    if (inPageSearch && inPageSearch !== topSearch) {
+                        inPageSearch.value = this.value;
+                        inPageSearch.dispatchEvent(new Event('input', { bubbles: true }));
+                        inPageSearch.dispatchEvent(new Event('keyup', { bubbles: true }));
+                    }
+
+                    // 2. Call global filter functions if defined on page
+                    if (typeof filterAnnouncements === 'function') {
+                        filterAnnouncements(query);
+                    }
+                    if (typeof filterTableByKeyword === 'function') {
+                        filterTableByKeyword(query);
+                    }
+
+                    // 3. Fallback table row & card filtering
+                    const rows = document.querySelectorAll('.saas-table tbody tr, .table-saas tbody tr, table.table tbody tr, .filterable-row');
+                    if (rows.length > 0) {
+                        rows.forEach(row => {
+                            const text = row.textContent.toLowerCase();
+                            row.style.display = text.includes(query) ? '' : 'none';
+                        });
+                    }
+
+                    const cards = document.querySelectorAll('.announcement-item-wrapper, .kanban-card');
+                    if (cards.length > 0) {
+                        cards.forEach(card => {
+                            const text = card.textContent.toLowerCase();
+                            card.style.display = text.includes(query) ? '' : 'none';
+                        });
+                    }
+
+                    // 4. Filter Full Calendar events
+                    const calEvents = document.querySelectorAll('.cal-event-pill');
+                    if (calEvents.length > 0) {
+                        calEvents.forEach(ev => {
+                            const text = ev.textContent.toLowerCase();
+                            ev.style.display = text.includes(query) ? '' : 'none';
+                        });
+                    }
+
+                    // 5. Build instant suggestions popup
+                    if (popup && content) {
+                        if (query.length >= 1) {
+                            const matchedLinks = quickLinks.filter(l => l.title.toLowerCase().includes(query) || l.desc.toLowerCase().includes(query));
+                            
+                            let html = '';
+                            if (matchedLinks.length > 0) {
+                                html += '<div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1 mb-1">Chức năng & Lối tắt</div>';
+                                matchedLinks.forEach(l => {
+                                    html += `<a href="${l.url}" class="d-flex align-items-center gap-2.5 p-2 rounded-xl text-decoration-none text-slate-800 hover:bg-slate-50 transition mb-1">
+                                        <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center flex-shrink-0">
+                                            <i class="fa-solid ${l.icon} text-xs"></i>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="font-bold text-xs text-slate-900">${l.title}</div>
+                                            <div class="text-[11px] text-slate-400 text-truncate">${l.desc}</div>
+                                        </div>
+                                    </a>`;
+                                });
+                            }
+
+                            // Also scan visible text on page for matches
+                            const visibleTitles = [];
+                            document.querySelectorAll('.topic-title-link, h2, h5, h6, .announcement-item-wrapper h2').forEach(el => {
+                                const t = (el.textContent || '').trim();
+                                if (t.toLowerCase().includes(query) && !visibleTitles.includes(t) && visibleTitles.length < 5) {
+                                    visibleTitles.push(t);
+                                }
+                            });
+
+                            if (visibleTitles.length > 0) {
+                                html += '<div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1 mt-2 mb-1 border-t border-slate-100">Kết quả trên trang này</div>';
+                                visibleTitles.forEach(t => {
+                                    html += `<div class="p-2 rounded-xl bg-slate-50 border border-slate-100/80 mb-1 text-xs text-slate-800 font-semibold line-clamp-1">
+                                        <i class="fa-solid fa-magnifying-glass text-blue-500 text-[10px] me-1.5"></i> ${t}
+                                    </div>`;
+                                });
+                            }
+
+                            if (!html) {
+                                html = `<div class="p-3 text-center text-slate-400 text-xs">
+                                    <i class="fa-regular fa-folder-open text-base d-block mb-1"></i>
+                                    Không tìm thấy kết quả phù hợp với <strong>"${query}"</strong>
+                                </div>`;
+                            }
+
+                            content.innerHTML = html;
+                            popup.classList.remove('d-none');
+                        } else {
+                            popup.classList.add('d-none');
+                        }
+                    }
+                });
+
+                // Hide popup when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (popup && !popup.contains(e.target) && e.target !== topSearch) {
+                        popup.classList.add('d-none');
+                    }
+                });
+
+                topSearch.addEventListener('focus', function() {
+                    if (this.value.trim().length >= 1 && popup) {
+                        popup.classList.remove('d-none');
+                    }
+                });
+
+                topSearch.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        this.value = '';
+                        this.dispatchEvent(new Event('input'));
+                        if (popup) popup.classList.add('d-none');
+                        this.blur();
+                    } else if (e.key === 'Enter') {
+                        const inPageForm = document.querySelector('form:has(input[name="keyword"]), form:has(input[name="search"])');
+                        if (inPageForm) {
+                            e.preventDefault();
+                            inPageForm.submit();
+                        }
+                    }
+                });
+            });
+        </script>
+    </div>
+</body>
+</html>

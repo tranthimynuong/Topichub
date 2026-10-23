@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:replace="~{fragments/head :: head('Lịch kế hoạch & Đợt')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
+<body class="workspace-page">
+
+    <!-- Left Sidebar -->
+    <aside th:replace="~{fragments/sidebar :: sidebar('schedule', ${user})}"></aside>
+
+    <!-- Main Wrapper -->
+    <div class="saas-main-wrapper">
+        <!-- Topbar -->
+        <header th:replace="~{fragments/topbar :: topbar('Lịch kế hoạch & Đợt', 'Trưởng khoa', '/department-head/dashboard', ${user})}"></header>
+
+        <!-- Main Content View -->
+        <main class="saas-content">
+
+            <!-- Page Title Header -->
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4 anim-fade-up">
+                <div>
+                    <div class="d-flex align-items-center gap-2.5">
+                        <h1 class="text-2xl font-black text-slate-900 tracking-tight mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif;">Lịch kế hoạch & Đợt đăng ký</h1>
+                        <span class="badge bg-teal-100 text-teal-800 font-bold text-xs px-3 py-1 rounded-full">Trưởng khoa</span>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2.5">
+                    <a th:href="@{/department-head/periods}" class="btn-motion-secondary rounded-full px-4 py-2 text-xs font-bold transition d-inline-flex align-items-center gap-2 text-slate-800 bg-white hover:bg-slate-100 border border-slate-200/90 shadow-2xs text-decoration-none">
+                        <i class="fa-solid fa-calendar-plus text-teal-600 text-xs"></i>
+                        <span>Quản lý Đợt</span>
+                    </a>
+                    <a th:href="@{/department-head/councils}" class="btn-motion-primary rounded-full px-4 py-2 text-xs font-bold shadow-wellnest d-inline-flex align-items-center gap-2 transition text-white bg-slate-900 hover:bg-slate-800 border-0 text-decoration-none">
+                        <i class="fa-solid fa-scale-balanced text-teal-300 text-xs"></i>
+                        <span>Hội đồng chấm</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Full Calendar Fragment Ingestion -->
+            <div class="anim-fade-up" style="animation-delay: 0.05s;">
+                <div th:replace="~{fragments/full_calendar :: fullCalendar('Lịch kế hoạch Toàn Khoa', 'DEPARTMENT_HEAD')}"></div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Scripts (includes aiChatWidget) -->
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+</body>
+</html>

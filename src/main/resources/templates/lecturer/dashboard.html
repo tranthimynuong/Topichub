@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+    <head th:replace="~{fragments/head :: head('Bảng điều khiển Giảng viên')}">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>TopicHub</title>
+    </head>
+    <body class="dashboard-page workspace-page">
+        <a class="db-skip" href="#dashboard-main">Đến nội dung chính</a>
+        <!-- Left Sidebar -->
+        <aside th:replace="~{fragments/sidebar :: sidebar('dashboard', ${user})}"></aside>
+        <!-- Main Wrapper -->
+        <div class="saas-main-wrapper">
+            <!-- Topbar -->
+            <header th:replace="~{fragments/topbar :: topbar('Bảng điều khiển', 'Giảng viên', '/lecturer/dashboard', ${user})}"></header>
+            <!-- Main Content View -->
+            <main class="saas-content" id="dashboard-main" tabindex="-1">
+                <div th:if="${successMessage}" class="db-alert" role="status">
+                    <span>
+                        <i class="fa-solid fa-check me-2" aria-hidden="true"></i>
+                        <span th:text="${successMessage}"></span>
+                    </span>
+                </div>
+                <div th:if="${errorMessage}" class="db-alert" role="alert">
+                    <span>
+                        <i class="fa-solid fa-circle-exclamation me-2" aria-hidden="true"></i>
+                        <span th:text="${errorMessage}"></span>
+                    </span>
+                </div>
+                <header class="db-header">
+                    <div>
+                        <div class="db-eyebrow">Không gian giảng viên</div>
+                        <h1>Công việc của tôi</h1>
+                        <p>Theo dõi nhóm hướng dẫn, phản biện và các bài nộp cần đánh giá.</p>
+                    </div>
+                    <div class="db-actions">
+                        <a th:href="@{/lecturer/schedule}" class="db-button">
+                            <span>Lịch công tác</span>
+                            <i class="fa-solid fa-calendar" aria-hidden="true"></i>
+                        </a>
+                        <a th:href="@{/lecturer/topics/create}" class="db-button db-button-primary">
+                            <span>Đề xuất đề tài</span>
+                            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                </header>
+                <div class="db-metrics" aria-label="Thống kê giảng viên">
+                    <a class="db-metric" th:href="@{/lecturer/topics}">
+                        <span class="db-metric-label">Đề tài phụ trách<i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        </span>
+                        <strong class="db-metric-value" th:text="${totalTopics != null ? totalTopics : '—'}">—</strong>
+                        <span class="db-metric-note">Đề xuất và hướng dẫn</span>
+                    </a>
+                    <a class="db-metric" th:href="@{/lecturer/registrations}">
+                        <span class="db-metric-label">Nhóm hướng dẫn<i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        </span>
+                        <strong class="db-metric-value" th:text="${groups != null ? groups.size() : '—'}">—</strong>
+                        <span class="db-metric-note">Sinh viên đang phụ trách</span>
+                    </a>
+                    <a class="db-metric" th:href="@{/lecturer/reviews}">
+                        <span class="db-metric-label">Đề tài phản biện<i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        </span>
+                        <strong class="db-metric-value" th:text="${reviewerCount != null ? reviewerCount : '—'}">—</strong>
+                        <span class="db-metric-note">Theo phân công</span>
+                    </a>
+                    <a class="db-metric" th:href="@{/lecturer/councils}">
+                        <span class="db-metric-label">Hội đồng tham gia<i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        </span>
+                        <strong class="db-metric-value" th:text="${councilCount != null ? councilCount : '—'}">—</strong>
+                        <span class="db-metric-note">Lịch bảo vệ và chấm điểm</span>
+                    </a>
+                </div>
+                <div class="db-layout">
+                    <div class="db-stack">
+                        <section class="db-panel">
+                            <div class="db-panel-header">
+                                <div>
+                                    <h2>Cần xử lý</h2>
+                                    <p>Các công việc được tổng hợp từ nhóm và đề tài bạn phụ trách.</p>
+                                </div>
+                            </div>
+                            <ul class="db-list">
+                                <li>
+                                    <a th:href="@{/lecturer/registrations}" class="db-quick-link">
+                                        <span>
+                                            <i class="fa-regular fa-user" aria-hidden="true"></i>Nhóm chờ duyệt hướng dẫn</span>
+                                        <span class="db-tag" th:text="${pendingGroups != null ? pendingGroups.size() : 0}">—</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/lecturer/submissions}" class="db-quick-link">
+                                        <span>
+                                            <i class="fa-regular fa-file-lines" aria-hidden="true"></i>Bài nộp chưa đánh giá</span>
+                                        <span class="db-tag" th:text="${ungradedSubmissions != null ? ungradedSubmissions.size() : 0}">—</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/lecturer/topics}" class="db-quick-link">
+                                        <span>
+                                            <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>Đề xuất cần chỉnh sửa</span>
+                                        <span class="db-tag" th:text="${rejectedTopics != null ? rejectedTopics.size() : 0}">—</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/lecturer/registrations}" class="db-quick-link">
+                                        <span>
+                                            <i class="fa-regular fa-comment-dots" aria-hidden="true"></i>Yêu cầu rút / giải tán nhóm</span>
+                                        <span class="db-tag" th:text="${(pendingLeaveRequests != null ? pendingLeaveRequests.size() : 0) + (pendingDissolveRequests != null ? pendingDissolveRequests.size() : 0)}">—</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </section>
+                        <section class="db-panel">
+                            <div class="db-panel-header">
+                                <div>
+                                    <h2>Đề tài của tôi</h2>
+                                </div>
+                                <a th:href="@{/lecturer/topics}" class="db-button">
+                                    <span>Tất cả đề tài</span>
+                                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                                </a>
+                            </div>
+                            <div class="db-table-scroll" tabindex="0" role="region" aria-label="Đề tài của giảng viên" th:if="${topics != null &amp;&amp; !topics.isEmpty()}">
+                                <table class="db-table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Đề tài</th>
+                                            <th scope="col">Khoa</th>
+                                            <th scope="col">Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="t, iter : ${topics}" th:if="${iter.index &lt; 5}">
+                                            <td>
+                                                <button class="db-cell-title db-title-button" th:text="${t.title}" type="button" onclick="openTopicDrawer(this)" th:aria-label="${'Xem chi tiết đề tài ' + t.code}" th:data-topic-id="${t.id}" th:data-topic-code="${t.code}" th:data-topic-title="${t.title}" th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}" th:data-topic-major="${t.department != null ? t.department.name : 'Khoa CNTT'}" th:data-topic-supervisor="${t.supervisor != null &amp;&amp; t.supervisor.user != null ? t.supervisor.user.fullName : 'Tôi'}" th:data-topic-co-supervisor="${t.coSupervisor != null &amp;&amp; t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}" th:data-topic-reviewer="${t.reviewer != null &amp;&amp; t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}" th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}" th:data-topic-max-students="${t.maxStudents}" th:data-topic-status="${t.status}" th:data-topic-rejection-reason="${t.rejectionReason}" th:data-topic-description="${t.description}" th:data-topic-requirements="${t.requirements}" th:data-topic-role="LECTURER"></button>
+                                                <span class="db-cell-meta" th:text="${t.code + (t.period != null ? ' · ' + t.period.name : '')}"></span>
+                                            </td>
+                                            <td th:text="${t.department != null ? t.department.name : 'Khoa CNTT'}"></td>
+                                            <td>
+                                                <span class="db-tag" th:classappend="${t.status == 'PENDING' ? 'db-tag-warning' : ''}" th:text="${t.status == 'APPROVED' ? 'Đã duyệt' : (t.status == 'REJECTED' ? 'Cần chỉnh sửa' : (t.status == 'PENDING' ? 'Chờ duyệt' : 'Bản nháp'))}"></span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div th:if="${topics == null || topics.isEmpty()}">
+                                <div class="db-empty">
+                                    <i class="fa-regular fa-folder-open" aria-hidden="true"></i>
+                                    <h3>Chưa có đề tài phụ trách</h3>
+                                    <p>Bắt đầu bằng việc đề xuất đề tài trong một đợt đang mở.</p>
+                                    <a th:href="@{/lecturer/topics/create}" class="db-button">
+                                        <span>Đề xuất đề tài</span>
+                                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="db-panel">
+                            <div class="db-panel-header">
+                                <div>
+                                    <h2>Phân công phản biện</h2>
+                                </div>
+                                <a th:href="@{/lecturer/reviews}" class="db-button">
+                                    <span>Xem phân công</span>
+                                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                                </a>
+                            </div>
+                            <div class="db-table-scroll" tabindex="0" role="region" aria-label="Phân công phản biện" th:if="${reviewerTopics != null &amp;&amp; !reviewerTopics.isEmpty()}">
+                                <table class="db-table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Đề tài được phân công</th>
+                                            <th scope="col" class="db-cell-actions">Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="t, iter : ${reviewerTopics}" th:if="${iter.index &lt; 3}">
+                                            <td>
+                                                <span class="db-cell-title" th:text="${t.title}"></span>
+                                                <span class="db-cell-meta" th:text="${t.code}"></span>
+                                            </td>
+                                            <td class="db-cell-actions">
+                                                <button type="button" class="db-button db-button-small" th:data-grade-url="@{/lecturer/reviews/{id}/grade(id=${t.id})}" th:data-topic-title="${t.title}" onclick="openReviewerGradeModal(this.dataset.gradeUrl, this.dataset.topicTitle)">Nhập điểm<i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div th:if="${reviewerTopics == null || reviewerTopics.isEmpty()}">
+                                <div class="db-empty">
+                                    <i class="fa-regular fa-clipboard" aria-hidden="true"></i>
+                                    <h3>Chưa có phân công phản biện</h3>
+                                    <p>Các đề tài được phân công sẽ xuất hiện tại đây.</p>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <aside class="db-stack" aria-label="Thông tin giảng viên">
+                        <section class="db-panel">
+                            <div class="db-panel-header">
+                                <div>
+                                    <h2>Tiến độ đề xuất</h2>
+                                </div>
+                            </div>
+                            <div th:each="prog, iter : ${proposalProgressList}" th:if="${iter.index &lt; 3}" class="db-period">
+                                <h3 th:text="${prog.period.name}"></h3>
+                                <p>
+                                    <span th:text="${prog.proposedCount}"></span> / <span th:text="${prog.minRequired}"></span> đề xuất theo yêu cầu</p>
+                                <p th:text="${prog.targetReached ? 'Đã đạt số lượng đề xuất' : 'Còn thiếu ' + prog.remainingNeeded + ' đề xuất'}"></p>
+                                <p>Hạn đề xuất: <time th:text="${prog.period.lecturerProposalEnd != null ? #temporals.format(prog.period.lecturerProposalEnd, 'dd/MM/yyyy') : 'Chưa thiết lập'}"></time>
+                                </p>
+                                <div class="db-progress" role="progressbar" th:aria-label="${'Tiến độ đề xuất: ' + prog.period.name}" aria-valuemin="0" aria-valuemax="100" th:aria-valuenow="${prog.progressPercent}">
+                                    <span th:style="${'width:' + prog.progressPercent + '%'}"></span>
+                                </div>
+                            </div>
+                            <div th:if="${proposalProgressList == null || proposalProgressList.isEmpty()}">
+                                <div class="db-empty">
+                                    <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                                    <h3>Chưa có đợt đề xuất</h3>
+                                    <p>Theo dõi các đợt mới trong lịch công tác.</p>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="db-panel">
+                            <div class="db-panel-header">
+                                <div>
+                                    <h2>Truy cập nhanh</h2>
+                                </div>
+                            </div>
+                            <ul class="db-list">
+                                <li>
+                                    <a class="db-quick-link" th:href="@{/lecturer/submissions}">
+                                        <span>
+                                            <i class="fa-solid fa-file-lines" aria-hidden="true"></i>Đánh giá bài nộp</span>
+                                        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="db-quick-link" th:href="@{/lecturer/registrations}">
+                                        <span>
+                                            <i class="fa-solid fa-users" aria-hidden="true"></i>Nhóm sinh viên</span>
+                                        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="db-quick-link" th:href="@{/lecturer/councils}">
+                                        <span>
+                                            <i class="fa-solid fa-scale-balanced" aria-hidden="true"></i>Hội đồng &amp; lịch bảo vệ</span>
+                                        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </section>
+                        <section class="db-panel">
+                            <div class="db-panel-header">
+                                <div>
+                                    <h2>Thông báo mới</h2>
+                                </div>
+                            </div>
+                            <details class="db-notice" th:each="a : ${announcements}">
+                                <summary>
+                                    <span th:text="${a.title}"></span>
+                                    <time th:if="${a.createdAt != null}" th:datetime="${#temporals.format(a.createdAt, 'yyyy-MM-dd')}" th:text="${#temporals.format(a.createdAt, 'dd/MM/yyyy')}"></time>
+                                </summary>
+                                <p th:text="${a.content}"></p>
+                            </details>
+                            <div th:if="${announcements == null || announcements.isEmpty()}">
+                                <div class="db-empty">
+                                    <i class="fa-regular fa-bell" aria-hidden="true"></i>
+                                    <h3>Chưa có thông báo</h3>
+                                    <p>Các thông báo mới sẽ xuất hiện tại đây.</p>
+                                </div>
+                            </div>
+                        </section>
+                    </aside>
+                </div>
+            </main>
+        </div>
+        <!-- Modal Reviewer Grade -->
+        <div class="modal fade" id="modalReviewerGrade" tabindex="-1" aria-hidden="true" aria-labelledby="lecturer-dialog-0-title">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-2xl border-0 shadow-xl">
+                    <form id="formReviewerGrade" th:action="@{/lecturer/reviews/0/grade}" method="post">
+                        <div class="modal-header border-b border-slate-100 p-4">
+                            <h2 class="modal-title font-bold text-slate-900 text-sm" id="lecturer-dialog-0-title">
+                                <i class="fa-solid fa-clipboard-check text-blue-600 me-1.5"></i> Chấm điểm Phản biện Đề tài (GVPB)
+                        </h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
+                        </div>
+                        <div class="modal-body p-4 space-y-3">
+                            <p class="font-semibold text-slate-900 text-xs mb-0 p-2.5 bg-slate-50 rounded-xl border border-slate-100" id="reviewerTopicTitle"></p>
+                            <div>
+                                <label class="form-label text-xs font-semibold text-slate-700" for="lecturer-dialog-0-score">Điểm phản biện (Thang điểm 10) <span class="text-rose-600">*</span>
+                                </label>
+                                <input type="number" step="0.1" min="0" max="10" name="score" class="form-control text-xs rounded-xl" placeholder="vd: 8.5" required id="lecturer-dialog-0-score" aria-label="Điểm phản biện (Thang điểm 10)" title="Điểm phản biện (Thang điểm 10)">
+                            </div>
+                            <div>
+                                <label class="form-label text-xs font-semibold text-slate-700" for="lecturer-dialog-0-comments">Nhận xét chi tiết của GVPB <span class="text-rose-600">*</span>
+                                </label>
+                                <textarea name="comments" class="form-control text-xs rounded-xl" rows="4" placeholder="Nhận xét về ưu điểm, hạn chế và kết quả đạt được..." required id="lecturer-dialog-0-comments" aria-label="Nhận xét chi tiết của GVPB" title="Nhận xét chi tiết của GVPB"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-t border-slate-100 p-3">
+                            <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium">
+                                <i class="fa-solid fa-paper-plane me-1"></i> Lưu &amp; Nộp điểm
+                        </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- Topic Detail Drawer Fragment included via scripts fragment -->
+        <!-- Scripts Fragment -->
+        <div th:replace="~{fragments/scripts :: scripts}"></div>
+        <script>
+        function openReviewerGradeModal(actionUrl, title) {
+            document.getElementById('formReviewerGrade').action = actionUrl;
+            document.getElementById('reviewerTopicTitle').textContent = typeof decodeUnicode === 'function' ? decodeUnicode(title) : title;
+            new bootstrap.Modal(document.getElementById('modalReviewerGrade')).show();
+        }
+    </script>
+    </body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:replace="~{fragments/head :: head('Lịch trình & Đợt')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
+<body class="workspace-page">
+
+    <!-- Left Sidebar -->
+    <aside th:replace="~{fragments/sidebar :: sidebar('schedule', ${user})}"></aside>
+
+    <!-- Main Wrapper -->
+    <div class="saas-main-wrapper">
+        <!-- Topbar -->
+        <header th:replace="~{fragments/topbar :: topbar('Lịch trình & Đợt', 'Giảng viên', '/lecturer/dashboard', ${user})}"></header>
+
+        <!-- Main Content View -->
+        <main class="saas-content">
+
+            <!-- Page Title Header -->
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4 anim-fade-up">
+                <div>
+                    <div class="d-flex align-items-center gap-2.5">
+                        <h1 class="text-2xl font-black text-slate-900 tracking-tight mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif;">Lịch trình & Sự kiện</h1>
+                        <span class="badge bg-teal-100 text-teal-800 font-bold text-xs px-3 py-1 rounded-full">Giảng viên</span>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2.5">
+                    <a th:href="@{/lecturer/councils}" class="btn bg-white hover:bg-slate-50 text-slate-800 border border-slate-200/80 rounded-full px-4 py-2 text-xs font-bold transition d-inline-flex align-items-center gap-2 shadow-2xs">
+                        <i class="fa-solid fa-scale-balanced text-teal-600 text-xs"></i>
+                        <span>Hội đồng của tôi (<span th:text="${councils != null ? #lists.size(councils) : 0}">0</span>)</span>
+                    </a>
+                    <a th:href="@{/lecturer/reviews}" class="btn bg-slate-900 hover:bg-slate-800 text-teal-300 rounded-full px-4 py-2 text-xs font-bold shadow-wellnest d-inline-flex align-items-center gap-2 transition border-0">
+                        <i class="fa-solid fa-clipboard-check text-xs"></i>
+                        <span>Chấm phản biện (<span th:text="${reviewerTopics != null ? #lists.size(reviewerTopics) : 0}">0</span>)</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Full Calendar Fragment Ingestion -->
+            <div class="anim-fade-up" style="animation-delay: 0.05s;">
+                <div th:replace="~{fragments/full_calendar :: fullCalendar('Lịch trình Giảng viên', 'LECTURER')}"></div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Scripts (includes aiChatWidget) -->
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+</body>
+</html>

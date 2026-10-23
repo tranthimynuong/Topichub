@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
+<head th:replace="~{fragments/head :: head('Quản lý Nhân sự & Nhóm')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
+
+<body class="workspace-page">
+
+    <!-- Left Sidebar -->
+    <aside th:replace="~{fragments/sidebar :: sidebar('personnel', ${user})}"></aside>
+
+    <!-- Main Wrapper -->
+    <div class="saas-main-wrapper">
+        <!-- Topbar -->
+        <header
+            th:replace="~{fragments/topbar :: topbar('Quản lý Nhân sự', ${user != null && user.role != null ? user.role.name : 'Trưởng Khoa'}, '/department-head/dashboard', ${user})}">
+        </header>
+
+        <!-- Main Content View -->
+        <main class="saas-content">
+
+            <!-- Flash Messages -->
+            <div th:if="${successMessage}"
+                class="alert alert-success alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-emerald-200"
+                role="alert">
+                <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span
+                    th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
+            </div>
+            <div th:if="${errorMessage}"
+                class="alert alert-danger alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-rose-200"
+                role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-1.5 text-rose-600"></i> <span
+                    th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
+            </div>
+
+            <!-- Page Header with Segmented Tabs -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <h1 class="text-lg font-bold text-slate-900 mb-0">Quản Lý Nhân Sự & Sinh Viên</h1>
+                    <span class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200"
+                        th:text="${department != null ? department.name : 'Khoa CNTT'}">Khoa CNTT</span>
+                </div>
+
+                <!-- Modern Segmented Pill Tabs -->
+                <div
+                    class="segmented-control bg-slate-100 p-1 rounded-xl d-inline-flex border border-slate-200/80 shadow-xs">
+                    <button type="button" class="segmented-tab px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+                        th:classappend="${activeTab == 'lecturers' ? 'active bg-white text-blue-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'}"
+                        onclick="switchPersonnelTab('lecturers')">
+                        <i class="fa-solid fa-chalkboard-user me-1.5"></i> Giảng viên (<span
+                            th:text="${#lists.size(lecturers)}">2</span>)
+                    </button>
+                    <button type="button" class="segmented-tab px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+                        th:classappend="${activeTab == 'students' ? 'active bg-white text-blue-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'}"
+                        onclick="switchPersonnelTab('students')">
+                        <i class="fa-solid fa-users me-1.5"></i> Sinh viên & Nhóm (<span
+                            th:text="${totalGroups != null ? totalGroups : 0}">5</span>)
+                    </button>
+                </div>
+            </div>
+
+            <!-- ================= TAB 1: LECTURERS ================= -->
+            <div id="tabLecturers" th:style="${activeTab == 'lecturers' ? 'display: block;' : 'display: none;'}">
+                <!-- 1-Row Toolbar for Lecturers -->
+                <div class="saas-card p-3 mb-4 workspace-filterbar">
+                    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                        <div class="relative flex-grow-1 max-w-md">
+                            <input type="text" class="form-control form-control-sm rounded-xl pl-8 text-xs"
+                                placeholder="Tìm kiếm theo tên giảng viên, mã GV, email..."
+                                onkeyup="filterLecturers(this.value)" title="Tìm kiếm theo tên giảng viên, mã GV, email..." aria-label="Tìm kiếm theo tên giảng viên, mã GV, email...">
+                            <i
+                                class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none"></i>
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <select id="selectAcademic" class="form-select form-select-sm rounded-xl text-xs"
+                                style="width: 200px;" onchange="filterLecturersByAcademic(this.value)" title="selectAcademic" aria-label="selectAcademic">
+                                <option value="all">-- Tất cả học vị --</option>
+                                <option value="PGS">PGS.TS / Phó Giáo Sư</option>
+                                <option value="TS">TS / Tiến sĩ</option>
+                                <option value="ThS">ThS / Thạc sĩ</option>
+                            </select>
+                            <span class="badge-pill-neutral font-medium text-xs ms-1"
+                                th:text="'Tổng số: ' + ${#lists.size(lecturers)} + ' giảng viên'"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lecturers Table -->
+                <div
+                    class="table-saas-container mb-4 shadow-sm border border-slate-100 rounded-2xl overflow-hidden bg-white">
+                    <div class="w-full overflow-x-auto">
+                        <table class="table table-saas mb-0" id="tableLecturers">
+                            <thead>
+                                <tr>
+                                    <th style="width: 28%;" scope="col">Giảng viên</th>
+                                    <th style="width: 14%;" scope="col">Mã GV</th>
+                                    <th style="width: 18%;" scope="col">Học hàm / Học vị</th>
+                                    <th style="width: 20%;" scope="col">Email & Liên hệ</th>
+                                    <th style="width: 20%;" scope="col">Tải hướng dẫn (Quota)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${lecturers == null or lecturers.isEmpty()}">
+                                    <td colspan="5" class="text-center py-5 text-slate-400 text-xs">
+                                        <i class="fa-regular fa-folder-open text-2xl mb-2 d-block text-slate-300"></i>
+                                        Chưa có danh sách giảng viên trong khoa.
+                                    </td>
+                                </tr>
+                                <tr th:each="l : ${lecturers}" class="lecturer-row"
+                                    th:data-academic="${l.academicTitle != null ? l.academicTitle : ''}">
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2.5">
+                                            <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 font-bold flex items-center justify-center text-xs flex-shrink-0"
+                                                th:text="${l.user != null and l.user.fullName != null and !l.user.fullName.isEmpty() ? l.user.fullName.substring(0, 1) : 'G'}">
+                                                G</div>
+                                            <div>
+                                                <div class="font-bold text-slate-900 text-xs line-clamp-1"
+                                                    th:text="${l.user != null ? l.user.fullName : 'Giảng viên'}">TS.
+                                                    Nguyễn Văn A</div>
+                                                <span class="text-slate-400 text-xs truncate-cell"
+                                                    th:text="${l.department != null ? l.department.name : 'Khoa CNTT'}">Khoa
+                                                    CNTT</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold"
+                                            th:text="${l.lecturerCode}">GV001</span>
+                                    </td>
+                                    <td>
+                                        <span class="font-medium text-slate-900 text-xs"
+                                            th:text="${(l.academicTitle != null ? l.academicTitle : '') + (l.degree != null ? ' - ' + l.degree : '')}">TS
+                                            - Tiến sĩ</span>
+                                    </td>
+                                    <td>
+                                        <div class="text-slate-800 text-xs truncate-cell"
+                                            th:text="${l.user != null ? l.user.email : ''}">email@edu.vn</div>
+                                        <span class="text-slate-400 text-xs font-mono"
+                                            th:text="${l.user != null and l.user.phone != null ? l.user.phone : ''}">0905123456</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column gap-1">
+                                            <div class="d-flex justify-content-between align-items-center text-xs">
+                                                <span class="font-bold text-slate-900"
+                                                    th:text="${(lecturerTopicCountMap != null && lecturerTopicCountMap[l.id] != null ? lecturerTopicCountMap[l.id] : 0) + ' / ' + l.maxTopicsQuota + ' đề tài'}">0
+                                                    / 5 đề tài</span>
+                                                <span
+                                                    class="badge bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] px-1.5 py-0.2 rounded font-semibold"
+                                                    th:if="${lecturerTopicCountMap == null || lecturerTopicCountMap[l.id] == null || lecturerTopicCountMap[l.id] < l.maxTopicsQuota}">Còn
+                                                    chỉ tiêu</span>
+                                                <span
+                                                    class="badge bg-amber-50 text-amber-700 border border-amber-200 text-[10px] px-1.5 py-0.2 rounded font-semibold"
+                                                    th:if="${lecturerTopicCountMap != null && lecturerTopicCountMap[l.id] != null && lecturerTopicCountMap[l.id] >= l.maxTopicsQuota}">Đã
+                                                    đủ tải</span>
+                                            </div>
+                                            <div class="w-100 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                                <div class="bg-blue-600 h-1.5 rounded-full"
+                                                    th:style="'width: ' + ${((lecturerTopicCountMap != null && lecturerTopicCountMap[l.id] != null ? lecturerTopicCountMap[l.id] : 0) * 100.0 / (l.maxTopicsQuota > 0 ? l.maxTopicsQuota : 5))} + '%;'">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB 2: STUDENTS & GROUPS ================= -->
+            <div id="tabStudents" th:style="${activeTab == 'students' ? 'display: block;' : 'display: none;'}">
+                <!-- 1-Row Toolbar for Students & Groups -->
+                <div class="saas-card p-3 mb-4 workspace-filterbar">
+                    <form th:action="@{/department-head/personnel}" method="get"
+                        class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                        <input type="hidden" name="tab" value="students">
+                        <div class="relative flex-grow-1 max-w-md">
+                            <input type="text" class="form-control form-control-sm rounded-xl pl-8 text-xs"
+                                placeholder="Tìm theo mã nhóm, tên nhóm, sinh viên, đề tài..."
+                                onkeyup="filterStudentGroups(this.value)" title="Tìm theo mã nhóm, tên nhóm, sinh viên, đề tài..." aria-label="Tìm theo mã nhóm, tên nhóm, sinh viên, đề tài...">
+                            <i
+                                class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none"></i>
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <select id="periodId" name="periodId" class="form-select form-select-sm rounded-xl text-xs"
+                                style="width: 220px;" onchange="this.form.submit()" title="periodId" aria-label="periodId">
+                                <option value="" th:selected="${selectedPeriodId == null}">-- Tất cả các đợt đăng ký --</option>
+                                <option th:each="p : ${periods}" th:value="${p.id}" th:text="${p.name}"
+                                    th:selected="${selectedPeriodId != null && selectedPeriodId == p.id}"></option>
+                            </select>
+                            <select id="selectGroupStatus" class="form-select form-select-sm rounded-xl text-xs"
+                                style="width: 170px;" onchange="filterGroupByStatus(this.value)" title="selectGroupStatus" aria-label="selectGroupStatus">
+                                <option value="all">-- Tất cả trạng thái --</option>
+                                <option value="assigned">Đã có đề tài</option>
+                                <option value="unassigned">Chưa chọn đề tài</option>
+                            </select>
+                            <button type="button"
+                                class="btn btn-sm btn-dark rounded-xl px-3 py-1.5 text-xs font-semibold shadow-xs ms-1"
+                                data-bs-toggle="modal" data-bs-target="#modalMergeGroups">
+                                <i class="fa-solid fa-code-merge me-1.5 text-amber-400"></i> Gộp nhóm thiếu người
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Clean Minimalist Groups Table -->
+                <div
+                    class="table-saas-container mb-4 shadow-sm border border-slate-100 rounded-2xl overflow-hidden bg-white">
+                    <div class="w-full overflow-x-auto">
+                        <table class="table table-saas mb-0" id="tableStudentGroups">
+                            <thead>
+                                <tr>
+                                    <th style="width: 22%;" scope="col">Nhóm Sinh Viên</th>
+                                    <th style="width: 24%;" scope="col">Trưởng Nhóm / Thành Viên</th>
+                                    <th style="width: 36%;" scope="col">Đề Tài Đăng Ký & GVHD</th>
+                                    <th style="width: 18%;" class="text-end" scope="col">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${groups == null or groups.isEmpty()}">
+                                    <td colspan="4" class="text-center py-5 text-slate-400 text-xs">
+                                        <i class="fa-regular fa-folder-open text-2xl mb-2 d-block text-slate-300"></i>
+                                        Chưa có nhóm sinh viên nào trong đợt đã chọn.
+                                    </td>
+                                </tr>
+                                <tr th:each="g : ${groups}" class="group-row"
+                                    th:data-has-topic="${g.topic != null ? 'yes' : 'no'}">
+                                    <td>
+                                        <div class="font-bold text-slate-900 text-xs" th:text="${g.groupName}">Nhóm 1
+                                        </div>
+                                        <div class="d-flex align-items-center gap-1.5 mt-0.5">
+                                            <span
+                                                class="badge bg-slate-100 text-slate-700 border border-slate-200 text-xs px-1.5 py-0.2 rounded font-mono"
+                                                th:text="${g.groupCode}">GR001</span>
+                                            <span class="badge bg-blue-50 text-blue-700 text-xs px-1.5 py-0.2 rounded"
+                                                th:text="${g.members != null ? g.members.size() + ' SV' : '1 SV'}">2
+                                                SV</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="font-semibold text-slate-900 text-xs"
+                                            th:text="${g.leader != null && g.leader.user != null ? g.leader.user.fullName : 'Trưởng nhóm'}">
+                                            Nguyễn Văn A</div>
+                                        <span class="text-slate-400 text-xs font-mono"
+                                            th:text="${g.leader != null ? g.leader.studentCode : ''}">2021001</span>
+                                    </td>
+                                    <td>
+                                        <div th:if="${g.topic != null}">
+                                            <div class="font-bold text-slate-900 text-xs line-clamp-1"
+                                                th:text="${g.topic.title}" th:title="${g.topic.title}">Tên đề tài</div>
+                                            <div class="text-slate-400 text-xs mt-0.5">
+                                                GVHD: <strong class="text-slate-700"
+                                                    th:text="${g.topic.supervisor != null && g.topic.supervisor.user != null ? g.topic.supervisor.user.fullName : 'N/A'}"></strong>
+                                            </div>
+                                        </div>
+                                        <div th:unless="${g.topic != null}">
+                                            <span
+                                                class="badge bg-amber-50 text-amber-800 border border-amber-200 text-xs px-2 py-0.5 rounded-md font-medium">Chưa
+                                                đăng ký đề tài</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <form th:if="${g.topic != null}"
+                                            th:action="@{/department-head/students/groups/{id}/unassign-topic(id=${g.id})}"
+                                            method="post" class="d-inline"
+                                            onsubmit="return confirm('Bạn có chắc chắn muốn hủy gán đề tài cho nhóm này?');">
+                                            <input type="hidden" name="periodId" th:value="${selectedPeriodId}">
+                                            <button type="submit"
+                                                class="btn btn-sm btn-outline-danger rounded-xl px-2.5 py-1 text-xs font-medium"
+                                                title="Hủy gán đề tài">
+                                                <i class="fa-solid fa-link-slash me-1"></i> Hủy gán
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pagination for Groups -->
+                <div class="d-flex align-items-center justify-content-between p-3 bg-white border border-slate-100 rounded-2xl shadow-xs"
+                    th:if="${totalPages > 1}">
+                    <span class="text-xs text-slate-500 font-medium"
+                        th:text="'Trang ' + ${currentPage} + ' / ' + ${totalPages} + ' (' + ${totalGroups} + ' nhóm)'">Trang
+                        1 / 1</span>
+                    <div class="d-flex align-items-center gap-1.5">
+                        <a th:if="${hasPrevious}"
+                            th:href="@{/department-head/personnel(tab='students', periodId=${selectedPeriodId}, page=${currentPage - 1})}"
+                            class="btn btn-sm btn-light border rounded-xl px-3 text-xs">Trước</a>
+                        <a th:if="${hasNext}"
+                            th:href="@{/department-head/personnel(tab='students', periodId=${selectedPeriodId}, page=${currentPage + 1})}"
+                            class="btn btn-sm btn-light border rounded-xl px-3 text-xs">Tiếp</a>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Merge Groups Modal -->
+    <div class="modal fade" id="modalMergeGroups" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-2xl border-0 shadow-xl">
+                <form th:action="@{/department-head/students/groups/merge}" method="post">
+                    <div class="modal-header border-b border-slate-100 p-4">
+                        <h6 class="modal-title font-bold text-slate-900 text-sm">
+                            <i class="fa-solid fa-code-merge text-amber-500 me-1.5"></i> Gộp Các Nhóm Sinh Viên Thiếu
+                            Người
+                        </h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
+                    </div>
+                    <div class="modal-body p-4 space-y-3">
+                        <p class="text-xs text-slate-500 mb-3">Tính năng cho phép Trưởng khoa gộp các nhóm đơn lẻ
+                            dưới sĩ số tối thiểu vào 1 nhóm hợp lệ.</p>
+                        <div>
+                            <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-personnel-7">Chọn Nhóm Đích (Nhóm nhận
+                                thành viên) *</label>
+                            <select name="targetGroupId" class="form-select text-xs rounded-xl" required title="Chọn Nhóm Đích (Nhóm nhận thành viên)" aria-label="Chọn Nhóm Đích (Nhóm nhận thành viên)" id="field-department-head-personnel-7">
+                                <option value="">-- Chọn nhóm đích --</option>
+                                <option th:each="g : ${groups}" th:value="${g.id}"
+                                    th:text="${g.groupCode + ' - ' + g.groupName + ' (' + (g.members != null ? g.members.size() : 1) + ' SV)'}">
+                                </option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-personnel-8">Chọn Nhóm Nguồn (Sẽ giải tán
+                                sau khi gộp) *</label>
+                            <select name="sourceGroupId" class="form-select text-xs rounded-xl" required title="Chọn Nhóm Nguồn (Sẽ giải tán sau khi gộp)" aria-label="Chọn Nhóm Nguồn (Sẽ giải tán sau khi gộp)" id="field-department-head-personnel-8">
+                                <option value="">-- Chọn nhóm nguồn --</option>
+                                <option th:each="g : ${groups}" th:value="${g.id}"
+                                    th:text="${g.groupCode + ' - ' + g.groupName + ' (' + (g.members != null ? g.members.size() : 1) + ' SV)'}">
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-t border-slate-100 p-3">
+                        <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs"
+                            data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-semibold">Thực
+                            hiện gộp nhóm</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Fragment -->
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+
+    <script>
+        function switchPersonnelTab(tab) {
+            const tabLec = document.getElementById('tabLecturers');
+            const tabStu = document.getElementById('tabStudents');
+            if (tab === 'lecturers') {
+                tabLec.style.display = 'block';
+                tabStu.style.display = 'none';
+            } else {
+                tabLec.style.display = 'none';
+                tabStu.style.display = 'block';
+            }
+            // Update URL without reload
+            const url = new URL(window.location);
+            url.searchParams.set('tab', tab);
+            window.history.replaceState({}, '', url);
+
+            // Update tab styles
+            document.querySelectorAll('.segmented-tab').forEach((btn, idx) => {
+                if ((tab === 'lecturers' && idx === 0) || (tab === 'students' && idx === 1)) {
+                    btn.classList.add('active', 'bg-white', 'text-blue-600', 'shadow-sm');
+                    btn.classList.remove('text-slate-600');
+                } else {
+                    btn.classList.remove('active', 'bg-white', 'text-blue-600', 'shadow-sm');
+                    btn.classList.add('text-slate-600');
+                }
+            });
+        }
+
+        function filterLecturers(keyword) {
+            keyword = keyword.toLowerCase().trim();
+            const rows = document.querySelectorAll('#tableLecturers .lecturer-row');
+            rows.forEach(r => {
+                const text = r.textContent.toLowerCase();
+                r.style.display = text.includes(keyword) ? '' : 'none';
+            });
+        }
+
+        function filterLecturersByAcademic(val) {
+            const rows = document.querySelectorAll('#tableLecturers .lecturer-row');
+            rows.forEach(r => {
+                const ac = r.getAttribute('data-academic') || '';
+                if (val === 'all' || ac.includes(val)) {
+                    r.style.display = '';
+                } else {
+                    r.style.display = 'none';
+                }
+            });
+        }
+
+        function filterStudentGroups(keyword) {
+            keyword = keyword.toLowerCase().trim();
+            const rows = document.querySelectorAll('#tableStudentGroups .group-row');
+            rows.forEach(r => {
+                const text = r.textContent.toLowerCase();
+                r.style.display = text.includes(keyword) ? '' : 'none';
+            });
+        }
+
+        function filterGroupByStatus(val) {
+            const rows = document.querySelectorAll('#tableStudentGroups .group-row');
+            rows.forEach(r => {
+                const hasTopic = r.getAttribute('data-has-topic');
+                if (val === 'all') {
+                    r.style.display = '';
+                } else if (val === 'assigned' && hasTopic === 'yes') {
+                    r.style.display = '';
+                } else if (val === 'unassigned' && hasTopic === 'no') {
+                    r.style.display = '';
+                } else {
+                    r.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<body>
+    <div th:fragment="fullCalendar(calendarTitle, userRole)" class="full-calendar-wrapper">
+
+        <!-- Safe Event Data Container via DOM Data Attributes -->
+        <div id="serverCalendarEventsData" style="display: none;">
+            <th:block th:if="${councils != null}" th:each="c : ${councils}">
+                <div class="server-cal-event" 
+                     th:data-id="${'council-' + c.id}"
+                     data-type="COUNCIL"
+                     data-type-name="Hội đồng chấm bảo vệ"
+                     th:data-title="${c.name != null ? c.name : 'Hội đồng bảo vệ'}"
+                     th:data-date="${c.defenseDate != null ? #temporals.format(c.defenseDate, 'yyyy-MM-dd') : ''}"
+                     th:data-time="${c.defenseDate != null ? #temporals.format(c.defenseDate, 'HH:mm') : '08:30'}"
+                     th:data-location="${c.location != null && !c.location.isEmpty() ? c.location : 'Phòng bảo vệ'}"
+                     th:data-code="${c.code != null ? c.code : ''}"
+                     data-color-class="cal-event-teal"
+                     data-icon="fa-scale-balanced"
+                     th:data-action-url="${userRole == 'LECTURER' ? '/lecturer/councils' : (userRole == 'DEPARTMENT_HEAD' ? '/department-head/councils' : '#')}">
+                </div>
+            </th:block>
+            <th:block th:if="${reviewerTopics != null}" th:each="rt : ${reviewerTopics}">
+                <div class="server-cal-event"
+                     th:data-id="${'review-' + rt.id}"
+                     data-type="REVIEW"
+                     data-type-name="Chấm phản biện (GVPB)"
+                     th:data-title="${'GVPB: ' + rt.title}"
+                     th:data-date="${rt.period != null && rt.period.reviewerDeadline != null ? #temporals.format(rt.period.reviewerDeadline, 'yyyy-MM-dd') : '2026-09-25'}"
+                     data-time="17:00"
+                     data-location="Nộp phiếu điểm trực tuyến"
+                     th:data-code="${rt.code != null ? rt.code : ''}"
+                     data-color-class="cal-event-cyan"
+                     data-icon="fa-clipboard-check"
+                     data-action-url="/lecturer/reviews">
+                </div>
+            </th:block>
+            <th:block th:if="${periods != null}" th:each="p : ${periods}">
+                <div th:if="${p.lecturerProposalEnd != null}" class="server-cal-event"
+                     th:data-id="${'prop-end-' + p.id}"
+                     data-type="PERIOD"
+                     data-type-name="Hạn nộp đề xuất đề tài"
+                     th:data-title="${'Hạn đề xuất: ' + p.name}"
+                     th:data-date="${#temporals.format(p.lecturerProposalEnd, 'yyyy-MM-dd')}"
+                     th:data-time="${#temporals.format(p.lecturerProposalEnd, 'HH:mm')}"
+                     data-location="Cổng TopicHub"
+                     data-color-class="cal-event-indigo"
+                     data-icon="fa-book-bookmark"
+                     th:data-action-url="${userRole == 'LECTURER' ? '/lecturer/topics/create' : '/department-head/periods'}">
+                </div>
+                <div th:if="${p.studentRegistrationEnd != null}" class="server-cal-event"
+                     th:data-id="${'reg-end-' + p.id}"
+                     data-type="REGISTRATION"
+                     data-type-name="Hạn SV đăng ký đề tài"
+                     th:data-title="${'Hạn ĐK đề tài: ' + p.name}"
+                     th:data-date="${#temporals.format(p.studentRegistrationEnd, 'yyyy-MM-dd')}"
+                     th:data-time="${#temporals.format(p.studentRegistrationEnd, 'HH:mm')}"
+                     data-location="Cổng TopicHub"
+                     data-color-class="cal-event-amber"
+                     data-icon="fa-users"
+                     th:data-action-url="${userRole == 'STUDENT' ? '/student/topics' : '/department-head/periods'}">
+                </div>
+                <div th:if="${p.councilDefenseDate != null}" class="server-cal-event"
+                     th:data-id="${'p-def-' + p.id}"
+                     data-type="COUNCIL"
+                     data-type-name="Ngày bảo vệ khóa luận"
+                     th:data-title="${'Ngày bảo vệ KLTN: ' + p.name}"
+                     th:data-date="${#temporals.format(p.councilDefenseDate, 'yyyy-MM-dd')}"
+                     data-time="08:00"
+                     data-location="Khu nhà H - Trường ĐH CNTT"
+                     data-color-class="cal-event-teal"
+                     data-icon="fa-graduation-cap"
+                     th:data-action-url="${userRole == 'LECTURER' ? '/lecturer/councils' : (userRole == 'STUDENT' ? '/student/results' : '/department-head/councils')}">
+                </div>
+            </th:block>
+            <th:block th:if="${activePeriods != null}" th:each="ap : ${activePeriods}">
+                <div th:if="${ap.studentRegistrationEnd != null}" class="server-cal-event"
+                     th:data-id="${'stu-reg-' + ap.id}"
+                     data-type="REGISTRATION"
+                     data-type-name="Hạn đăng ký đề tài"
+                     th:data-title="${'Hạn chọn đề tài: ' + ap.name}"
+                     th:data-date="${#temporals.format(ap.studentRegistrationEnd, 'yyyy-MM-dd')}"
+                     th:data-time="${#temporals.format(ap.studentRegistrationEnd, 'HH:mm')}"
+                     data-location="Cổng TopicHub"
+                     data-color-class="cal-event-amber"
+                     data-icon="fa-user-check"
+                     data-action-url="/student/topics">
+                </div>
+                <div th:if="${ap.councilDefenseDate != null}" class="server-cal-event"
+                     th:data-id="${'stu-def-' + ap.id}"
+                     data-type="COUNCIL"
+                     data-type-name="Lịch bảo vệ hội đồng"
+                     th:data-title="${'Lịch bảo vệ: ' + ap.name}"
+                     th:data-date="${#temporals.format(ap.councilDefenseDate, 'yyyy-MM-dd')}"
+                     data-time="08:30"
+                     data-location="Khu nhà H"
+                     data-color-class="cal-event-teal"
+                     data-icon="fa-scale-balanced"
+                     data-action-url="/student/results">
+                </div>
+            </th:block>
+            <th:block th:if="${submissions != null}" th:each="s : ${submissions}">
+                <div class="server-cal-event"
+                     th:data-id="${'sub-' + s.id}"
+                     data-type="SUBMISSION"
+                     data-type-name="Nộp báo cáo tiến độ"
+                     th:data-title="${s.title != null ? s.title : 'Báo cáo tiến độ'}"
+                     th:data-date="${s.submittedAt != null ? #temporals.format(s.submittedAt, 'yyyy-MM-dd') : '2026-09-18'}"
+                     th:data-time="${s.submittedAt != null ? #temporals.format(s.submittedAt, 'HH:mm') : '10:00'}"
+                     th:data-location="${s.group != null ? ('Nhóm: ' + s.group.groupCode) : 'Hệ thống nộp bài'}"
+                     data-color-class="cal-event-rose"
+                     data-icon="fa-file-arrow-up"
+                     th:data-action-url="${userRole == 'LECTURER' ? '/lecturer/submissions' : '/student/submissions'}">
+                </div>
+            </th:block>
+        </div>
+
+        <!-- Calendar Container Card -->
+        <div class="saas-card p-4 p-md-5 border-0 shadow-wellnest">
+
+            <!-- 1. Header Controls Row (Pixel match with WellNest Doctors' Schedule) -->
+            <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 pb-4 mb-3 border-b border-slate-100">
+                
+                <!-- Left: Month / Year with Navigation Arrows -->
+                <div class="d-flex align-items-center gap-3">
+                    <h2 class="text-xl md:text-2xl font-black text-slate-900 mb-0 tracking-tight" id="fullCalMonthYearTitle" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                        Tháng 9 2026
+                    </h2>
+                    <div class="d-flex align-items-center gap-1 bg-slate-100 p-1 rounded-full">
+                        <button type="button" class="btn btn-sm btn-white rounded-full text-slate-600 hover:text-slate-900 border-0 d-flex align-items-center justify-content-center shadow-2xs" 
+                                style="width: 30px; height: 30px; padding: 0;"
+                                onclick="fullCalendarApp.prevMonth()" title="Tháng trước">
+                            <i class="fa-solid fa-chevron-left text-xs"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-white rounded-full text-slate-600 hover:text-slate-900 border-0 d-flex align-items-center justify-content-center shadow-2xs" 
+                                style="width: 30px; height: 30px; padding: 0;"
+                                onclick="fullCalendarApp.nextMonth()" title="Tháng tiếp">
+                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-light border border-slate-200 text-slate-700 font-bold rounded-full px-3 py-1 text-xs hover:bg-slate-100" 
+                            onclick="fullCalendarApp.goToToday()">
+                        Hôm nay
+                    </button>
+                </div>
+
+                <!-- Right: View Buttons, Filter Dropdown, and Add Button -->
+                <div class="d-flex flex-wrap align-items-center gap-2.5">
+                    
+                    <!-- View Switcher (Day, Week, Month) -->
+                    <div class="d-inline-flex p-1 bg-slate-100 rounded-full text-xs font-bold" role="group">
+                        <button type="button" class="btn-cal-view px-3 py-1.5 rounded-full border-0 text-slate-600 transition" id="viewBtnDay" onclick="fullCalendarApp.setView('day')">
+                            Ngày
+                        </button>
+                        <button type="button" class="btn-cal-view px-3 py-1.5 rounded-full border-0 text-slate-600 transition" id="viewBtnWeek" onclick="fullCalendarApp.setView('week')">
+                            Tuần
+                        </button>
+                        <button type="button" class="btn-cal-view px-3.5 py-1.5 rounded-full border-0 active-cal-view shadow-2xs font-extrabold transition" id="viewBtnMonth" onclick="fullCalendarApp.setView('month')">
+                            Tháng
+                        </button>
+                    </div>
+
+                    <!-- Agenda Filter Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-white border border-slate-200/90 rounded-full px-3.5 py-2 text-xs font-bold text-slate-700 d-flex align-items-center gap-2 hover:bg-slate-50 transition shadow-2xs" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="agendaFilterBtn">
+                            <i class="fa-solid fa-filter text-slate-400"></i>
+                            <span id="agendaFilterLabel">Tất cả lịch trình</span>
+                            <i class="fa-solid fa-chevron-down text-slate-400 ms-1" style="font-size: 0.65rem;"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-wellnest-lg border border-slate-100 rounded-3xl p-1.5 text-xs">
+                            <li><button class="dropdown-item rounded-2xl py-2 px-3 fw-bold d-flex align-items-center gap-2" onclick="fullCalendarApp.setFilter('ALL', 'Tất cả lịch trình')"><i class="fa-solid fa-layer-group text-slate-400"></i> Tất cả lịch trình</button></li>
+                            <li><button class="dropdown-item rounded-2xl py-2 px-3 fw-bold d-flex align-items-center gap-2 text-teal-700" onclick="fullCalendarApp.setFilter('COUNCIL', 'Hội đồng chấm')"><i class="fa-solid fa-scale-balanced text-teal-500"></i> Hội đồng chấm & Bảo vệ</button></li>
+                            <li><button class="dropdown-item rounded-2xl py-2 px-3 fw-bold d-flex align-items-center gap-2 text-cyan-700" onclick="fullCalendarApp.setFilter('REVIEW', 'Chấm phản biện')"><i class="fa-solid fa-clipboard-check text-cyan-500"></i> Chấm phản biện (GVPB)</button></li>
+                            <li><button class="dropdown-item rounded-2xl py-2 px-3 fw-bold d-flex align-items-center gap-2 text-indigo-700" onclick="fullCalendarApp.setFilter('PERIOD', 'Đợt & Đề tài')"><i class="fa-solid fa-calendar-check text-indigo-500"></i> Mốc đợt & Hạn đề tài</button></li>
+                            <li><button class="dropdown-item rounded-2xl py-2 px-3 fw-bold d-flex align-items-center gap-2 text-rose-700" onclick="fullCalendarApp.setFilter('SUBMISSION', 'Báo cáo & Tiến độ')"><i class="fa-solid fa-file-arrow-up text-rose-500"></i> Báo cáo & Tiến độ</button></li>
+                            <li><button class="dropdown-item rounded-2xl py-2 px-3 fw-bold d-flex align-items-center gap-2 text-amber-700" onclick="fullCalendarApp.setFilter('NOTE', 'Ghi chú cá nhân')"><i class="fa-regular fa-note-sticky text-amber-500"></i> Ghi chú cá nhân</button></li>
+                        </ul>
+                    </div>
+
+                    <!-- Add Schedule / Note Button -->
+                    <button type="button" class="btn btn-sm btn-dark rounded-full px-4 py-2 text-xs font-bold d-flex align-items-center gap-1.5 shadow-wellnest-sm transition"
+                            onclick="fullCalendarApp.openAddModal()" style="background-color: #132238;">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span>Thêm lịch / Ghi chú</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. MONTH VIEW CONTAINER -->
+            <div id="calendarMonthViewContainer" class="calendar-view-panel">
+                <div class="calendar-table-container rounded-3xl overflow-hidden border border-slate-200/80 bg-white">
+                    <div class="calendar-grid-header grid grid-cols-7 border-b border-slate-200/80 bg-slate-50/70 text-slate-500 font-bold text-center py-2.5 text-xs uppercase tracking-wider">
+                        <div>Chủ nhật</div>
+                        <div>Thứ hai</div>
+                        <div>Thứ ba</div>
+                        <div>Thứ tư</div>
+                        <div>Thứ năm</div>
+                        <div>Thứ sáu</div>
+                        <div>Thứ bảy</div>
+                    </div>
+                    <div class="calendar-grid-body grid grid-cols-7 auto-rows-fr divide-x divide-y divide-slate-100" id="fullCalMonthGrid">
+                        <!-- Dynamically filled by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. WEEK VIEW CONTAINER -->
+            <div id="calendarWeekViewContainer" class="calendar-view-panel d-none">
+                <div class="grid grid-cols-1 md:grid-cols-7 gap-2.5 lg:gap-3" id="fullCalWeekGrid">
+                    <!-- Dynamically filled by JS -->
+                </div>
+            </div>
+
+            <!-- 4. DAY VIEW CONTAINER -->
+            <div id="calendarDayViewContainer" class="calendar-view-panel d-none">
+                <div class="rounded-3xl overflow-hidden border border-slate-200/80 bg-white p-4 md:p-6" id="fullCalDayContent">
+                    <!-- Dynamically filled by JS -->
+                </div>
+            </div>
+
+            <!-- Legend Badge Bar -->
+            <div class="d-flex flex-wrap align-items-center gap-4 mt-4 pt-3 border-t border-slate-100 text-xs font-medium text-slate-600">
+                <span class="fw-bold text-slate-900">Chú thích màu sắc:</span>
+                <div class="d-flex align-items-center gap-1.5">
+                    <span class="w-3 h-3 rounded-full bg-teal-400"></span>
+                    <span>Hội đồng chấm bảo vệ</span>
+                </div>
+                <div class="d-flex align-items-center gap-1.5">
+                    <span class="w-3 h-3 rounded-full bg-cyan-400"></span>
+                    <span>Chấm phản biện (GVPB)</span>
+                </div>
+                <div class="d-flex align-items-center gap-1.5">
+                    <span class="w-3 h-3 rounded-full bg-indigo-400"></span>
+                    <span>Hạn nộp & Mốc đợt</span>
+                </div>
+                <div class="d-flex align-items-center gap-1.5">
+                    <span class="w-3 h-3 rounded-full bg-rose-400"></span>
+                    <span>Báo cáo nộp bài</span>
+                </div>
+                <div class="d-flex align-items-center gap-1.5">
+                    <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+                    <span>Ghi chú riêng của bạn</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- MODAL: ADD / EDIT SCHEDULE NOTE -->
+        <div class="modal fade" id="addScheduleModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-3xl border-0 shadow-wellnest-lg p-3 p-md-4">
+                    <div class="modal-header border-0 pb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="w-9 h-9 rounded-full bg-teal-50 text-teal-600 d-flex align-items-center justify-content-center">
+                                <i class="fa-solid fa-calendar-plus text-sm"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title font-black text-slate-900 text-base mb-0">Thêm sự kiện / Ghi chú lịch</h5>
+                                <p class="text-slate-400 text-xs mb-0">Lưu vào lịch cá nhân trên TopicHub</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close rounded-full" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
+                    </div>
+                    <div class="modal-body py-3">
+                        <form id="addScheduleForm" onsubmit="fullCalendarApp.saveCustomNote(event)">
+                            <div class="mb-3">
+                                <label class="form-label text-xs font-bold text-slate-700" for="noteTitle">Tiêu đề sự kiện / Công việc <span class="text-rose-500">*</span></label>
+                                <input type="text" id="noteTitle" class="form-control rounded-2xl text-xs py-2.5 border-slate-200 focus:ring-2 focus:ring-teal-400" placeholder="Ví dụ: Họp nhóm SV đề tài 04, Ôn tập phản biện..." required title="Tiêu đề sự kiện / Công việc" aria-label="Tiêu đề sự kiện / Công việc">
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label text-xs font-bold text-slate-700" for="noteDate">Ngày diễn ra <span class="text-rose-500">*</span></label>
+                                    <input type="date" id="noteDate" class="form-control rounded-2xl text-xs py-2 border-slate-200" required title="Ngày diễn ra" aria-label="Ngày diễn ra">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label text-xs font-bold text-slate-700" for="noteTime">Giờ (Thời gian)</label>
+                                    <input type="time" id="noteTime" class="form-control rounded-2xl text-xs py-2 border-slate-200" value="09:00" title="Giờ (Thời gian)" aria-label="Giờ (Thời gian)">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-xs font-bold text-slate-700" for="noteLocation">Địa điểm / Phòng họp</label>
+                                <input type="text" id="noteLocation" class="form-control rounded-2xl text-xs py-2 border-slate-200" placeholder="Ví dụ: Phòng H6.2 hoặc Google Meet" title="Địa điểm / Phòng họp" aria-label="Địa điểm / Phòng họp">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-xs font-bold text-slate-700" for="field-fragments-full_calendar-6">Màu sắc đánh dấu</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="noteColor" value="cal-event-teal" checked class="form-check-input me-1 text-teal-600" placeholder="noteColor" title="Màu sắc đánh dấu" aria-label="Màu sắc đánh dấu" id="field-fragments-full_calendar-4"> <span class="badge bg-teal-100 text-teal-800 rounded-full px-2 py-1 text-xs">Xanh ngọc (Teal)</span>
+                                    </label>
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="noteColor" value="cal-event-indigo" class="form-check-input me-1 text-indigo-600" placeholder="noteColor" title="Màu sắc đánh dấu" aria-label="Màu sắc đánh dấu" id="field-fragments-full_calendar-5"> <span class="badge bg-indigo-100 text-indigo-800 rounded-full px-2 py-1 text-xs">Tím than</span>
+                                    </label>
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="noteColor" value="cal-event-amber" class="form-check-input me-1 text-amber-600" placeholder="noteColor" title="Màu sắc đánh dấu" aria-label="Màu sắc đánh dấu" id="field-fragments-full_calendar-6"> <span class="badge bg-amber-100 text-amber-800 rounded-full px-2 py-1 text-xs">Vàng cam</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-xs font-bold text-slate-700" for="noteDesc">Ghi chú chi tiết</label>
+                                <textarea id="noteDesc" class="form-control rounded-2xl text-xs p-2.5 border-slate-200" rows="2" placeholder="Nội dung cần chuẩn bị, tài liệu..." title="Ghi chú chi tiết" aria-label="Ghi chú chi tiết"></textarea>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2 pt-2">
+                                <button type="button" class="btn btn-light rounded-full text-xs px-4 py-2 font-bold" data-bs-dismiss="modal">Hủy</button>
+                                <button type="submit" class="btn btn-primary rounded-full text-xs px-4 py-2 font-bold border-0 bg-teal-500 hover:bg-teal-600 text-white">Lưu vào Lịch</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: EVENT DETAIL POPUP -->
+        <div class="modal fade" id="eventDetailModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-3xl border-0 shadow-wellnest-lg p-3 p-md-4">
+                    <div class="modal-header border-0 pb-1">
+                        <div class="d-flex align-items-center gap-2">
+                            <div id="eventDetailIconBox" class="w-10 h-10 rounded-2xl bg-teal-50 text-teal-600 d-flex align-items-center justify-content-center text-base">
+                                <i class="fa-solid fa-calendar-check" id="eventDetailIcon"></i>
+                            </div>
+                            <div>
+                                <span class="badge bg-teal-100 text-teal-800 rounded-full px-2.5 py-0.5 text-xs fw-bold" id="eventDetailType">Loại sự kiện</span>
+                                <h5 class="modal-title font-black text-slate-900 text-base mt-0.5 mb-0" id="eventDetailTitle">Tiêu đề sự kiện</h5>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close rounded-full" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
+                    </div>
+                    <div class="modal-body py-3">
+                        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2.5 text-xs">
+                            <div class="d-flex align-items-center gap-2.5 text-slate-700">
+                                <i class="fa-regular fa-calendar text-teal-600 w-4 text-center"></i>
+                                <span class="font-bold">Ngày diễn ra:</span>
+                                <span id="eventDetailDate" class="text-slate-900 font-semibold">20/09/2026</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2.5 text-slate-700">
+                                <i class="fa-regular fa-clock text-teal-600 w-4 text-center"></i>
+                                <span class="font-bold">Thời gian:</span>
+                                <span id="eventDetailTime" class="text-slate-900 font-semibold">09:00 AM</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2.5 text-slate-700">
+                                <i class="fa-solid fa-location-dot text-teal-600 w-4 text-center"></i>
+                                <span class="font-bold">Địa điểm / Phòng:</span>
+                                <span id="eventDetailLocation" class="text-slate-900 font-semibold">Phòng H6.1</span>
+                            </div>
+                            <div id="eventDetailDescRow" class="pt-2 border-t border-slate-200/60 text-slate-600">
+                                <span class="font-bold d-block mb-1 text-slate-700">Chi tiết / Hướng dẫn:</span>
+                                <p id="eventDetailDesc" class="mb-0 text-slate-600 leading-relaxed"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0 d-flex justify-content-between">
+                        <button type="button" id="eventDetailDeleteBtn" class="btn btn-sm btn-outline-danger rounded-full text-xs font-bold px-3 d-none" onclick="fullCalendarApp.deleteCurrentNote()">
+                            <i class="fa-regular fa-trash-can me-1"></i> Xóa ghi chú này
+                        </button>
+                        <div class="d-flex gap-2 ms-auto">
+                            <button type="button" class="btn btn-sm btn-light rounded-full text-xs font-bold px-4" data-bs-dismiss="modal">Đóng</button>
+                            <a href="#" id="eventDetailActionBtn" class="btn btn-sm btn-primary rounded-full text-xs font-bold px-4 bg-teal-500 hover:bg-teal-600 text-white border-0 d-none">
+                                <span>Xem chi tiết</span> <i class="fa-solid fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

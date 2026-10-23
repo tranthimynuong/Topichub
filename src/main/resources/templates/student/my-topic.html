@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:replace="~{fragments/head :: head('Đề Tài Của Nhóm')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
+<body class="workspace-page">
+
+    <!-- Left Sidebar -->
+    <aside th:replace="~{fragments/sidebar :: sidebar('my-topic', ${user})}"></aside>
+
+    <!-- Main Wrapper -->
+    <div class="saas-main-wrapper">
+        <!-- Topbar -->
+        <header th:replace="~{fragments/topbar :: topbar('Đề Tài Đã Nhận', 'Sinh Viên', '/student/dashboard', ${user})}"></header>
+
+        <!-- Main Content View -->
+        <main class="saas-content">
+
+            <!-- Flash Messages -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-emerald-200" role="alert">
+                <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
+            </div>
+
+            <!-- Page Header -->
+            <div class="mb-4">
+                <h1 class="text-xl font-bold text-slate-900 mb-1">Chi Tiết Đề Tài Của Nhóm</h1>
+                <p class="text-xs text-slate-500 mb-0">Xem thông tin đề tài nghiên cứu, giảng viên hướng dẫn và các mốc tiến độ.</p>
+            </div>
+
+            <div th:if="${group == null || group.topic == null}">
+                <div class="saas-card text-center py-5 text-muted text-xs">
+                    <i class="fa-regular fa-folder-open text-3xl mb-2 d-block text-slate-300"></i>
+                    Nhóm của bạn chưa đăng ký đề tài nào.
+                    <div class="mt-3">
+                        <a th:href="@{/student/topics}" class="btn btn-sm btn-dark rounded-xl px-3 text-xs">Đến danh mục đề tài</a>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${group != null && group.topic != null}" class="row g-4 mb-4">
+                <div class="col-lg-8">
+                    <div class="saas-card p-4 mb-4" style="overflow: hidden;">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold" th:text="${group.topic.code}">DT-01</span>
+                            <span class="badge-pill-approved font-semibold text-xs" th:text="${group.status}">ĐÃ ĐĂNG KÝ</span>
+                        </div>
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 text-break" style="overflow-wrap: anywhere; word-break: break-word;" th:text="${group.topic.title}">Tên đề tài</h2>
+                        
+                        <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Mục tiêu & Nội dung:</h3>
+                        <p class="text-xs text-slate-600 mb-4 leading-relaxed text-break" style="white-space: pre-line; overflow-wrap: anywhere; word-break: break-word;" th:text="${group.topic.description}">Mô tả đề tài...</p>
+
+                        <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Yêu cầu chuyên môn:</h3>
+                        <p class="text-xs text-slate-600 mb-0 leading-relaxed text-break" style="overflow-wrap: anywhere; word-break: break-word;" th:text="${group.topic.requirements != null ? group.topic.requirements : 'Theo hướng dẫn của GV'}"></p>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="saas-card p-4 mb-4">
+                        <h2 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">Giảng viên hướng dẫn</h2>
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 font-bold flex items-center justify-center text-sm flex-shrink-0">
+                                <i class="fa-solid fa-chalkboard-user"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold text-slate-900 text-xs" th:text="${group.topic.supervisor != null && group.topic.supervisor.user != null ? group.topic.supervisor.user.fullName : 'Chưa có'}"></div>
+                                <span class="text-slate-400 text-xs font-mono" th:text="'Mã GV: ' + (${group.topic.supervisor != null ? group.topic.supervisor.lecturerCode : ''})"></span>
+                            </div>
+                        </div>
+                        <div th:if="${group.topic.coSupervisor != null && group.topic.coSupervisor.user != null}" class="pt-2 border-t border-slate-100">
+                            <span class="text-slate-400 text-xs d-block mb-1">GVHD phụ (Đồng hướng dẫn):</span>
+                            <strong class="text-slate-800 text-xs font-medium" th:text="${group.topic.coSupervisor.user.fullName}"></strong>
+                        </div>
+                    </div>
+
+                    <div class="saas-card p-4">
+                        <h2 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">Thao tác nhanh</h2>
+                        <div class="d-grid gap-2">
+                            <a th:href="@{/student/submissions}" class="btn btn-sm btn-dark rounded-xl px-3 py-2 text-xs font-medium"><i class="fa-solid fa-file-arrow-up me-1"></i> Đến trang nộp báo cáo</a>
+                            <a th:href="@{/student/results}" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100"><i class="fa-solid fa-star me-1 text-amber-500"></i> Xem kết quả & Điểm</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Scripts Fragment -->
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+</body>
+</html>

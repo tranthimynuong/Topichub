@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
+<head th:replace="~{fragments/head :: head('Quản lý & Phê duyệt Đề tài')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
+
+<body class="workspace-page">
+
+    <!-- Left Sidebar -->
+    <aside th:replace="~{fragments/sidebar :: sidebar('topics', ${user})}"></aside>
+
+    <!-- Main Wrapper -->
+    <div class="saas-main-wrapper">
+        <!-- Topbar -->
+        <header
+            th:replace="~{fragments/topbar :: topbar('Duyệt Đề tài', ${user != null && user.role != null ? user.role.name : 'Trưởng Khoa'}, '/department-head/dashboard', ${user})}">
+        </header>
+
+        <!-- Main Content View -->
+        <main class="saas-content">
+
+            <!-- Flash Messages -->
+            <div th:if="${successMessage}"
+                class="alert alert-success alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-emerald-200"
+                role="alert">
+                <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span
+                    th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
+            </div>
+            <div th:if="${errorMessage}"
+                class="alert alert-danger alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-rose-200"
+                role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-1.5 text-rose-600"></i> <span
+                    th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
+            </div>
+
+            <!-- Page Header -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                <div class="d-flex align-items-center gap-2.5 flex-wrap">
+                    <h1 class="text-xl font-bold text-slate-900 mb-0">Quản Lý & Phê Duyệt Đề Tài</h1>
+                    <span class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200"
+                        th:text="${department != null ? department.name : 'Khoa CNTT'}">Khoa CNTT</span>
+                </div>
+                <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                    <span id="filteredRowCount" class="badge-pill-neutral font-medium text-xs text-slate-600 bg-slate-100 px-3 py-1.5 rounded-full"
+                        th:text="'Tổng số: ' + (${topicsPage != null ? topicsPage.totalElements : (topics != null ? topics.size() : 0)}) + ' đề tài'"></span>
+                </div>
+            </div>
+
+            <!-- KPI Cards Grid (Đồng bộ chuẩn periods.html) -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-3" role="group" aria-label="Bộ lọc nhanh theo trạng thái duyệt đề tài">
+                <!-- KPI 1: Tất cả đề tài -->
+                <div class="period-kpi-card active" onclick="filterByWorkflowStage('ALL', this)" role="button" tabindex="0">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-xs font-semibold text-slate-700">Tất cả đề tài</span>
+                        <div class="kpi-icon-badge bg-slate-100 text-slate-600">
+                            <i class="fa-solid fa-folder-open text-2xs"></i>
+                        </div>
+                    </div>
+                    <div class="text-lg font-bold text-slate-900 mt-1"
+                         th:text="${stats != null && stats['totalTopics'] != null ? stats['totalTopics'] : (topics != null ? topics.size() : 0)}">
+                        0</div>
+                    <div class="kpi-highlight-bar bg-blue-500"></div>
+                </div>
+
+                <!-- KPI 2: Chờ phê duyệt -->
+                <div class="period-kpi-card" onclick="filterByWorkflowStage('PENDING', this)" role="button" tabindex="0">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-xs font-semibold text-amber-700">1. Chờ phê duyệt</span>
+                        <div class="kpi-icon-badge bg-amber-100 text-amber-600">
+                            <i class="fa-regular fa-clock text-2xs"></i>
+                        </div>
+                    </div>
+                    <div class="text-lg font-bold text-amber-600 mt-1"
+                         th:text="${stats != null && stats['pendingTopics'] != null ? stats['pendingTopics'] : 0}">
+                        0</div>
+                    <div class="kpi-highlight-bar bg-amber-500"></div>
+                </div>
+
+                <!-- KPI 3: Đã phê duyệt -->
+                <div class="period-kpi-card" onclick="filterByWorkflowStage('APPROVED', this)" role="button" tabindex="0">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-xs font-semibold text-emerald-700">2. Đã phê duyệt</span>
+                        <div class="kpi-icon-badge bg-emerald-100 text-emerald-600">
+                            <i class="fa-solid fa-circle-check text-2xs"></i>
+                        </div>
+                    </div>
+                    <div class="text-lg font-bold text-emerald-600 mt-1"
+                         th:text="${stats != null && stats['approvedTopics'] != null ? stats['approvedTopics'] : 0}">
+                        0</div>
+                    <div class="kpi-highlight-bar bg-emerald-500"></div>
+                </div>
+
+                <!-- KPI 4: Bị từ chối -->
+                <div class="period-kpi-card" onclick="filterByWorkflowStage('REJECTED', this)" role="button" tabindex="0">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-xs font-semibold text-rose-700">3. Bị từ chối</span>
+                        <div class="kpi-icon-badge bg-rose-100 text-rose-600">
+                            <i class="fa-solid fa-circle-xmark text-2xs"></i>
+                        </div>
+                    </div>
+                    <div class="text-lg font-bold text-rose-600 mt-1"
+                         th:text="${stats != null && stats['rejectedTopics'] != null ? stats['rejectedTopics'] : 0}">
+                        0</div>
+                    <div class="kpi-highlight-bar bg-rose-500"></div>
+                </div>
+            </div>
+
+            <!-- Universal 1-Row Toolbar (Gọn gàng, vừa vặn trên 1 dòng, không bị rớt dòng) -->
+            <div class="saas-card mb-4 workspace-filterbar" style="padding: 10px 14px;">
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-2.5">
+                    <!-- Left: View Mode Toggle -->
+                    <div class="view-mode-toggle bg-slate-100 p-0.5 rounded-xl d-inline-flex border border-slate-200" style="height: 36px; min-height: 36px; align-items: center; flex-shrink: 0;">
+                        <button type="button" id="viewBtnTable"
+                            class="btn btn-xs rounded-lg px-2.5 py-1 text-xs font-semibold view-toggle-btn active"
+                            onclick="setViewMode('table')" aria-pressed="true" style="height: 28px; min-height: 28px;">
+                            <i class="fa-solid fa-table-list me-1"></i> Bảng
+                        </button>
+                        <button type="button" id="viewBtnKanban"
+                            class="btn btn-xs rounded-lg px-2.5 py-1 text-xs font-semibold view-toggle-btn text-slate-600"
+                            onclick="setViewMode('kanban')" aria-pressed="false" style="height: 28px; min-height: 28px;">
+                            <i class="fa-solid fa-table-columns me-1"></i> Kanban
+                        </button>
+                    </div>
+
+                    <!-- Center & Right: Search and Filters (Single Row) -->
+                    <div class="d-flex align-items-center gap-2 flex-grow-1 justify-content-lg-end" style="min-width: 0;">
+                        <div class="relative flex-grow-1" style="min-width: 140px; max-width: 210px;">
+                            <input type="text" id="topicKeywordInput"
+                                class="form-control form-control-sm rounded-xl text-xs"
+                                style="height: 36px; min-height: 36px; padding-left: 32px; font-size: 12.5px;"
+                                placeholder="Tìm kiếm đề tài, GV..." onkeyup="applyCombinedFilters()"
+                                title="Tìm kiếm đề tài..." aria-label="Tìm kiếm đề tài...">
+                            <i class="fa-solid fa-magnifying-glass text-slate-400 absolute text-xs pointer-events-none" style="left: 10px; top: 50%; transform: translateY(-50%);"></i>
+                        </div>
+                        <select id="filterPeriodSelect" class="form-select form-select-sm rounded-xl text-xs"
+                            style="height: 36px; min-height: 36px; width: 130px; font-size: 12px; padding-left: 8px; padding-right: 22px; flex-shrink: 0;" onchange="applyCombinedFilters()" title="Đợt đăng ký" aria-label="Đợt đăng ký">
+                            <option value="ALL">-- Tất cả đợt --</option>
+                            <option th:each="p : ${periods}" th:value="${p.name}" th:text="${p.name}">Đợt 1</option>
+                        </select>
+                        <select id="filterStatusSelect" class="form-select form-select-sm rounded-xl text-xs"
+                            style="height: 36px; min-height: 36px; width: 125px; font-size: 12px; padding-left: 8px; padding-right: 22px; flex-shrink: 0;" onchange="syncStatusFromSelect(this.value)" title="Trạng thái duyệt" aria-label="Trạng thái duyệt">
+                            <option value="ALL">-- Trạng thái --</option>
+                            <option value="PENDING">Chờ phê duyệt</option>
+                            <option value="APPROVED">Đã phê duyệt</option>
+                            <option value="REJECTED">Bị từ chối</option>
+                        </select>
+                        <select id="filterSupervisorSelect" class="form-select form-select-sm rounded-xl text-xs"
+                            style="height: 36px; min-height: 36px; width: 135px; font-size: 12px; padding-left: 8px; padding-right: 22px; flex-shrink: 0;" onchange="applyCombinedFilters()" title="Giảng viên hướng dẫn" aria-label="Giảng viên hướng dẫn"
+                            th:if="${lecturers != null && !lecturers.isEmpty()}">
+                            <option value="ALL">-- Tất cả GVHD --</option>
+                            <option th:each="l : ${lecturers}" th:value="${l.user != null ? l.user.fullName : l.id}" th:text="${l.user != null ? l.user.fullName : 'GV'}">TS. Nguyễn Văn A</option>
+                        </select>
+                        <span id="topicFilteredCountBadge" class="badge-pill-neutral font-semibold text-xs shadow-2xs d-inline-flex align-items-center px-2.5"
+                            style="height: 36px; min-height: 36px; font-size: 12px; white-space: nowrap; flex-shrink: 0;"
+                            th:text="'Tổng: ' + (${topicsPage != null ? topicsPage.totalElements : (topics != null ? topics.size() : 0)}) + ' đề tài'"></span>
+                        <button type="button" onclick="resetAllFilters()" class="btn btn-sm btn-light border border-slate-200 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100 shadow-2xs d-inline-flex align-items-center justify-content-center"
+                            style="height: 36px; min-height: 36px; width: 36px; padding: 0; flex-shrink: 0;"
+                            title="Đặt lại bộ lọc" aria-label="Đặt lại bộ lọc">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 1: TOPICS DATA TABLE (ĐÚNG BẢN CHẤT DUYỆT ĐỀ TÀI CỦA TRƯỞNG KHOA) -->
+            <div id="tableViewContainer" class="table-saas-container mb-4">
+                <div class="w-full overflow-x-auto">
+                    <table class="table table-saas mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 36%;" scope="col">Mã &amp; Tên đề tài</th>
+                                <th style="width: 18%;" scope="col">Khoa / Đợt</th>
+                                <th style="width: 18%;" scope="col">GV Hướng dẫn</th>
+                                <th style="width: 13%;" scope="col">Trạng thái duyệt</th>
+                                <th style="width: 15%;" class="text-end" scope="col">Thao tác phê duyệt</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topicsTableBody">
+                            <tr th:if="${topicsPage == null || #lists.isEmpty(topicsPage.content)}">
+                                <td colspan="5" class="text-center py-5 text-muted text-xs">
+                                    <i class="fa-regular fa-folder-open text-2xl mb-2 d-block text-slate-300"></i>
+                                    Không tìm thấy đề tài nào phù hợp với bộ lọc.
+                                </td>
+                            </tr>
+                            <tr th:each="t : ${topicsPage.content}"
+                                th:with="group=${topicGroupMap != null ? topicGroupMap.get(t.id) : null}"
+                                class="filterable-row topic-item-row cursor-pointer transition hover:bg-blue-50/40"
+                                th:data-status="${t.status}"
+                                th:data-has-reviewer="${t.reviewer != null ? 'true' : 'false'}"
+                                th:data-has-council="${t.council != null ? 'true' : 'false'}"
+                                th:data-topic-id="${t.id}" th:data-topic-code="${t.code}"
+                                th:data-topic-title="${t.title}"
+                                th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}"
+                                th:data-topic-major="${t.department != null ? t.department.name : 'Khoa CNTT'}"
+                                th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa phân công'}"
+                                th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}"
+                                th:data-topic-reviewer="${t.reviewer != null && t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}"
+                                th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}"
+                                th:data-topic-max-students="${t.maxStudents}"
+                                th:data-topic-description="${t.description}"
+                                th:data-topic-requirements="${t.requirements}"
+                                th:data-topic-rejection-reason="${t.rejectionReason}"
+                                th:data-topic-group-name="${group != null ? group.groupName : ''}"
+                                th:data-topic-leader-name="${group != null && group.leader != null && group.leader.user != null ? group.leader.user.fullName : ''}"
+                                th:data-topic-leader-code="${group != null && group.leader != null ? group.leader.studentCode : ''}"
+                                data-topic-role="DEPARTMENT_HEAD"
+                                onclick="openTopicDrawer(this)" tabindex="0" onkeydown="if (event.target === this && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); this.click(); }">
+                                
+                                <!-- Cột 1: Mã & Tên đề tài -->
+                                <td>
+                                    <div class="d-flex align-items-center gap-1.5 mb-1.5 flex-wrap">
+                                        <span class="badge bg-slate-100 text-slate-800 border border-slate-200 text-xs px-2 py-0.5 rounded-md font-mono font-semibold"
+                                            th:text="${t.code}">DT-01</span>
+                                        <span class="badge bg-slate-100 text-slate-600 border border-slate-200 text-2xs px-1.5 py-0.5 rounded font-medium">
+                                            <i class="fa-solid fa-users me-1 text-slate-400"></i><span th:text="${'Tối đa ' + (t.maxStudents != null ? t.maxStudents : 3) + ' SV'}">Tối đa 3 SV</span>
+                                        </span>
+                                    </div>
+                                    <div class="font-bold text-slate-900 text-xs hover:text-blue-600 transition"
+                                         style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.38;"
+                                         th:text="${t.title}">Tên đề tài
+                                    </div>
+                                    <div class="text-xs text-slate-400 mt-0.5"
+                                         style="display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;"
+                                         th:text="${t.description}">Mô tả ngắn</div>
+                                </td>
+
+                                <!-- Cột 2: Khoa / Đợt -->
+                                <td>
+                                    <div class="font-medium text-slate-800 text-xs"
+                                        th:text="${t.department != null ? t.department.name : 'Khoa CNTT'}">
+                                        Khoa Công nghệ Thông tin</div>
+                                    <div class="d-flex align-items-center gap-1.5 mt-1 flex-wrap">
+                                        <span class="text-xs text-slate-500"
+                                              th:text="${t.period != null ? t.period.name : 'Chung'}">KLTN</span>
+                                        <span class="badge bg-indigo-50 text-indigo-700 border border-indigo-200 text-2xs px-1.5 py-0.5 rounded font-bold"
+                                              th:text="${'HK' + (t.semester != null ? t.semester : (t.period != null ? t.period.semester : 1)) + ' · ' + (t.academicYear != null ? t.academicYear : (t.period != null ? t.period.academicYear : '2026-2027'))}">HK1 · 2026-2027</span>
+                                    </div>
+                                </td>
+
+                                <!-- Cột 3: GV Hướng dẫn -->
+                                <td>
+                                    <div class="font-medium text-slate-900 text-xs"
+                                        th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa rõ'}">
+                                        TS. Nguyễn Văn A</div>
+                                    <span th:if="${t.coSupervisor != null && t.coSupervisor.user != null}"
+                                        class="text-xs text-slate-400 d-block mt-0.5"
+                                        th:text="'Phụ: ' + ${t.coSupervisor.user.fullName}"></span>
+                                </td>
+
+                                <!-- Cột 4: Trạng thái duyệt đề tài -->
+                                <td>
+                                    <div th:if="${t.status == 'APPROVED'}">
+                                        <span class="badge-pill-approved font-semibold">
+                                            <i class="fa-solid fa-circle-check text-xs"></i> Đã duyệt
+                                        </span>
+                                    </div>
+                                    <div th:if="${t.status == 'PENDING'}">
+                                        <span class="badge-pill-pending font-semibold">
+                                            <i class="fa-regular fa-clock text-xs"></i> Chờ duyệt
+                                        </span>
+                                    </div>
+                                    <div th:if="${t.status == 'REJECTED'}">
+                                        <span class="badge-pill-rejected font-semibold">
+                                            <i class="fa-solid fa-circle-xmark text-xs"></i> Từ chối
+                                        </span>
+                                        <div th:if="${t.rejectionReason != null && !#strings.isEmpty(t.rejectionReason)}"
+                                             class="text-2xs text-rose-500 mt-1 line-clamp-1"
+                                             th:title="'Lý do từ chối: ' + ${t.rejectionReason}">
+                                            <i class="fa-solid fa-comment-dots me-0.5"></i> <span th:text="${t.rejectionReason}"></span>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Cột 5: Thao tác phê duyệt (Hành động trực tiếp của Trưởng khoa) -->
+                                <td class="text-end" onclick="event.stopPropagation()">
+                                    <!-- Case 1: Đề tài Chờ Duyệt (PENDING) -> Phê duyệt / Từ chối / Sửa & Duyệt -->
+                                    <div th:if="${t.status == 'PENDING'}" class="d-flex align-items-center justify-content-end gap-1.5">
+                                        <!-- Form Duyệt trực tiếp có inject CSRF chuẩn Spring Thymeleaf -->
+                                        <form th:action="@{/department-head/topics/{id}/approve(id=${t.id})}" method="post" class="d-inline" onsubmit="return confirm('Xác nhận PHÊ DUYỆT đề tài này để công bố cho sinh viên đăng ký?');">
+                                            <button type="submit" class="btn btn-xs bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-2.5 py-1 text-xs font-semibold shadow-2xs d-inline-flex align-items-center gap-1 transition" title="Phê duyệt đề tài">
+                                                <i class="fa-solid fa-check"></i> Duyệt
+                                            </button>
+                                        </form>
+                                        <!-- Nút Mở Modal Từ Chối -->
+                                        <button type="button" class="btn btn-xs bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg px-2 py-1 text-xs font-semibold transition"
+                                            data-bs-toggle="modal" data-bs-target="#rejectModal"
+                                            th:data-topic-id="${t.id}" th:data-topic-title="${t.title}"
+                                            onclick="prepareRejectModalFromBtn(this)" title="Từ chối đề xuất này">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+                                        <!-- Nút Mở Modal Sửa Nhanh & Duyệt -->
+                                        <button type="button" class="btn btn-xs btn-light border border-slate-200 hover:border-blue-300 text-blue-700 rounded-lg px-2 py-1 text-xs font-medium transition"
+                                            data-bs-toggle="modal" data-bs-target="#quickEditApproveModal"
+                                            th:data-topic-id="${t.id}" th:data-topic-title="${t.title}"
+                                            th:data-topic-desc="${t.description}" th:data-topic-req="${t.requirements}"
+                                            onclick="prepareQuickEditModalFromBtn(this)" title="Hiệu chỉnh &amp; Duyệt ngay">
+                                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- Case 2: Đề tài Đã Duyệt (APPROVED) -> Sẵn sàng mở cho SV đăng ký -->
+                                    <div th:if="${t.status == 'APPROVED'}" class="d-flex align-items-center justify-content-end gap-1.5">
+                                        <span class="badge bg-emerald-50 text-emerald-700 border border-emerald-200 text-2xs px-2 py-1 rounded font-medium d-inline-flex align-items-center gap-1" title="Đã duyệt, sẵn sàng mở cho SV đăng ký">
+                                            <i class="fa-solid fa-check-double text-emerald-500"></i> Mở ĐK (SV)
+                                        </span>
+                                        <button type="button" class="btn btn-xs btn-light border border-slate-200 rounded-lg px-2 py-1 text-slate-600 hover:text-blue-600"
+                                            onclick="openTopicDrawer(this.closest('.topic-item-row'))" title="Xem chi tiết đề tài">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- Case 3: Đề tài Bị Từ Chối (REJECTED) -> Duyệt lại hoặc xem chi tiết -->
+                                    <div th:if="${t.status == 'REJECTED'}" class="d-flex align-items-center justify-content-end gap-1.5">
+                                        <form th:action="@{/department-head/topics/{id}/approve(id=${t.id})}" method="post" class="d-inline" onsubmit="return confirm('Xác nhận PHÊ DUYỆT LẠI đề tài này?');">
+                                            <button type="submit" class="btn btn-xs bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-medium transition" title="Xem xét và phê duyệt lại">
+                                                <i class="fa-solid fa-rotate-right me-1"></i> Duyệt lại
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-xs btn-light border border-slate-200 rounded-lg px-2 py-1 text-slate-600 hover:text-blue-600"
+                                            onclick="openTopicDrawer(this.closest('.topic-item-row'))" title="Xem chi tiết đề tài">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Bar for Table View -->
+                <div th:if="${topicsPage != null && topicsPage.totalPages > 1}" 
+                     class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 p-3 border-t border-slate-100 bg-slate-50/50">
+                    <div class="text-xs text-slate-500">
+                        Hiển thị trang <span class="font-bold text-slate-800" th:text="${topicsPage.number + 1}">1</span> / 
+                        <span class="font-bold text-slate-800" th:text="${topicsPage.totalPages}">1</span> 
+                        (tổng <span class="font-bold text-slate-800" th:text="${topicsPage.totalElements}">96</span> đề tài)
+                    </div>
+                    <nav aria-label="Table pagination">
+                        <ul class="pagination pagination-sm mb-0 gap-1">
+                            <li class="page-item" th:classappend="${topicsPage.first ? 'disabled' : ''}">
+                                <a class="page-link rounded-lg px-2.5 py-1 text-xs" 
+                                   th:href="@{/department-head/topics(page=${topicsPage.number}, size=${topicsPage.size}, status=${selectedStatus}, periodId=${selectedPeriodId}, keyword=${keyword})}">
+                                    <i class="fa-solid fa-chevron-left text-2xs"></i>
+                                </a>
+                            </li>
+                            <li th:each="p : ${#numbers.sequence(1, topicsPage.totalPages)}" 
+                                class="page-item" th:classappend="${p == (topicsPage.number + 1) ? 'active' : ''}">
+                                <a class="page-link rounded-lg px-2.5 py-1 text-xs" 
+                                   th:href="@{/department-head/topics(page=${p}, size=${topicsPage.size}, status=${selectedStatus}, periodId=${selectedPeriodId}, keyword=${keyword})}"
+                                   th:text="${p}">1</a>
+                            </li>
+                            <li class="page-item" th:classappend="${topicsPage.last ? 'disabled' : ''}">
+                                <a class="page-link rounded-lg px-2.5 py-1 text-xs" 
+                                   th:href="@{/department-head/topics(page=${topicsPage.number + 2}, size=${topicsPage.size}, status=${selectedStatus}, periodId=${selectedPeriodId}, keyword=${keyword})}">
+                                    <i class="fa-solid fa-chevron-right text-2xs"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- VIEW 2: KANBAN BOARD VIEW (3 CỘT CHUẨN DUYỆT ĐỀ TÀI: CHỜ DUYỆT, ĐÃ DUYỆT, BỊ TỪ CHỐI) -->
+            <div id="kanbanViewContainer" class="kanban-board-container mb-4" style="display: none;">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                    
+                    <!-- COLUMN 1: PENDING APPROVAL -->
+                    <div class="kanban-column bg-slate-50 border border-slate-200 rounded-2xl p-3">
+                        <div class="d-flex align-items-center justify-content-between mb-3 px-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                                <h6 class="font-bold text-xs uppercase tracking-wider text-slate-800 mb-0">1. Chờ Phê Duyệt</h6>
+                            </div>
+                            <span class="badge bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full font-bold kanban-col-count" id="kanbanPendingCount">0</span>
+                        </div>
+                        <div class="kanban-cards-wrapper space-y-3" id="kanbanColPending">
+                            <th:block th:each="t : ${topicsPage.content}" th:if="${t.status == 'PENDING'}">
+                                <div class="kanban-card bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-amber-300 transition duration-200"
+                                    th:with="group=${topicGroupMap != null ? topicGroupMap.get(t.id) : null}"
+                                    th:data-status="${t.status}"
+                                    th:data-has-reviewer="${t.reviewer != null ? 'true' : 'false'}"
+                                    th:data-has-council="${t.council != null ? 'true' : 'false'}"
+                                    th:data-topic-id="${t.id}" th:data-topic-code="${t.code}"
+                                    th:data-topic-title="${t.title}"
+                                    th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}"
+                                    th:data-topic-major="${t.department != null ? t.department.name : 'Khoa CNTT'}"
+                                    th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa phân công'}"
+                                    th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}"
+                                    th:data-topic-reviewer="${t.reviewer != null && t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}"
+                                    th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}"
+                                    th:data-topic-max-students="${t.maxStudents}"
+                                    th:data-topic-description="${t.description}"
+                                    th:data-topic-requirements="${t.requirements}"
+                                    th:data-topic-rejection-reason="${t.rejectionReason}"
+                                    th:data-topic-group-name="${group != null ? group.groupName : ''}"
+                                    th:data-topic-leader-name="${group != null && group.leader != null && group.leader.user != null ? group.leader.user.fullName : ''}"
+                                    th:data-topic-leader-code="${group != null && group.leader != null ? group.leader.studentCode : ''}"
+                                    data-topic-role="DEPARTMENT_HEAD">
+                                    <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                        <span class="badge bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded font-semibold" th:text="${t.code}">DT-01</span>
+                                        <span class="badge bg-amber-50 text-amber-700 border border-amber-200 text-2xs px-1.5 py-0.5 rounded font-medium">Chờ duyệt</span>
+                                    </div>
+                                    <h6 class="text-xs font-bold text-slate-900 mb-1.5 leading-snug cursor-pointer hover:text-blue-600 transition line-clamp-2"
+                                        th:text="${t.title}" onclick="openTopicDrawer(this.closest('.kanban-card'))">Tên đề tài</h6>
+                                    <div class="text-xs text-slate-500 mb-3 space-y-1">
+                                        <div class="d-flex align-items-center gap-1 truncate-cell">
+                                            <i class="fa-solid fa-chalkboard-user text-slate-400 w-3.5"></i>
+                                            <span th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa rõ'}">GVHD</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-1 text-slate-400 truncate-cell">
+                                            <i class="fa-solid fa-calendar-check text-slate-400 w-3.5"></i>
+                                            <span th:text="${t.period != null ? t.period.name : 'KLTN'}">Đợt</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-1 text-slate-400 truncate-cell">
+                                            <i class="fa-solid fa-users text-slate-400 w-3.5"></i>
+                                            <span th:text="${'Tối đa ' + (t.maxStudents != null ? t.maxStudents : 3) + ' SV'}">Tối đa 3 SV</span>
+                                        </div>
+                                    </div>
+                                    <div class="pt-2 border-t border-slate-100 d-flex align-items-center justify-content-between gap-1.5">
+                                        <form th:action="@{/department-head/topics/{id}/approve(id=${t.id})}" method="post" class="flex-grow-1" onsubmit="return confirm('Xác nhận PHÊ DUYỆT đề tài này?');">
+                                            <button type="submit" class="btn btn-xs w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg py-1 font-semibold text-xs shadow-sm">
+                                                <i class="fa-solid fa-check me-1"></i> Duyệt
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-xs bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-lg px-2 py-1 font-semibold text-xs"
+                                            data-bs-toggle="modal" data-bs-target="#rejectModal"
+                                            th:data-topic-id="${t.id}" th:data-topic-title="${t.title}"
+                                            onclick="prepareRejectModalFromBtn(this)" title="Từ chối đề tài">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-xs btn-light border border-slate-200 rounded-lg px-2 py-1 text-slate-600" onclick="openTopicDrawer(this.closest('.kanban-card'))" title="Chi tiết">
+                                            <i class="fa-solid fa-arrow-right"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </th:block>
+                        </div>
+                    </div>
+
+                    <!-- COLUMN 2: APPROVED TOPICS -->
+                    <div class="kanban-column bg-slate-50 border border-slate-200 rounded-2xl p-3">
+                        <div class="d-flex align-items-center justify-content-between mb-3 px-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                                <h6 class="font-bold text-xs uppercase tracking-wider text-slate-800 mb-0">2. Đã Phê Duyệt</h6>
+                            </div>
+                            <span class="badge bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold kanban-col-count" id="kanbanApprovedCount">0</span>
+                        </div>
+                        <div class="kanban-cards-wrapper space-y-3" id="kanbanColApproved">
+                            <th:block th:each="t : ${topicsPage.content}" th:if="${t.status == 'APPROVED'}">
+                                <div class="kanban-card bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-300 transition duration-200"
+                                    th:with="group=${topicGroupMap != null ? topicGroupMap.get(t.id) : null}"
+                                    th:data-status="${t.status}"
+                                    th:data-has-reviewer="${t.reviewer != null ? 'true' : 'false'}"
+                                    th:data-has-council="${t.council != null ? 'true' : 'false'}"
+                                    th:data-topic-id="${t.id}" th:data-topic-code="${t.code}"
+                                    th:data-topic-title="${t.title}"
+                                    th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}"
+                                    th:data-topic-major="${t.department != null ? t.department.name : 'Khoa CNTT'}"
+                                    th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa phân công'}"
+                                    th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}"
+                                    th:data-topic-reviewer="${t.reviewer != null && t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}"
+                                    th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}"
+                                    th:data-topic-max-students="${t.maxStudents}"
+                                    th:data-topic-description="${t.description}"
+                                    th:data-topic-requirements="${t.requirements}"
+                                    th:data-topic-rejection-reason="${t.rejectionReason}"
+                                    th:data-topic-group-name="${group != null ? group.groupName : ''}"
+                                    th:data-topic-leader-name="${group != null && group.leader != null && group.leader.user != null ? group.leader.user.fullName : ''}"
+                                    th:data-topic-leader-code="${group != null && group.leader != null ? group.leader.studentCode : ''}"
+                                    data-topic-role="DEPARTMENT_HEAD">
+                                    <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                        <span class="badge bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded font-semibold" th:text="${t.code}">DT-01</span>
+                                        <span class="badge bg-emerald-50 text-emerald-700 border border-emerald-200 text-2xs px-1.5 py-0.5 rounded font-semibold">
+                                            <i class="fa-solid fa-circle-check me-0.5"></i> Đã duyệt
+                                        </span>
+                                    </div>
+                                    <h6 class="text-xs font-bold text-slate-900 mb-1.5 leading-snug cursor-pointer hover:text-blue-600 transition line-clamp-2"
+                                        th:text="${t.title}" onclick="openTopicDrawer(this.closest('.kanban-card'))">Tên đề tài</h6>
+                                    <div class="text-xs text-slate-500 mb-3 space-y-1">
+                                        <div class="d-flex align-items-center gap-1 truncate-cell">
+                                            <i class="fa-solid fa-chalkboard-user text-slate-400 w-3.5"></i>
+                                            <span th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa rõ'}">GVHD</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-1 text-slate-400 truncate-cell">
+                                            <i class="fa-solid fa-calendar-check text-slate-400 w-3.5"></i>
+                                            <span th:text="${t.period != null ? t.period.name : 'KLTN'}">Đợt</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-1 text-slate-400 truncate-cell">
+                                            <i class="fa-solid fa-users text-slate-400 w-3.5"></i>
+                                            <span th:text="${'Tối đa ' + (t.maxStudents != null ? t.maxStudents : 3) + ' SV'}">Tối đa 3 SV</span>
+                                        </div>
+                                    </div>
+                                    <div class="pt-2 border-t border-slate-100 d-flex align-items-center justify-content-between gap-2">
+                                        <span class="badge bg-emerald-50 text-emerald-700 border border-emerald-200 text-2xs px-2 py-1 rounded font-medium d-inline-flex align-items-center gap-1">
+                                            <i class="fa-solid fa-check-double text-emerald-500"></i> Mở ĐK (SV)
+                                        </span>
+                                        <button type="button" class="btn btn-xs btn-light border border-slate-200 rounded-lg px-2.5 py-1 text-slate-600 hover:text-blue-600"
+                                            onclick="openTopicDrawer(this.closest('.kanban-card'))" title="Chi tiết">
+                                            <i class="fa-solid fa-arrow-right"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </th:block>
+                        </div>
+                    </div>
+
+                    <!-- COLUMN 3: REJECTED TOPICS -->
+                    <div class="kanban-column bg-slate-50 border border-slate-200 rounded-2xl p-3">
+                        <div class="d-flex align-items-center justify-content-between mb-3 px-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                                <h6 class="font-bold text-xs uppercase tracking-wider text-slate-800 mb-0">3. Bị Từ Chối</h6>
+                            </div>
+                            <span class="badge bg-rose-100 text-rose-800 text-xs px-2 py-0.5 rounded-full font-bold kanban-col-count" id="kanbanRejectedCount">0</span>
+                        </div>
+                        <div class="kanban-cards-wrapper space-y-3" id="kanbanColRejected">
+                            <th:block th:each="t : ${topicsPage.content}" th:if="${t.status == 'REJECTED'}">
+                                <div class="kanban-card bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-rose-300 transition duration-200"
+                                    th:with="group=${topicGroupMap != null ? topicGroupMap.get(t.id) : null}"
+                                    th:data-status="${t.status}"
+                                    th:data-has-reviewer="false"
+                                    th:data-has-council="false"
+                                    th:data-topic-id="${t.id}" th:data-topic-code="${t.code}"
+                                    th:data-topic-title="${t.title}"
+                                    th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}"
+                                    th:data-topic-major="${t.department != null ? t.department.name : 'Khoa CNTT'}"
+                                    th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa phân công'}"
+                                    th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}"
+                                    data-topic-reviewer="Không có"
+                                    data-topic-council="Không có"
+                                    th:data-topic-max-students="${t.maxStudents}"
+                                    th:data-topic-description="${t.description}"
+                                    th:data-topic-requirements="${t.requirements}"
+                                    th:data-topic-rejection-reason="${t.rejectionReason}"
+                                    th:data-topic-group-name="${group != null ? group.groupName : ''}"
+                                    th:data-topic-leader-name="${group != null && group.leader != null && group.leader.user != null ? group.leader.user.fullName : ''}"
+                                    th:data-topic-leader-code="${group != null && group.leader != null ? group.leader.studentCode : ''}"
+                                    data-topic-role="DEPARTMENT_HEAD">
+                                    <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                        <span class="badge bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded font-semibold" th:text="${t.code}">DT-01</span>
+                                        <span class="badge bg-rose-50 text-rose-700 border border-rose-200 text-2xs px-1.5 py-0.5 rounded font-semibold">
+                                            <i class="fa-solid fa-circle-xmark me-0.5"></i> Từ chối
+                                        </span>
+                                    </div>
+                                    <h6 class="text-xs font-bold text-slate-900 mb-1.5 leading-snug cursor-pointer hover:text-blue-600 transition line-clamp-2"
+                                        th:text="${t.title}" onclick="openTopicDrawer(this.closest('.kanban-card'))">Tên đề tài</h6>
+                                    <div class="text-xs text-slate-500 mb-2 space-y-1">
+                                        <div class="d-flex align-items-center gap-1 truncate-cell">
+                                            <i class="fa-solid fa-chalkboard-user text-slate-400 w-3.5"></i>
+                                            <span th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa rõ'}">GVHD</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-1 text-slate-400 truncate-cell">
+                                            <i class="fa-solid fa-calendar-check text-slate-400 w-3.5"></i>
+                                            <span th:text="${t.period != null ? t.period.name : 'KLTN'}">Đợt</span>
+                                        </div>
+                                    </div>
+                                    <div th:if="${t.rejectionReason != null && !#strings.isEmpty(t.rejectionReason)}" class="p-2 mb-2 bg-rose-50 rounded-lg border border-rose-200 text-2xs text-rose-700">
+                                        <strong>Lý do:</strong> <span th:text="${t.rejectionReason}"></span>
+                                    </div>
+                                    <div class="pt-2 border-t border-slate-100 d-flex align-items-center justify-content-between gap-2">
+                                        <form th:action="@{/department-head/topics/{id}/approve(id=${t.id})}" method="post" class="flex-grow-1" onsubmit="return confirm('Xác nhận PHÊ DUYỆT LẠI đề tài này?');">
+                                            <button type="submit" class="btn btn-xs w-full bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border border-slate-200 rounded-lg py-1 font-medium text-xs transition">
+                                                <i class="fa-solid fa-rotate-right me-1"></i> Duyệt lại
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-xs btn-light border border-slate-200 rounded-lg px-2.5 py-1 text-slate-600 hover:text-blue-600"
+                                            onclick="openTopicDrawer(this.closest('.kanban-card'))" title="Chi tiết">
+                                            <i class="fa-solid fa-arrow-right"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </th:block>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Server-Side Pagination -->
+            <div th:replace="~{fragments/pagination :: pager(${topicsPage}, '/department-head/topics')}"></div>
+
+        </main>
+    </div>
+
+    <!-- Modals for Assign Reviewer and Assign Council (outside table to avoid stacking context / backdrop bugs) -->
+    <th:block th:each="t : ${topicsPage.content}">
+        <!-- Modal Assign Reviewer -->
+        <div class="modal fade text-start" th:id="'assignReviewerModal-' + ${t.id}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" style="max-width: 490px;">
+                <div class="modal-content bg-white rounded-2xl border-0 shadow-2xl overflow-hidden">
+                    <form th:action="@{/department-head/topics/{id}/assign-reviewer(id=${t.id})}" method="post">
+                        <div class="modal-header border-b border-slate-100 bg-slate-50/70 p-3.5 px-4 d-flex align-items-center justify-content-between">
+                            <h6 class="modal-title font-bold text-slate-900 text-sm d-flex align-items-center gap-2 mb-0">
+                                <span class="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 d-inline-flex align-items-center justify-content-center flex-shrink-0">
+                                    <i class="fa-solid fa-user-shield text-xs"></i>
+                                </span>
+                                <span>Phân công Cán bộ Phản biện (GVPB)</span>
+                            </h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <!-- Topic Summary Card -->
+                            <div class="p-3.5 bg-slate-50 rounded-xl mb-3.5 border border-slate-200/80">
+                                <div class="d-flex align-items-center justify-content-between gap-2 mb-1.5">
+                                    <span class="badge bg-blue-100 text-blue-800 border border-blue-200 font-mono font-bold text-2xs px-2 py-0.5 rounded-md" th:text="${t.code}">DT-01</span>
+                                    <span class="text-2xs text-slate-500 font-medium" th:text="${t.period != null ? t.period.name : 'Chung'}">KLTN</span>
+                                </div>
+                                <div class="text-sm font-bold text-slate-900 leading-snug mb-2" th:text="${t.title}">Tên đề tài</div>
+                                <div class="text-xs text-slate-600 d-flex align-items-center gap-2 pt-2 border-t border-slate-200/60">
+                                    <span class="badge bg-slate-200 text-slate-700 font-medium px-2 py-0.5 rounded">GVHD</span>
+                                    <span class="font-semibold text-slate-800" th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa phân công'}"></span>
+                                </div>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label text-xs font-semibold text-slate-700 mb-1.5">Chọn Cán bộ Phản biện <span class="text-rose-500">*</span></label>
+                                <select name="reviewerId" class="form-select text-xs rounded-xl py-2 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required title="Chọn Cán bộ Phản biện" aria-label="Chọn Cán bộ Phản biện">
+                                    <option value="">-- Chọn Giảng viên Phản biện --</option>
+                                    <option th:each="l : ${lecturers}"
+                                        th:if="${(t.supervisor == null || !l.id.equals(t.supervisor.id)) && (t.coSupervisor == null || !l.id.equals(t.coSupervisor.id))}"
+                                        th:value="${l.id}"
+                                        th:text="${l.user != null ? l.user.fullName : ''}"
+                                        th:selected="${t.reviewer != null && t.reviewer.id.equals(l.id)}">
+                                    </option>
+                                </select>
+                                <div class="mt-2 p-2.5 bg-blue-50/70 rounded-xl border border-blue-200/60 d-flex align-items-center gap-2 text-xs text-blue-800">
+                                    <i class="fa-solid fa-circle-info text-blue-600 flex-shrink-0"></i>
+                                    <span>Hệ thống tự động loại trừ GVHD khỏi danh sách để đảm bảo tính khách quan.</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-t border-slate-100 bg-slate-50/50 p-3 px-4 d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3.5 text-xs font-medium text-slate-600 hover:bg-slate-100" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 text-xs font-semibold shadow-sm transition">
+                                <i class="fa-solid fa-check me-1"></i> Lưu phân công
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <!-- Quick Edit & Direct Approve Modal -->
+    <div class="modal fade" id="quickEditApproveModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content rounded-2xl border-0 shadow-xl">
+                <form id="quickEditApproveForm" th:action="@{/department-head/topics/0/quick-edit-approve}" method="post">
+                    <div class="modal-header border-b border-slate-100 p-4">
+                        <h6 class="modal-title font-bold text-slate-900 text-sm">
+                            <i class="fa-solid fa-wand-magic-sparkles text-blue-600 me-1.5"></i> Hiệu Chỉnh Nhanh & Phê Duyệt Trực Tiếp
+                        </h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
+                    </div>
+                    <div class="modal-body p-4 space-y-3">
+                        <div class="p-3 bg-blue-50/70 border border-blue-200/80 rounded-xl text-xs text-blue-900">
+                            <i class="fa-solid fa-info-circle text-blue-600 me-1"></i>
+                            <strong>Mục đích:</strong> Trưởng khoa hiệu chỉnh lại tên, mô tả hoặc yêu cầu của đề tài cho chuẩn mực và bấm Duyệt ngay (`APPROVED`) để kịp công bố cho sinh viên mà không cần trả về làm lại sát ngày.
+                        </div>
+
+                        <div>
+                            <label class="form-label text-xs font-semibold text-slate-700" for="quickEditTitle">Tên đề tài *</label>
+                            <input type="text" id="quickEditTitle" name="title" class="form-control text-xs rounded-xl" required title="Tên đề tài" aria-label="Tên đề tài">
+                        </div>
+
+                        <div>
+                            <label class="form-label text-xs font-semibold text-slate-700" for="quickEditDescription">Mô tả mục tiêu & phạm vi đề tài</label>
+                            <textarea id="quickEditDescription" name="description" class="form-control text-xs rounded-xl" rows="4" title="Mô tả mục tiêu &amp; phạm vi đề tài" aria-label="Mô tả mục tiêu &amp; phạm vi đề tài"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="form-label text-xs font-semibold text-slate-700" for="quickEditRequirements">Yêu cầu kiến thức đối với sinh viên</label>
+                            <textarea id="quickEditRequirements" name="requirements" class="form-control text-xs rounded-xl" rows="3" title="Yêu cầu kiến thức đối với sinh viên" aria-label="Yêu cầu kiến thức đối với sinh viên"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-t border-slate-100 p-3">
+                        <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs font-medium" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-sm btn-success rounded-xl px-4 text-xs font-semibold">
+                            <i class="fa-solid fa-check me-1"></i> Lưu & Phê duyệt ngay
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Topic Modal -->
+    <div class="modal fade" id="rejectModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-2xl border-0 shadow-xl">
+                <form id="rejectForm" th:action="@{/department-head/topics/0/reject}" method="post">
+                    <div class="modal-header border-b border-slate-100 p-4">
+                        <h6 class="modal-title font-bold text-slate-900 text-sm"><i
+                                class="fa-solid fa-triangle-exclamation text-rose-500 me-1.5"></i> Từ Chối Đề Xuất Đề
+                            Tài</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng" title="Đóng"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <p class="text-xs text-slate-600 mb-2">Đề tài: <strong id="rejectTopicTitle"
+                                class="text-slate-900"></strong></p>
+                        <label class="form-label text-xs font-semibold text-slate-700" for="field-department-head-topics-18">Lý do từ chối (bắt buộc gửi cho
+                            GVHD) *</label>
+                        <textarea name="rejectionReason" class="form-control text-xs rounded-xl" rows="3"
+                            placeholder="Nhập lý do chưa đạt yêu cầu (trùng lặp, phạm vi quá rộng, thiếu tính khả thi...)"
+                            required title="Lý do từ chối (bắt buộc gửi cho GVHD)" aria-label="Lý do từ chối (bắt buộc gửi cho GVHD)" id="field-department-head-topics-18"></textarea>
+                    </div>
+                    <div class="modal-footer border-t border-slate-100 p-3">
+                        <button type="button" class="btn btn-sm btn-light border rounded-xl px-3 text-xs font-medium"
+                            data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-sm btn-danger rounded-xl px-3 text-xs font-semibold">Xác
+                            nhận từ chối</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Scripts Fragment -->
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+
+    <!-- Scoped CSS for Modern KPI Cards & 1-Row Filterbar (Đồng bộ tuyệt đối với periods.html) -->
+    <style>
+        .period-kpi-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.875rem;
+            padding: 0.625rem 0.875rem;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.15s ease-in-out;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .period-kpi-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.04);
+            border-color: #cbd5e1;
+        }
+
+        .period-kpi-card.active {
+            border-color: #3b82f6;
+            background: #f8faff;
+            box-shadow: 0 3px 10px rgba(59, 130, 246, 0.1);
+        }
+
+        .period-kpi-card .kpi-highlight-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2.5px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .period-kpi-card.active .kpi-highlight-bar {
+            opacity: 1;
+        }
+
+        .kpi-icon-badge {
+            width: 22px;
+            height: 22px;
+            border-radius: 0.375rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+
+    <!-- Enhanced Topic Management Script -->
+    <script>
+        function prepareQuickEditModalFromBtn(btn) {
+            const topicId = btn.getAttribute('data-topic-id');
+            const title = btn.getAttribute('data-topic-title') || '';
+            const desc = btn.getAttribute('data-topic-desc') || '';
+            const req = btn.getAttribute('data-topic-req') || '';
+
+            const form = document.getElementById('quickEditApproveForm');
+            if (form) form.action = '/department-head/topics/' + topicId + '/quick-edit-approve';
+
+            const tEl = document.getElementById('quickEditTitle');
+            const dEl = document.getElementById('quickEditDescription');
+            const rEl = document.getElementById('quickEditRequirements');
+            if (tEl) tEl.value = title;
+            if (dEl) dEl.value = desc;
+            if (rEl) rEl.value = req;
+        }
+
+        function prepareQuickEditModal(topicId, trElement, fallbackTitle, fallbackDesc, fallbackReq) {
+            const form = document.getElementById('quickEditApproveForm');
+            if (form) form.action = '/department-head/topics/' + topicId + '/quick-edit-approve';
+            let title = '', desc = '', req = '';
+            if (trElement && trElement.getAttribute) {
+                title = trElement.getAttribute('data-topic-title') || '';
+                desc = trElement.getAttribute('data-topic-description') || '';
+                req = trElement.getAttribute('data-topic-requirements') || '';
+            } else if (typeof trElement === 'string') {
+                title = trElement;
+                desc = fallbackTitle || '';
+                req = fallbackDesc || '';
+            } else {
+                title = fallbackTitle || '';
+                desc = fallbackDesc || '';
+                req = fallbackReq || '';
+            }
+            const tEl = document.getElementById('quickEditTitle');
+            const dEl = document.getElementById('quickEditDescription');
+            const rEl = document.getElementById('quickEditRequirements');
+            if (tEl) tEl.value = title;
+            if (dEl) dEl.value = desc;
+            if (rEl) rEl.value = req;
+        }
+
+        function prepareRejectModalFromBtn(btn) {
+            const topicId = btn.getAttribute('data-topic-id');
+            const title = btn.getAttribute('data-topic-title') || '';
+            const form = document.getElementById('rejectForm');
+            if (form) form.action = '/department-head/topics/' + topicId + '/reject';
+            const titleEl = document.getElementById('rejectTopicTitle');
+            if (titleEl) titleEl.textContent = title;
+        }
+
+        function prepareRejectModal(topicId, title) {
+            const form = document.getElementById('rejectForm');
+            if (form) form.action = '/department-head/topics/' + topicId + '/reject';
+            const titleEl = document.getElementById('rejectTopicTitle');
+            if (titleEl) titleEl.textContent = title || '';
+        }
+
+        // View Mode Switcher (Table vs Kanban)
+        function setViewMode(mode) {
+            const tableView = document.getElementById('tableViewContainer');
+            const kanbanView = document.getElementById('kanbanViewContainer');
+            const btnTable = document.getElementById('viewBtnTable');
+            const btnKanban = document.getElementById('viewBtnKanban');
+
+            btnTable?.setAttribute('aria-pressed', String(mode !== 'kanban'));
+            btnKanban?.setAttribute('aria-pressed', String(mode === 'kanban'));
+            if (mode === 'kanban') {
+                if (tableView) tableView.style.display = 'none';
+                if (kanbanView) kanbanView.style.display = 'block';
+                if (btnTable) { btnTable.classList.remove('active'); btnTable.classList.add('text-slate-600'); }
+                if (btnKanban) { btnKanban.classList.add('active'); btnKanban.classList.remove('text-slate-600'); }
+                localStorage.setItem('topichub_dept_topic_view', 'kanban');
+                updateKanbanColumnCounters();
+            } else {
+                if (tableView) tableView.style.display = 'block';
+                if (kanbanView) kanbanView.style.display = 'none';
+                if (btnTable) { btnTable.classList.add('active'); btnTable.classList.remove('text-slate-600'); }
+                if (btnKanban) { btnKanban.classList.remove('active'); btnKanban.classList.add('text-slate-600'); }
+                localStorage.setItem('topichub_dept_topic_view', 'table');
+            }
+        }
+
+        // Filter by Workflow Stage across Table & Kanban
+        let currentWorkflowStage = 'ALL';
+        function filterByWorkflowStage(stage, element) {
+            currentWorkflowStage = stage || 'ALL';
+
+            // Sync with dropdown select
+            const statusSel = document.getElementById('filterStatusSelect');
+            if (statusSel) {
+                statusSel.value = currentWorkflowStage;
+            }
+
+            // Update KPI cards active state
+            document.querySelectorAll('.period-kpi-card').forEach(c => {
+                c.classList.remove('active');
+            });
+            if (element) {
+                element.classList.add('active');
+            } else {
+                // Find matching KPI card and highlight
+                const cards = document.querySelectorAll('.period-kpi-card');
+                if (stage === 'ALL' && cards[0]) cards[0].classList.add('active');
+                else if (stage === 'PENDING' && cards[1]) cards[1].classList.add('active');
+                else if (stage === 'APPROVED' && cards[2]) cards[2].classList.add('active');
+                else if (stage === 'REJECTED' && cards[3]) cards[3].classList.add('active');
+            }
+
+            applyCombinedFilters();
+        }
+
+        function syncStatusFromSelect(statusVal) {
+            filterByWorkflowStage(statusVal, null);
+        }
+
+        // Reset all filters to default
+        function resetAllFilters() {
+            const kw = document.getElementById('topicKeywordInput');
+            if (kw) kw.value = '';
+            const pSel = document.getElementById('filterPeriodSelect');
+            if (pSel) pSel.value = 'ALL';
+            const sSel = document.getElementById('filterSupervisorSelect');
+            if (sSel) sSel.value = 'ALL';
+            const statusSel = document.getElementById('filterStatusSelect');
+            if (statusSel) statusSel.value = 'ALL';
+
+            const firstKpi = document.querySelector('.period-kpi-card');
+            filterByWorkflowStage('ALL', firstKpi);
+        }
+
+        // Apply filters to Table Rows and Kanban Cards simultaneously
+        function applyCombinedFilters() {
+            const kwInput = document.getElementById('topicKeywordInput');
+            const keyword = (kwInput ? kwInput.value : '').toLowerCase().trim();
+            const stage = currentWorkflowStage;
+
+            const pSel = document.getElementById('filterPeriodSelect');
+            const selectedPeriod = pSel ? pSel.value : 'ALL';
+
+            const sSel = document.getElementById('filterSupervisorSelect');
+            const selectedSupervisor = sSel ? sSel.value : 'ALL';
+
+            // 1. Filter Table Rows
+            const tableRows = document.querySelectorAll('.topic-item-row');
+            let visibleRowCount = 0;
+
+            tableRows.forEach(row => {
+                const status = (row.getAttribute('data-status') || '').toUpperCase();
+                const rowPeriod = row.getAttribute('data-topic-period') || '';
+                const rowSupervisor = row.getAttribute('data-topic-supervisor') || '';
+                const text = row.textContent.toLowerCase();
+
+                let matchesStage = false;
+                if (stage === 'ALL') {
+                    matchesStage = true;
+                } else if (stage === 'PENDING') {
+                    matchesStage = (status === 'PENDING');
+                } else if (stage === 'APPROVED') {
+                    matchesStage = (status === 'APPROVED');
+                } else if (stage === 'REJECTED') {
+                    matchesStage = (status === 'REJECTED');
+                }
+
+                const matchesPeriod = (selectedPeriod === 'ALL' || rowPeriod === selectedPeriod);
+                const matchesSupervisor = (selectedSupervisor === 'ALL' || rowSupervisor.includes(selectedSupervisor) || selectedSupervisor.includes(rowSupervisor));
+                const matchesKeyword = !keyword || text.includes(keyword);
+
+                if (matchesStage && matchesPeriod && matchesSupervisor && matchesKeyword) {
+                    row.style.display = '';
+                    visibleRowCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // 2. Filter Kanban Cards
+            const kanbanCards = document.querySelectorAll('.kanban-card');
+            kanbanCards.forEach(card => {
+                const status = (card.getAttribute('data-status') || '').toUpperCase();
+                const cardPeriod = card.getAttribute('data-topic-period') || '';
+                const cardSupervisor = card.getAttribute('data-topic-supervisor') || '';
+                const text = card.textContent.toLowerCase();
+
+                let matchesStage = false;
+                if (stage === 'ALL') {
+                    matchesStage = true;
+                } else if (stage === 'PENDING') {
+                    matchesStage = (status === 'PENDING');
+                } else if (stage === 'APPROVED') {
+                    matchesStage = (status === 'APPROVED');
+                } else if (stage === 'REJECTED') {
+                    matchesStage = (status === 'REJECTED');
+                }
+
+                const matchesPeriod = (selectedPeriod === 'ALL' || cardPeriod === selectedPeriod);
+                const matchesSupervisor = (selectedSupervisor === 'ALL' || cardSupervisor.includes(selectedSupervisor) || selectedSupervisor.includes(cardSupervisor));
+                const matchesKeyword = !keyword || text.includes(keyword);
+
+                if (matchesStage && matchesPeriod && matchesSupervisor && matchesKeyword) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Update Total Row Count Display
+            const counter = document.getElementById('topicFilteredCountBadge');
+            if (counter) {
+                counter.textContent = 'Tổng: ' + visibleRowCount + ' đề tài';
+            }
+
+            const headerCounter = document.getElementById('filteredRowCount');
+            if (headerCounter) {
+                headerCounter.textContent = 'Tổng số: ' + visibleRowCount + ' đề tài';
+            }
+
+            updateKanbanColumnCounters();
+        }
+
+        // Count visible cards per column
+        function updateKanbanColumnCounters() {
+            const countVisible = (colId) => {
+                const col = document.getElementById(colId);
+                if (!col) return 0;
+                return Array.from(col.querySelectorAll('.kanban-card')).filter(c => c.style.display !== 'none').length;
+            };
+
+            const pCount = document.getElementById('kanbanPendingCount');
+            const aCount = document.getElementById('kanbanApprovedCount');
+            const rCount = document.getElementById('kanbanRejectedCount');
+
+            if (pCount) pCount.textContent = countVisible('kanbanColPending');
+            if (aCount) aCount.textContent = countVisible('kanbanColApproved');
+            if (rCount) rCount.textContent = countVisible('kanbanColRejected');
+        }
+
+        // Initialize on DOM Ready
+        document.addEventListener('DOMContentLoaded', function () {
+            const savedView = localStorage.getItem('topichub_dept_topic_view');
+            if (savedView === 'kanban') {
+                setViewMode('kanban');
+            }
+            updateKanbanColumnCounters();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:replace="~{fragments/head :: head('Tổng hợp Điểm & Công bố Kết quả')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
+<body class="workspace-page">
+
+    <!-- Left Sidebar -->
+    <aside th:replace="~{fragments/sidebar :: sidebar('results', ${user})}"></aside>
+
+    <!-- Main Wrapper -->
+    <div class="saas-main-wrapper">
+        <!-- Topbar -->
+        <header th:replace="~{fragments/topbar :: topbar('Tổng hợp Điểm & Kết quả', ${user != null && user.role != null ? user.role.name : 'Trưởng Khoa'}, '/department-head/dashboard', ${user})}"></header>
+
+        <!-- Main Content View -->
+        <main class="saas-content">
+
+            <!-- Flash Messages -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-emerald-200 shadow-xs" role="alert">
+                <i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show rounded-2xl mb-4 py-2.5 px-4 text-xs font-medium border border-rose-200 shadow-xs" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-1.5 text-rose-600"></i> <span th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0.75rem 1rem;" aria-label="Đóng" title="Đóng"></button>
+            </div>
+
+            <!-- Page Header & Action Bar -->
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <h1 class="text-base font-bold text-slate-900 tracking-tight mb-0">Tổng Hợp & Công Bố Điểm</h1>
+                        <span class="badge bg-slate-100 text-slate-700 font-medium border-0 text-xs px-2.5 py-1 rounded-full" th:text="${department != null ? department.name : 'Khoa Công nghệ Thông tin'}">Khoa Công nghệ Thông tin</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-0">Theo dõi tiến độ chấm điểm, xem chi tiết phiếu đánh giá và công bố điểm chính thức cho sinh viên.</p>
+                </div>
+                <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                    <!-- Batch Publish Button -->
+                    <form th:action="@{/department-head/results/publish-all}" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn CÔNG BỐ KẾT QUẢ ĐIỂM CHÍNH THỨC cho toàn bộ đề tài đã có điểm trong đợt này?');">
+                        <input type="hidden" name="periodId" th:value="${selectedPeriodId}">
+                        <input type="hidden" name="isFinalized" value="true">
+                        <button type="submit" class="btn btn-dark d-inline-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow-xs whitespace-nowrap">
+                            <i class="fa-solid fa-bullhorn text-xs"></i>
+                            <span>Công bố kết quả toàn đợt</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modern Unified Toolbar (Rộng rãi, thoáng mắt, khoảng cách chuẩn SaaS) -->
+            <div class="results-toolbar-card mb-4 bg-white border border-slate-200/90 rounded-2xl shadow-xs" style="padding: 12px 16px;">
+                <form th:action="@{/department-head/results}" method="get" class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                    <!-- Search Input -->
+                    <div class="relative flex-grow-1" style="min-width: 250px; max-width: 380px;">
+                        <input type="text" class="form-control form-control-sm rounded-xl text-xs results-search-input"
+                               style="height: 36px; padding-left: 36px; font-size: 13px;"
+                               placeholder="Tìm kiếm theo mã, tên đề tài, GV, SV..."
+                               onkeyup="filterTableByKeyword(this.value)"
+                               title="Tìm kiếm theo mã, tên đề tài, GV, SV..."
+                               aria-label="Tìm kiếm theo mã, tên đề tài, GV, SV...">
+                        <i class="fa-solid fa-magnifying-glass text-slate-400 absolute text-xs pointer-events-none" style="left: 12px; top: 50%; transform: translateY(-50%);"></i>
+                    </div>
+
+                    <!-- Filter Actions & Export Controls -->
+                    <div class="d-flex flex-wrap align-items-center gap-2.5">
+                        <select name="periodId" class="form-select form-select-sm rounded-xl text-xs" style="height: 36px; width: 190px; font-size: 12.5px; padding-left: 12px;" onchange="this.form.submit()" title="Chọn đợt" aria-label="Chọn đợt">
+                            <option value="">-- Tất cả các đợt --</option>
+                            <option th:each="p : ${periods}" th:value="${p.id}" th:text="${p.name}" th:selected="${selectedPeriodId == p.id}"></option>
+                        </select>
+
+                        <select class="form-select form-select-sm rounded-xl text-xs" style="height: 36px; width: 185px; font-size: 12.5px; padding-left: 12px;" onchange="filterTableByAttribute('score-status', this.value)" title="Tiến độ điểm" aria-label="Tiến độ điểm">
+                            <option value="all">-- Tất cả tiến độ điểm --</option>
+                            <option value="scored">Đã có điểm tổng kết</option>
+                            <option value="pending">Đang chờ chấm điểm</option>
+                        </select>
+
+                        <!-- Export Button Group with clean unified styling -->
+                        <div class="btn-group rounded-xl border border-slate-200/90 overflow-hidden shadow-2xs" style="height: 36px;">
+                            <a th:href="@{/department-head/results/export-excel(periodId=${selectedPeriodId})}"
+                               class="btn btn-xs px-3 text-xs font-semibold d-inline-flex align-items-center gap-1.5 text-slate-700 bg-slate-50 hover:bg-slate-100 border-0"
+                               title="Xuất file Excel (.xlsx) chuẩn định dạng">
+                                <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
+                                <span>Excel</span>
+                            </a>
+                            <a th:href="@{/department-head/results/export-pdf(periodId=${selectedPeriodId})}"
+                               class="btn btn-xs px-3 text-xs font-semibold d-inline-flex align-items-center gap-1.5 text-slate-700 bg-slate-50 hover:bg-slate-100 border-0 border-start border-slate-200"
+                               title="Xuất file PDF bảng điểm chính thức">
+                                <i class="fa-solid fa-file-pdf text-red-500 text-xs"></i>
+                                <span>PDF</span>
+                            </a>
+                            <a th:href="@{/department-head/results/export-csv(periodId=${selectedPeriodId})}"
+                               class="btn btn-xs px-3 text-xs font-semibold d-inline-flex align-items-center gap-1.5 text-slate-700 bg-slate-50 hover:bg-slate-100 border-0 border-start border-slate-200"
+                               title="Xuất file CSV">
+                                <i class="fa-solid fa-file-csv text-blue-500 text-xs"></i>
+                                <span>CSV</span>
+                            </a>
+                        </div>
+
+                        <!-- Reset Filter Button -->
+                        <a th:href="@{/department-head/results}"
+                           class="btn btn-sm btn-light border border-slate-200 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 d-inline-flex align-items-center justify-content-center shadow-2xs"
+                           style="height: 36px; width: 36px; padding: 0;"
+                           title="Đặt lại bộ lọc">
+                            <i class="fa-solid fa-rotate-left text-xs"></i>
+                        </a>
+
+                        <!-- Total count badge -->
+                        <span id="filteredRowCount"
+                              class="text-xs font-semibold text-slate-600 bg-slate-100/90 px-3 rounded-xl border border-slate-200/90 whitespace-nowrap d-inline-flex align-items-center shadow-2xs"
+                              style="height: 36px;"
+                              th:text="'Tổng: ' + (${totalTopics != null ? totalTopics : 0}) + ' đề tài'"></span>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Fixed Layout 100% Width Table Card (No Horizontal Overflow) -->
+            <div class="results-table-card border border-slate-200/80 rounded-2xl bg-white shadow-xs overflow-hidden mb-4">
+                <div class="w-full">
+                    <table class="table table-results table-fixed w-full mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th style="width: 36%;" class="py-2.5 px-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider" scope="col">Đề Tài & Nhóm Sinh Viên</th>
+                                <th style="width: 14%;" class="py-2.5 px-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider" scope="col">GV Hướng Dẫn</th>
+                                <th style="width: 14%;" class="py-2.5 px-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider" scope="col">GV Phản Biện</th>
+                                <th style="width: 15%;" class="py-2.5 px-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider" scope="col">Hội Đồng</th>
+                                <th style="width: 21%;" class="text-end py-2.5 px-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider" scope="col">Tổng Điểm & Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${topics == null || #lists.isEmpty(topics)}">
+                                <td colspan="5" class="text-center py-5 text-slate-400 text-xs">
+                                    <i class="fa-regular fa-folder-open text-2xl mb-2 d-block text-slate-300"></i>
+                                    Không tìm thấy đề tài nào trong đợt đã chọn.
+                                </td>
+                            </tr>
+                            <tr th:each="t : ${topics}" class="filterable-row results-table-row transition" 
+                                th:data-score-status="${topicGroupsMap == null || topicGroupsMap.get(t.id) == null ? 'unassigned' : (t.finalScore != null ? 'scored' : 'pending')}">
+                                
+                                <!-- Cột 1 (36%): Mã, Tên đề tài & Nhóm SV -->
+                                <td class="py-2.5 px-3.5 overflow-hidden">
+                                    <div class="d-flex align-items-center gap-1.5 mb-1 flex-wrap">
+                                        <span class="inline-flex items-center text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded text-slate-600 bg-slate-100 border border-slate-200/80 truncate max-w-[130px]" th:text="${t.code != null ? t.code : 'DT-' + t.id}" th:title="${t.code}">DT-01</span>
+                                        <span class="inline-flex items-center text-[10px] font-medium px-1.5 py-0.2 rounded text-blue-700 bg-blue-50 border border-blue-100 truncate max-w-[140px]" th:text="${t.department != null ? t.department.name : 'Khoa CNTT'}" th:title="${t.department != null ? t.department.name : ''}">Khoa CNTT</span>
+                                    </div>
+                                    <div class="topic-title-link font-semibold text-slate-900 text-xs truncate cursor-pointer hover:text-blue-600" 
+                                         th:text="${t.title}" 
+                                         th:title="${t.title}"
+                                         onclick="openTopicDrawer(this)"
+                                         th:data-topic-id="${t.id}"
+                                         th:data-topic-code="${t.code != null ? t.code : 'DT-' + t.id}"
+                                         th:data-topic-title="${t.title}"
+                                         th:data-topic-period="${t.period != null ? t.period.name : 'Chung'}"
+                                         th:data-topic-major="${t.department != null ? t.department.name : 'Khoa CNTT'}"
+                                         th:data-topic-department="${t.department != null ? t.department.name : 'Khoa CNTT'}"
+                                         th:data-topic-supervisor="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : 'Chưa phân công'}"
+                                         th:data-topic-co-supervisor="${t.coSupervisor != null && t.coSupervisor.user != null ? t.coSupervisor.user.fullName : 'Không có'}"
+                                         th:data-topic-reviewer="${t.reviewer != null && t.reviewer.user != null ? t.reviewer.user.fullName : 'Chưa phân công'}"
+                                         th:data-topic-council="${t.council != null ? t.council.name : 'Chưa phân hội đồng'}"
+                                         th:data-topic-max-students="${t.maxStudents}"
+                                         th:data-topic-status="${t.status}"
+                                         th:data-topic-group-name="${topicGroupsMap != null && topicGroupsMap.get(t.id) != null ? topicGroupsMap.get(t.id).groupName : ''}"
+                                         th:data-topic-leader-name="${topicGroupsMap != null && topicGroupsMap.get(t.id) != null && topicGroupsMap.get(t.id).leader != null && topicGroupsMap.get(t.id).leader.user != null ? topicGroupsMap.get(t.id).leader.user.fullName : ''}"
+                                         th:data-topic-leader-code="${topicGroupsMap != null && topicGroupsMap.get(t.id) != null && topicGroupsMap.get(t.id).leader != null ? topicGroupsMap.get(t.id).leader.studentCode : ''}"
+                                         th:data-topic-description="${t.description}"
+                                         th:data-topic-requirements="${t.requirements}"
+                                         th:data-topic-role="DEPARTMENT_HEAD">Tên đề tài</div>
+                                    
+                                    <!-- Group / Students Info -->
+                                    <div th:if="${topicGroupsMap != null && topicGroupsMap.get(t.id) != null}" class="d-flex align-items-center gap-1.5 text-[11px] text-slate-500 mt-0.5 truncate" th:title="${topicGroupsMap.get(t.id).groupName}">
+                                        <i class="fa-solid fa-users text-blue-500 text-[10px] flex-shrink-0"></i>
+                                        <span class="font-semibold text-slate-700 truncate max-w-[140px]" th:text="${topicGroupsMap.get(t.id).groupName}"></span>
+                                        <span class="text-slate-300">•</span>
+                                        <span class="text-slate-400 truncate">
+                                            <span th:each="m, mStat : ${topicGroupsMap.get(t.id).members}">
+                                                <span th:text="${m.student != null && m.student.user != null ? m.student.user.fullName : 'SV'}"></span><span th:if="${!mStat.last}">, </span>
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <div th:unless="${topicGroupsMap != null && topicGroupsMap.get(t.id) != null}" class="d-flex align-items-center gap-1 text-[11px] text-slate-400 mt-0.5">
+                                        <i class="fa-regular fa-circle-user text-slate-300 text-[10px]"></i>
+                                        <span>Chưa có nhóm</span>
+                                    </div>
+                                </td>
+
+                                <!-- Cột 2 (14%): GV Hướng dẫn + Điểm GVHD -->
+                                <td class="py-2.5 px-2.5 overflow-hidden">
+                                    <div class="font-medium text-slate-800 text-xs truncate" th:text="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : '—'}" th:title="${t.supervisor != null && t.supervisor.user != null ? t.supervisor.user.fullName : ''}">GVHD</div>
+                                    <div class="mt-0.5" th:if="${t.supervisor != null && t.supervisor.user != null && topicGroupsMap != null && topicGroupsMap.get(t.id) != null}">
+                                        <span th:each="e : ${topicEvaluationsMap != null && topicEvaluationsMap.get(t.id) != null ? topicEvaluationsMap.get(t.id) : #lists.emptyList()}"
+                                              th:if="${e.evaluationType == 'SUPERVISOR' && e.score != null}" 
+                                              class="score-chip score-chip-supervisor" 
+                                              th:title="'Điểm GVHD: ' + ${#numbers.formatDecimal(e.score, 1, 1)}"
+                                              th:text="${#numbers.formatDecimal(e.score, 1, 1)}">9.0</span>
+                                        <span th:if="${t.advisorScore == null && (topicEvaluationsMap == null || topicEvaluationsMap.get(t.id) == null || #lists.isEmpty(topicEvaluationsMap.get(t.id)))}" class="text-[10px] text-slate-400">Chờ chấm</span>
+                                    </div>
+                                    <div class="mt-0.5 text-slate-300 text-xs" th:unless="${t.supervisor != null && t.supervisor.user != null && topicGroupsMap != null && topicGroupsMap.get(t.id) != null}">—</div>
+                                </td>
+
+                                <!-- Cột 3 (14%): GV Phản biện + Điểm GVPB -->
+                                <td class="py-2.5 px-2.5 overflow-hidden">
+                                    <div th:if="${t.reviewer != null && t.reviewer.user != null}" class="font-medium text-slate-800 text-xs truncate" th:text="${t.reviewer.user.fullName}" th:title="${t.reviewer.user.fullName}">GVPB</div>
+                                    <div th:unless="${t.reviewer != null && t.reviewer.user != null}" class="text-slate-300 text-xs">—</div>
+                                    <div class="mt-0.5" th:if="${t.reviewer != null && t.reviewer.user != null && topicGroupsMap != null && topicGroupsMap.get(t.id) != null}">
+                                        <span th:each="e : ${topicEvaluationsMap != null && topicEvaluationsMap.get(t.id) != null ? topicEvaluationsMap.get(t.id) : #lists.emptyList()}"
+                                              th:if="${e.evaluationType == 'REVIEWER' && e.score != null}" 
+                                              class="score-chip score-chip-reviewer" 
+                                              th:title="'Điểm GVPB: ' + ${#numbers.formatDecimal(e.score, 1, 1)}"
+                                              th:text="${#numbers.formatDecimal(e.score, 1, 1)}">8.5</span>
+                                        <span th:if="${t.reviewerScore == null && (topicEvaluationsMap == null || topicEvaluationsMap.get(t.id) == null || #lists.isEmpty(topicEvaluationsMap.get(t.id)))}" class="text-[10px] text-slate-400">Chờ chấm</span>
+                                    </div>
+                                    <div class="mt-0.5 text-slate-300 text-xs" th:unless="${t.reviewer != null && t.reviewer.user != null && topicGroupsMap != null && topicGroupsMap.get(t.id) != null}">—</div>
+                                </td>
+
+                                <!-- Cột 4 (15%): Hội đồng + Điểm Hội đồng -->
+                                <td class="py-2.5 px-2.5 overflow-hidden">
+                                    <div th:if="${t.council != null}" class="font-medium text-slate-800 text-xs truncate" th:text="${t.council.name}" th:title="${t.council.name}">Hội đồng KLTN</div>
+                                    <div th:unless="${t.council != null}" class="text-slate-300 text-xs">—</div>
+                                    <div class="mt-0.5" th:if="${t.council != null && topicGroupsMap != null && topicGroupsMap.get(t.id) != null}">
+                                        <span th:each="e : ${topicEvaluationsMap != null && topicEvaluationsMap.get(t.id) != null ? topicEvaluationsMap.get(t.id) : #lists.emptyList()}"
+                                              th:if="${e.evaluationType == 'COUNCIL' && e.score != null}" 
+                                              class="score-chip score-chip-council" 
+                                              th:title="'Điểm HĐ: ' + ${#numbers.formatDecimal(e.score, 1, 1)}"
+                                              th:text="${#numbers.formatDecimal(e.score, 1, 1)}">9.0</span>
+                                        <span th:if="${t.councilScore == null && (topicEvaluationsMap == null || topicEvaluationsMap.get(t.id) == null || #lists.isEmpty(topicEvaluationsMap.get(t.id)))}" class="text-[10px] text-slate-400">Chờ chấm</span>
+                                    </div>
+                                    <div class="mt-0.5 text-slate-300 text-xs" th:unless="${t.council != null && topicGroupsMap != null && topicGroupsMap.get(t.id) != null}">—</div>
+                                </td>
+
+                                <!-- Cột 5 (21%): Tổng Điểm & Thao Tác -->
+                                <td class="py-2.5 px-3.5 text-end whitespace-nowrap overflow-hidden">
+                                    <div class="d-inline-flex align-items-center justify-content-end gap-1.5">
+                                        <!-- Điểm tổng kết -->
+                                        <div class="flex-shrink-0">
+                                            <div th:if="${topicGroupsMap == null || topicGroupsMap.get(t.id) == null}">
+                                                <span class="text-slate-300 text-xs">—</span>
+                                            </div>
+                                            <div th:if="${topicGroupsMap != null && topicGroupsMap.get(t.id) != null}">
+                                                <span th:if="${t.finalScore != null}" class="final-score-badge" 
+                                                      th:title="'Điểm tổng kết: ' + ${#numbers.formatDecimal(t.finalScore, 1, 2)}">
+                                                    <span class="final-score-num" th:text="${#numbers.formatDecimal(t.finalScore, 1, 2)}">8.83</span>
+                                                </span>
+                                                <span th:unless="${t.finalScore != null}" class="badge-status-pending">Chờ chấm</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Nút Xem Phiếu Chấm -->
+                                        <button th:if="${topicGroupsMap != null && topicGroupsMap.get(t.id) != null}" 
+                                                type="button" class="btn-motion-action btn-sheet-view" 
+                                                data-bs-toggle="modal" th:data-bs-target="'#evalDetailModal-' + ${t.id}" title="Xem chi tiết các phiếu chấm">
+                                            <i class="fa-solid fa-list-check text-[10px]"></i>
+                                            <span>Phiếu</span>
+                                        </button>
+                                        <button th:unless="${topicGroupsMap != null && topicGroupsMap.get(t.id) != null}" 
+                                                type="button" class="btn-motion-action btn-sheet-disabled" disabled title="Đề tài chưa có nhóm thực hiện">
+                                            <i class="fa-solid fa-list-check text-[10px]"></i>
+                                            <span>Phiếu</span>
+                                        </button>
+
+                                        <!-- Nút Công Bố / Hủy Công Bố (Gọn gàng) -->
+                                        <div th:if="${topicGroupsMap != null && topicGroupsMap.get(t.id) != null && t.finalScore != null}" class="d-inline">
+                                            <form th:action="@{/department-head/results/{id}/publish(id=${t.id})}" method="post" class="d-inline">
+                                                <input type="hidden" name="isFinalized" th:value="${!t.isFinalized}">
+                                                <button type="submit" 
+                                                        th:class="${t.isFinalized ? 'btn-motion-action btn-publish-active' : 'btn-motion-action btn-publish-ready'}"
+                                                        th:title="${t.isFinalized ? 'Đã công bố cho SV (Nhấp để chuyển về dự thảo)' : 'Nhấp để Công bố kết quả cho sinh viên'}">
+                                                    <i th:class="${t.isFinalized ? 'fa-solid fa-eye-slash text-[10px]' : 'fa-solid fa-bullhorn text-[10px]'}"></i>
+                                                    <span th:text="${t.isFinalized ? 'Đã công bố' : 'Công bố'}">Công bố</span>
+                                                </button>
+                                            </form>
+                                        </div>
+                                        <div th:unless="${topicGroupsMap != null && topicGroupsMap.get(t.id) != null && t.finalScore != null}" class="d-inline">
+                                            <span class="btn-motion-action btn-publish-disabled" title="Chưa đủ điều kiện công bố điểm">
+                                                <i class="fa-solid fa-ban text-[10px]"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Modern Pagination Footer -->
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 p-3 border-t border-slate-100 bg-slate-50/50">
+                    <span class="text-xs text-slate-500 font-medium">
+                        Hiển thị <strong class="text-slate-900" th:text="${topics != null ? topics.size() : 0}"></strong> / <strong class="text-slate-900" th:text="${totalTopics}"></strong> đề tài
+                    </span>
+                    <div class="d-flex align-items-center gap-1.5">
+                        <a th:if="${hasPrevious}" th:href="@{/department-head/results(periodId=${selectedPeriodId}, page=${currentPage - 1})}" class="btn-motion-secondary btn-sm rounded-xl px-2.5 py-1 text-xs font-semibold text-slate-700 bg-white border border-slate-200/80 shadow-xs">
+                            <i class="fa-solid fa-chevron-left text-[10px] me-1"></i> Trước
+                        </a>
+                        <span th:unless="${hasPrevious}" class="btn btn-sm rounded-xl px-2.5 py-1 text-xs text-slate-300 bg-slate-100/50 border border-slate-100 disabled">
+                            <i class="fa-solid fa-chevron-left text-[10px] me-1"></i> Trước
+                        </span>
+
+                        <span class="text-xs font-semibold text-slate-700 bg-white border border-slate-200/80 px-2.5 py-1 rounded-xl shadow-xs" th:text="'Trang ' + ${currentPage} + ' / ' + ${totalPages}">Trang 1 / 1</span>
+
+                        <a th:if="${hasNext}" th:href="@{/department-head/results(periodId=${selectedPeriodId}, page=${currentPage + 1})}" class="btn-motion-secondary btn-sm rounded-xl px-2.5 py-1 text-xs font-semibold text-slate-700 bg-white border border-slate-200/80 shadow-xs">
+                            Sau <i class="fa-solid fa-chevron-right text-[10px] ms-1"></i>
+                        </a>
+                        <span th:unless="${hasNext}" class="btn btn-sm rounded-xl px-2.5 py-1 text-xs text-slate-300 bg-slate-100/50 border border-slate-100 disabled">
+                            Sau <i class="fa-solid fa-chevron-right text-[10px] ms-1"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+
+
+    <!-- Modal Detailed Evaluations for each Topic (Placed directly in <body> outside saas-main-wrapper to prevent stacking context & backdrop bugs) -->
+    <th:block th:each="t : ${topics}">
+        <div class="modal fade results-modal text-start" th:id="'evalDetailModal-' + ${t.id}" tabindex="-1" aria-hidden="true"
+             th:if="${topicGroupsMap != null && topicGroupsMap.get(t.id) != null}">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content rounded-2xl border-0 shadow-2xl overflow-hidden">
+                    <div class="modal-header border-b border-slate-100 p-4 bg-slate-50/70">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge font-mono text-[11px] font-semibold bg-slate-200/80 text-slate-700 px-2 py-0.5 rounded" th:text="${t.code}">DT-01</span>
+                                <h6 class="modal-title font-bold text-slate-900 text-sm mb-0">Chi Tiết Phiếu Chấm & Đánh Giá</h6>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-0 line-clamp-1" th:text="${t.title}"></p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
+                    </div>
+
+                    <div class="modal-body p-4 space-y-3">
+                        <!-- Summary Bar -->
+                        <div class="p-3.5 bg-gradient-to-r from-blue-50/60 to-indigo-50/40 rounded-xl border border-blue-100/80 d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="text-slate-500 text-[11px] font-medium d-block">Điểm Tổng Kết (Trung Bình):</span>
+                                <span class="text-2xl font-black text-blue-700 font-mono tracking-tight" th:text="${t.finalScore != null ? #numbers.formatDecimal(t.finalScore, 1, 2) + ' / 10' : 'Chưa đủ điểm'}">8.65 / 10</span>
+                            </div>
+                            <div class="text-end">
+                                <span class="text-slate-500 text-[11px] font-medium d-block">Trạng thái công bố:</span>
+                                <span th:if="${t.isFinalized}" class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full mt-0.5">
+                                    <i class="fa-solid fa-circle-check text-[10px]"></i> Đã xuất bản cho SV
+                                </span>
+                                <span th:unless="${t.isFinalized}" class="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full mt-0.5">
+                                    <i class="fa-regular fa-clock text-[10px]"></i> Dự thảo nội bộ
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Discrepancy Alert Banner if max - min > 2.0 -->
+                        <div th:with="discrepancy=${topicEvaluationsMap != null && topicEvaluationsMap.get(t.id) != null ? T(topicmanagement.entity.Evaluation).calculateCouncilDiscrepancy(topicEvaluationsMap.get(t.id)) : 0.0}"
+                             th:if="${discrepancy > 2.0}"
+                             class="p-3 bg-amber-50/90 border border-amber-200 rounded-xl text-xs text-amber-900 d-flex align-items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 d-flex align-items-center justify-content-center flex-shrink-0">
+                                <i class="fa-solid fa-triangle-exclamation text-sm"></i>
+                            </div>
+                            <div>
+                                <strong class="font-semibold d-block">Cảnh báo độ lệch điểm Hội đồng:</strong>
+                                <span>Chênh lệch giữa điểm cao nhất và thấp nhất là </span>
+                                <strong class="font-bold font-mono" th:text="${discrepancy} + ' đ'"></strong>
+                                <span> (&gt; 2.0 đ). Hội đồng cần xem xét hội ý trước khi duyệt công bố chính thức!</span>
+                            </div>
+                        </div>
+
+                        <!-- List of individual evaluation sheets -->
+                        <div class="pt-2">
+                            <h6 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2.5">Danh sách các phiếu đánh giá thành phần:</h6>
+                            <div class="d-flex flex-column gap-2.5">
+                                <div th:each="e : ${topicEvaluationsMap != null && topicEvaluationsMap.get(t.id) != null ? topicEvaluationsMap.get(t.id) : #lists.emptyList()}" 
+                                     class="eval-card p-3.5 bg-white border border-slate-200/80 rounded-xl shadow-xs transition hover:border-slate-300">
+                                     <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-md"
+                                                  th:classappend="${e.evaluationType == 'SUPERVISOR' ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' : (e.evaluationType == 'REVIEWER' ? 'text-indigo-700 bg-indigo-50 border border-indigo-200' : 'text-purple-700 bg-purple-50 border border-purple-200')}"
+                                                  th:text="${e.getEvaluationTypeName()}">GVPB</span>
+                                            <strong class="text-slate-900 text-xs" th:text="${e.lecturer != null && e.lecturer.user != null ? e.lecturer.user.fullName : 'Giảng viên'}">TS. Nguyễn Văn A</strong>
+                                        </div>
+                                        <span class="font-black text-blue-700 text-sm font-mono" th:text="${e.score != null ? #numbers.formatDecimal(e.score, 1, 1) + ' đ' : '--'}">8.5 đ</span>
+                                    </div>
+                                    <div class="text-xs text-slate-600 bg-slate-50/60 p-2.5 rounded-lg border border-slate-100 leading-relaxed italic" th:text="${e.comments != null && !e.comments.isEmpty() ? e.comments : 'Không có nhận xét chi tiết.'}"></div>
+                                    <div class="d-flex justify-content-end mt-1.5">
+                                        <span class="text-slate-400 text-[11px]" th:text="${e.evaluatedAt != null ? #temporals.format(e.evaluatedAt, 'dd/MM/yyyy HH:mm') : ''}"></span>
+                                    </div>
+                                </div>
+                                <div th:if="${topicEvaluationsMap == null || topicEvaluationsMap.get(t.id) == null || topicEvaluationsMap.get(t.id).isEmpty()}" class="p-4 text-center text-slate-400 text-xs border border-dashed border-slate-200 rounded-xl">
+                                    Chưa có giảng viên nào gửi phiếu chấm điểm cho đề tài này.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-t border-slate-100 p-3.5 bg-slate-50/70 d-flex justify-content-between">
+                        <button type="button" class="btn-motion-secondary btn-sm rounded-xl px-3 py-1.5 text-xs font-semibold d-inline-flex align-items-center gap-1.5 text-slate-700 bg-white border border-slate-200" 
+                                th:onclick="'printTopicReport(' + ${t.id} + ')'">
+                            <i class="fa-solid fa-file-pdf text-rose-600"></i>
+                            <span>In / Xuất PDF Phiếu Đánh Giá</span>
+                        </button>
+                        <button type="button" class="btn-motion-secondary btn-sm rounded-xl px-4 py-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <!-- Scoped Custom Styling for Results View -->
+    <style>
+        .table-results {
+            border-collapse: separate;
+            border-spacing: 0;
+            table-layout: fixed !important;
+            width: 100% !important;
+        }
+
+        .table-results thead th {
+            background-color: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap;
+        }
+
+        .results-table-row {
+            border-bottom: 1px solid #f1f5f9;
+            transition: background-color 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .results-table-row:hover {
+            background-color: rgba(239, 246, 255, 0.5);
+        }
+
+        .topic-title-link {
+            transition: color 0.15s ease;
+        }
+
+        /* Score Chips (Individual Column Indicators) */
+        .score-chip {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            padding: 0.12rem 0.4rem;
+            border-radius: 5px;
+            letter-spacing: -0.02em;
+        }
+
+        .score-chip-supervisor {
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+        }
+
+        .score-chip-reviewer {
+            background-color: #eef2ff;
+            color: #4338ca;
+            border: 1px solid #c7d2fe;
+        }
+
+        .score-chip-council {
+            background-color: #faf5ff;
+            color: #7e22ce;
+            border: 1px solid #e9d5ff;
+        }
+
+        /* Final Score Badge */
+        .final-score-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.18rem 0.45rem;
+            border-radius: 6px;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+        }
+
+        .final-score-num {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-weight: 800;
+            font-size: 0.75rem;
+            color: #1d4ed8;
+        }
+
+        .badge-status-pending {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.15rem 0.4rem;
+            border-radius: 6px;
+            background-color: #fffbeb;
+            color: #b45309;
+            border: 1px solid #fde68a;
+        }
+
+        /* Motion Action Buttons */
+        .btn-motion-primary {
+            transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-motion-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.22);
+        }
+
+        .btn-motion-primary:active {
+            transform: scale(0.96);
+        }
+
+        .btn-motion-secondary {
+            transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .btn-motion-secondary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(15, 23, 42, 0.05);
+        }
+
+        .btn-motion-secondary:active {
+            transform: scale(0.96);
+        }
+
+        .btn-motion-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            transition: all 0.15s ease;
+            text-decoration: none;
+        }
+
+        .btn-motion-icon:hover {
+            transform: rotate(-15deg);
+        }
+
+        .btn-motion-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn-motion-action:active:not(:disabled) {
+            transform: scale(0.94);
+        }
+
+        .btn-sheet-view {
+            background-color: #f8fafc;
+            color: #334155;
+            border-color: #e2e8f0;
+        }
+
+        .btn-sheet-view:hover {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            border-color: #cbd5e1;
+        }
+
+        .btn-sheet-disabled {
+            background-color: #f8fafc;
+            color: #cbd5e1;
+            border-color: #f1f5f9;
+            cursor: not-allowed;
+        }
+
+        /* Publish Status & Action Badges */
+        .btn-publish-active {
+            background-color: #ecfdf5;
+            color: #059669;
+            border-color: #a7f3d0;
+        }
+
+        .btn-publish-active:hover {
+            background-color: #fef2f2;
+            color: #dc2626;
+            border-color: #fecaca;
+        }
+
+        .btn-publish-ready {
+            background-color: #eff6ff;
+            color: #2563eb;
+            border-color: #bfdbfe;
+        }
+
+        .btn-publish-ready:hover {
+            background-color: #2563eb;
+            color: #ffffff;
+            border-color: #2563eb;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-publish-disabled {
+            background-color: #f8fafc;
+            color: #cbd5e1;
+            border-color: #f1f5f9;
+            padding: 0.25rem 0.45rem;
+            cursor: not-allowed;
+        }
+
+        /* Fluid Modal Animation with Spring */
+        .results-modal {
+            z-index: 1055 !important;
+        }
+
+        .modal.fade .modal-dialog {
+            transform: scale(0.95) translateY(12px);
+            opacity: 0;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+        }
+
+        .modal.show .modal-dialog {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+
+        .eval-card {
+            transition: transform 0.15s ease, border-color 0.15s ease;
+        }
+
+        .eval-card:hover {
+            transform: translateY(-1px);
+        }
+
+        /* Drawer Smooth Spring Animation */
+        .saas-drawer-panel {
+            transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1), visibility 0.25s ease-in-out !important;
+        }
+
+        .saas-drawer-backdrop {
+            transition: opacity 0.25s ease-in-out, visibility 0.25s ease-in-out !important;
+            backdrop-filter: blur(3px) !important;
+        }
+
+        /* Dark Mode Adjustments */
+        [data-theme="dark"] .results-toolbar-card,
+        [data-theme="dark"] .results-table-card {
+            background-color: #0f172a !important;
+            border-color: #1e293b !important;
+        }
+
+        [data-theme="dark"] .table-results thead th {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #94a3b8 !important;
+        }
+
+        [data-theme="dark"] .results-table-row {
+            border-color: #1e293b !important;
+        }
+
+        [data-theme="dark"] .results-table-row:hover {
+            background-color: rgba(30, 41, 59, 0.6) !important;
+        }
+
+        [data-theme="dark"] .final-score-badge {
+            background: rgba(37, 99, 235, 0.15) !important;
+            border-color: rgba(37, 99, 235, 0.35) !important;
+        }
+
+        [data-theme="dark"] .final-score-num {
+            color: #60a5fa !important;
+        }
+
+        [data-theme="dark"] .btn-sheet-view {
+            background-color: #1e293b !important;
+            color: #cbd5e1 !important;
+            border-color: #334155 !important;
+        }
+
+        [data-theme="dark"] .btn-sheet-view:hover {
+            background-color: #334155 !important;
+            color: #ffffff !important;
+        }
+    </style>
+
+    <script>
+        function printTopicReport(topicId) {
+            const modal = document.getElementById('evalDetailModal-' + topicId);
+            if (!modal) return;
+
+            const printWindow = window.open('', '_blank', 'width=850,height=900');
+            const topicTitle = modal.querySelector('.modal-header p')?.innerText || 'Đề tài';
+            const finalScore = modal.querySelector('.text-2xl.font-black')?.innerText || '--';
+            const evalItems = modal.querySelectorAll('.modal-body .d-flex.flex-column > .eval-card');
+
+            let evalHtml = '';
+            evalItems.forEach(item => {
+                const type = item.querySelector('.badge, span[class*="rounded-md"]')?.innerText || 'Đánh giá';
+                const name = item.querySelector('strong')?.innerText || 'Giảng viên';
+                const score = item.querySelector('.font-black.text-blue-700')?.innerText || '--';
+                const comment = item.querySelector('.leading-relaxed.italic')?.innerText || '';
+
+                evalHtml += `
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 8px 12px; font-weight: 600;">${type}</td>
+                        <td style="padding: 8px 12px;">${name}</td>
+                        <td style="padding: 8px 12px; text-align: center; font-weight: bold; font-family: monospace;">${score}</td>
+                        <td style="padding: 8px 12px; font-style: italic; color: #475569;">${comment}</td>
+                    </tr>
+                `;
+            });
+
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html lang="vi">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Biên bản đánh giá - ${topicTitle}</title>
+                    <style>
+                        body { font-family: 'Times New Roman', serif; margin: 40px; color: #111; line-height: 1.5; font-size: 13pt; }
+                        .header-top { display: flex; justify-content: space-between; margin-bottom: 20px; }
+                        .header-col { text-align: center; }
+                        .title { font-size: 16pt; font-weight: bold; text-transform: uppercase; margin: 20px 0 10px 0; text-align: center; }
+                        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+                        th, td { border: 1px solid #333; padding: 8px; font-size: 11pt; }
+                        th { background: #f0f0f0; }
+                        .signatures { display: flex; justify-content: space-between; margin-top: 40px; text-align: center; }
+                        .sign-col { width: 45%; }
+                        @media print { body { margin: 15mm; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="header-top">
+                        <div class="header-col">
+                            <strong>BỘ GIÁO DỤC VÀ ĐÀO TẠO</strong><br>
+                            TRƯỜNG ĐẠI HỌC CÔNG NGHỆ<br>
+                            <strong>KHOA CÔNG NGHỆ THÔNG TIN</strong>
+                        </div>
+                        <div class="header-col">
+                            <strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br>
+                            <strong>Độc lập - Tự do - Hạnh phúc</strong><br>
+                            ------------------------
+                        </div>
+                    </div>
+                    
+                    <div class="title">BIÊN BẢN ĐÁNH GIÁ & CHẤM ĐIỂM ĐỀ TÀI / KHÓA LUẬN</div>
+                    
+                    <p><strong>Tên đề tài:</strong> ${topicTitle}</p>
+                    <p><strong>Điểm tổng kết cuối cùng:</strong> <span style="font-size: 14pt; font-weight: bold; color: #1d4ed8;">${finalScore}</span> (Thang điểm 10)</p>
+
+                    <h4 style="margin-top: 20px; margin-bottom: 5px;">BẢNG TỔNG HỢP PHIẾU ĐÁNH GIÁ CHI TIẾT:</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 25%;">Vị trí đánh giá</th>
+                                <th style="width: 25%;">Giảng viên chấm</th>
+                                <th style="width: 15%;">Điểm số</th>
+                                <th style="width: 35%;">Nhận xét & Góp ý</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${evalHtml}
+                        </tbody>
+                    </table>
+
+                    <div style="margin-top: 30px; text-align: right; font-style: italic;">
+                        Ngày ..... tháng ..... năm 2026
+                    </div>
+
+                    <div class="signatures">
+                        <div class="sign-col">
+                            <strong>GIẢNG VIÊN HƯỚNG DẪN / PHẢN BIỆN</strong><br>
+                            <i>(Ký và ghi rõ họ tên)</i>
+                        </div>
+                        <div class="sign-col">
+                            <strong>TRƯỞNG KHOA / CHỦ TỊCH HỘI ĐỒNG</strong><br>
+                            <i>(Ký và ghi rõ họ tên)</i>
+                        </div>
+                    </div>
+
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+    </script>
+
+    <!-- Scripts Fragment -->
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+</body>
+</html>

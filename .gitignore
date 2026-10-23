@@ -1,0 +1,163 @@
+# =========================================================================
+# BACKEND (Java / Maven / Gradle)
+# =========================================================================
+
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs, see http://java.com
+hs_err_pid*
+replay_pid*
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.next
+pom.xml.parsed
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+.gradle/
+build/
+!gradle-wrapper.jar
+
+# =========================================================================
+# FRONTEND (Node / Package Managers)
+# =========================================================================
+
+# Dependencies
+node_modules/
+jspm_packages/
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor directories and files
+.eslintcache
+.stylelintcache
+.cache/
+.parcel-cache/
+
+# =========================================================================
+# IDEs & EDITORS (Eclipse, IntelliJ, VS Code, NetBeans)
+# =========================================================================
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Eclipse
+.metadata/
+bin/
+tmp/
+.tmp/
+.classpath
+.project
+.settings/
+.factorypath
+
+# Visual Studio Code
+.vscode/
+!.vscode/extensions.json
+*.code-workspace
+.history/
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# =========================================================================
+# OPERATING SYSTEMS
+# =========================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+desktop.ini
+
+# =========================================================================
+# SECURITY & CONFIGURATION (Never commit secrets!)
+# =========================================================================
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Application secrets
+application-*.properties
+application-*.yml
+!application-dev.properties
+!application-dev.yml
+!application-prod.properties
+!application-prod.yml
+
+# Graft local context cache
+graft/
+.graft/
+
+# AI Tooling & Metadata
+.cursorrules
+.agents/
+.antigravity/
+.gemini/
+AGENTS.md
+CODEBASE_MAP.md
+PROJECT_AUDIT.md
+
+# Uploads & Runtime User Files
+uploads/
+
+# Documentation & Course Materials (Excluded from Source Code Repository)
+docs/
+Tailieu/
+

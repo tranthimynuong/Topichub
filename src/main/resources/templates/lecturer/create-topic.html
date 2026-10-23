@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:replace="~{fragments/head :: head('Đề Xuất Đề Tài Mới')}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub</title>
+</head>
+<body class="workspace-page">
+
+    <!-- Left Sidebar -->
+    <aside th:replace="~{fragments/sidebar :: sidebar('create-topic', ${user})}"></aside>
+
+    <!-- Main Wrapper -->
+    <div class="saas-main-wrapper">
+        <!-- Topbar -->
+        <header th:replace="~{fragments/topbar :: topbar('Đề xuất Đề tài mới', 'Giảng Viên', '/lecturer/dashboard', ${user})}"></header>
+
+        <!-- Main Content View -->
+        <main class="saas-content">
+            <div class="container-fluid" style="max-width: 900px;">
+
+                <div class="mb-4">
+                    <a th:href="@{/lecturer/topics}" class="text-slate-500 text-xs font-semibold hover:text-blue-600 transition"><i class="fa-solid fa-arrow-left me-1"></i> Quay lại danh sách đề tài</a>
+                    <h1 class="text-xl font-bold text-slate-900 mt-2 mb-1">Đề Xuất Đề Tài Nghiên Cứu / Khóa Luận Mới</h1>
+                    <p class="text-xs text-slate-500 mb-0">Nhập đầy đủ thông tin đề tài, chọn đợt đăng ký đang mở và giảng viên hướng dẫn phụ (nếu có).</p>
+                </div>
+
+                <div class="saas-card p-4 p-md-5 mb-4">
+                    <form th:action="@{/lecturer/topics/create}" method="post">
+                        <div class="row g-3">
+
+                            <div class="col-md-12">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-lecturer-create-topic-0">Tên đề tài *</label>
+                                <input type="text" name="title" class="form-control text-xs rounded-xl" placeholder="Ví dụ: Nghiên cứu và xây dựng ứng dụng Web phân loại tài liệu bằng học sâu" th:value="${topic != null ? topic.title : ''}" required title="Tên đề tài" aria-label="Tên đề tài" id="field-lecturer-create-topic-0">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-lecturer-create-topic-1">Đợt đăng ký *</label>
+                                <select name="periodId" class="form-select text-xs rounded-xl" required title="Đợt đăng ký" aria-label="Đợt đăng ký" id="field-lecturer-create-topic-1">
+                                    <option value="">-- Chọn đợt đăng ký đang mở --</option>
+                                    <option th:each="p : ${openPeriods}" th:value="${p.id}" 
+                                            th:selected="${(selectedPeriodId != null && (selectedPeriodId == p.id || #strings.toString(selectedPeriodId) == #strings.toString(p.id))) || (param.periodId != null && (param.periodId[0] == #strings.toString(p.id) || #strings.toString(param.periodId) == #strings.toString(p.id)))}"
+                                            th:text="${p.name + ' (' + p.getPeriodTypeName() + ' · Chỉ tiêu: tối thiểu ' + p.getMinTopicsPerLecturer() + ' đề tài)'}"></option>
+                                </select>
+                                <span class="text-xs text-slate-400 d-block mt-1" th:if="${#lists.isEmpty(openPeriods)}"><em>Hiện không có đợt nào trong thời gian mở đề xuất.</em></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-lecturer-create-topic-2">Khoa / Đơn vị quản lý</label>
+                                <input type="text" class="form-control text-xs rounded-xl bg-slate-50 text-slate-700 font-medium" 
+                                       th:value="${department != null ? department.name : (lecturer != null && lecturer.department != null ? lecturer.department.name : 'Khoa Công nghệ Thông tin')}" readonly title="Khoa / Đơn vị quản lý" aria-label="Khoa / Đơn vị quản lý" id="field-lecturer-create-topic-2">
+                            </div>
+
+                            <div class="col-md-6">
+                                 <label class="form-label text-xs font-semibold text-slate-700" for="field-lecturer-create-topic-4">Giảng viên hướng dẫn chính (GVHD 1)</label>
+                                 <input type="text" class="form-control text-xs rounded-xl bg-slate-50 text-slate-700 font-medium" th:value="${user.fullName + ' (Bạn)'}" readonly title="Giảng viên hướng dẫn chính (GVHD 1)" aria-label="Giảng viên hướng dẫn chính (GVHD 1)" id="field-lecturer-create-topic-4">
+                             </div>
+
+                             <div class="col-md-6">
+                                 <label class="form-label text-xs font-semibold text-slate-700" for="field-lecturer-create-topic-5">Giảng viên hướng dẫn phụ (GVHD 2 - Tùy chọn)</label>
+                                 <select name="coSupervisorId" class="form-select text-xs rounded-xl" title="Giảng viên hướng dẫn phụ (GVHD 2 - Tùy chọn)" aria-label="Giảng viên hướng dẫn phụ (GVHD 2 - Tùy chọn)" id="field-lecturer-create-topic-5">
+                                     <option value="">-- Không có GVHD phụ --</option>
+                                     <option th:each="l : ${coSupervisors}" th:value="${l.id}" th:text="${(l.user != null ? l.user.fullName : '') + ' (' + l.lecturerCode + ')'}"></option>
+                                 </select>
+                             </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-lecturer-create-topic-6">Số lượng sinh viên trong nhóm (3 - 5 SV) *</label>
+                                <input type="number" name="maxStudents" class="form-control text-xs rounded-xl" value="3" min="3" max="5" required title="Số lượng sinh viên trong nhóm (3 - 5 SV)" aria-label="Số lượng sinh viên trong nhóm (3 - 5 SV)" id="field-lecturer-create-topic-6">
+                                <span class="text-slate-400 text-xs mt-1 d-block">Quy định mỗi nhóm từ 3 đến 5 sinh viên.</span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-lecturer-create-topic-7">Mã đề tài (Tùy chọn, để trống sẽ tự sinh)</label>
+                                <input type="text" name="code" class="form-control text-xs rounded-xl font-mono" placeholder="Ví dụ: KLTN-AI-01" title="Mã đề tài (Tùy chọn, để trống sẽ tự sinh)" aria-label="Mã đề tài (Tùy chọn, để trống sẽ tự sinh)" id="field-lecturer-create-topic-7">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-lecturer-create-topic-8">Mô tả mục tiêu & phạm vi đề tài *</label>
+                                <textarea name="description" class="form-control text-xs rounded-xl" rows="4" placeholder="Mô tả tóm tắt mục tiêu, công nghệ áp dụng và kết quả dự kiến đạt được..." th:text="${topic != null ? topic.description : ''}" required title="Mô tả mục tiêu &amp; phạm vi đề tài" aria-label="Mô tả mục tiêu &amp; phạm vi đề tài" id="field-lecturer-create-topic-8"></textarea>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label text-xs font-semibold text-slate-700" for="field-lecturer-create-topic-9">Yêu cầu kiến thức đối với sinh viên</label>
+                                <textarea name="requirements" class="form-control text-xs rounded-xl" rows="3" placeholder="Yêu cầu về kỹ năng lập trình (Java, Python, React...), điểm GPA hoặc môn học tiên quyết..." th:text="${topic != null ? topic.requirements : ''}" title="Yêu cầu kiến thức đối với sinh viên" aria-label="Yêu cầu kiến thức đối với sinh viên" id="field-lecturer-create-topic-9"></textarea>
+                            </div>
+
+                            <div class="col-12 pt-3 border-t border-slate-100 d-flex justify-content-end gap-2">
+                                <a th:href="@{/lecturer/topics}" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3 text-xs font-medium text-slate-700">Hủy bỏ</a>
+                                <button type="submit" class="btn btn-sm btn-dark rounded-xl px-4 text-xs font-medium"><i class="fa-solid fa-paper-plane me-1.5"></i> Gửi đề xuất đề tài</button>
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts Fragment -->
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const periodSelect = document.querySelector('select[name="periodId"]');
+            if (periodSelect) {
+                const pId = urlParams.get('periodId');
+                const pName = urlParams.get('periodName');
+                const refTitle = urlParams.get('refNoticeTitle');
+
+                if (!periodSelect.value || periodSelect.value === '') {
+                    if (pId) {
+                        const opt = periodSelect.querySelector(`option[value="${pId}"]`);
+                        if (opt) periodSelect.value = pId;
+                    }
+                    if (!periodSelect.value && pName) {
+                        const pNameNorm = pName.trim().toLowerCase();
+                        Array.from(periodSelect.options).forEach(opt => {
+                            if (opt.value && opt.text.toLowerCase().includes(pNameNorm)) {
+                                periodSelect.value = opt.value;
+                            }
+                        });
+                    }
+                    if (!periodSelect.value && refTitle) {
+                        const refNorm = refTitle.trim().toLowerCase();
+                        Array.from(periodSelect.options).forEach(opt => {
+                            if (opt.value) {
+                                const periodNamePart = opt.text.split('(')[0].trim().toLowerCase();
+                                if (periodNamePart && refNorm.includes(periodNamePart)) {
+                                    periodSelect.value = opt.value;
+                                }
+                            }
+                        });
+                    }
+                    // Fallback: nếu chỉ có duy nhất 1 đợt mở (ngoài placeholder), tự động chọn đợt đó
+                    if (!periodSelect.value) {
+                        const validOptions = Array.from(periodSelect.options).filter(o => o.value && o.value !== '');
+                        if (validOptions.length === 1) {
+                            periodSelect.value = validOptions[0].value;
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

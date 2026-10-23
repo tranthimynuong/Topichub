@@ -1,0 +1,2178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub Scripts</title>
+</head>
+
+<body>
+    <div th:fragment="scripts">
+        <!-- Global Announcement Detail Modal (Available across all pages) -->
+        <div class="modal fade" id="announcementDetailModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content rounded-2xl border-0 shadow-xl">
+                    <div class="modal-header border-b border-slate-100 p-4 d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2.5 min-w-0 flex-grow-1 pe-2">
+                            <div
+                                class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center flex-shrink-0">
+                                <i class="fa-solid fa-bullhorn text-sm"></i>
+                            </div>
+                            <div class="min-w-0 flex-grow-1">
+                                <span id="modalAnnouncementCategory"
+                                    class="badge-pill-neutral font-semibold text-xs text-blue-700 bg-blue-50 border-blue-200 mb-0.5 d-inline-block">Thông
+                                    báo chung</span>
+                                <h6 id="modalAnnouncementTitle"
+                                    class="modal-title font-bold text-slate-900 text-sm mb-0" style="word-break: break-word; line-height: 1.4;">Tiêu đề thông báo</h6>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close flex-shrink-0" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
+                    </div>
+                    <div class="modal-body p-4 space-y-3">
+                        <div
+                            class="d-flex align-items-center justify-content-between text-xs text-slate-400 pb-2 border-b border-slate-100">
+                            <div><i class="fa-solid fa-user-pen me-1"></i> Người đăng: <strong
+                                    id="modalAnnouncementAuthor" class="text-slate-700">Ban chủ nhiệm Khoa</strong>
+                            </div>
+                            <div><i class="fa-regular fa-clock me-1"></i> <span id="modalAnnouncementTime">--</span>
+                            </div>
+                        </div>
+                        <div id="modalAnnouncementPeriodWrap"
+                            class="p-2.5 bg-blue-50/50 rounded-xl border border-blue-100 text-xs text-blue-800 d-none">
+                            <i class="fa-solid fa-bookmark me-1.5 text-blue-600"></i> Áp dụng cho: <strong
+                                id="modalAnnouncementPeriod">Đợt KLTN</strong>
+                        </div>
+                        <div id="modalAnnouncementContent"
+                            class="text-xs text-slate-700 leading-relaxed p-3 bg-slate-50/70 rounded-xl border border-slate-100"
+                            style="white-space: pre-line; min-height: 120px;">
+                            Nội dung chi tiết thông báo...
+                        </div>
+                    </div>
+                    <div
+                        class="modal-footer border-t border-slate-100 p-3 d-flex justify-content-between align-items-center">
+                        <div id="modalAnnouncementSecondaryActionWrap"></div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button"
+                                class="btn btn-sm btn-light border rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                                data-bs-dismiss="modal">Đóng</button>
+                            <a id="modalAnnouncementPrimaryActionBtn" href="#"
+                                class="btn btn-sm bg-slate-900 hover:bg-slate-800 text-teal-300 rounded-xl px-4 py-2 text-xs font-bold shadow-sm d-inline-flex align-items-center gap-1.5 transition border-0 d-none">
+                                <i id="modalAnnouncementActionIcon" class="fa-solid fa-plus text-xs"></i>
+                                <span id="modalAnnouncementActionText">Đề xuất đề tài ngay</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Global System & Account Settings Modal (Available across all pages) -->
+        <div class="modal fade" id="systemSettingsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content rounded-3xl border-0 shadow-2xl overflow-hidden">
+                    <div class="modal-header border-bottom border-slate-100 p-3.5 d-flex align-items-center justify-content-between" style="background: linear-gradient(to right, #f8fafc, rgba(239,246,255,0.5));">
+                        <div class="d-flex align-items-center gap-3 min-w-0 flex-grow-1">
+                            <div class="w-11 h-11 rounded-2xl bg-blue-600 text-white d-inline-flex align-items-center justify-content-center shadow-md shadow-blue-500/20 flex-shrink-0">
+                                <i class="fa-solid fa-gear text-base"></i>
+                            </div>
+                            <div class="min-w-0 flex-grow-1">
+                                <h6 class="modal-title font-bold text-slate-900 text-sm mb-0.5 text-truncate">Cài Đặt Hệ Thống & Tài Khoản</h6>
+                                <p class="text-2xs text-slate-500 mb-0 text-truncate">Quản lý tùy chọn cá nhân, bảo mật tài khoản và giao diện hiển thị.</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close ms-2" data-bs-dismiss="modal" aria-label="Close" title="Đóng"></button>
+                    </div>
+                    <div class="modal-body p-4 space-y-4">
+                        <!-- Navigation Tabs within Settings -->
+                        <ul class="nav nav-pills gap-2 border-bottom border-slate-100 pb-3" id="settingsTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active rounded-xl px-3 py-1.5 text-xs font-bold"
+                                    id="tab-profile-tab" data-bs-toggle="pill" data-bs-target="#tab-profile"
+                                    type="button" role="tab">
+                                    <i class="fa-solid fa-user-circle me-1.5"></i> Hồ sơ & Tài khoản
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link rounded-xl px-3 py-1.5 text-xs font-bold" id="tab-security-tab"
+                                    data-bs-toggle="pill" data-bs-target="#tab-security" type="button" role="tab">
+                                    <i class="fa-solid fa-shield-halved me-1.5"></i> Đổi Mật Khẩu
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link rounded-xl px-3 py-1.5 text-xs font-bold"
+                                    id="tab-preferences-tab" data-bs-toggle="pill" data-bs-target="#tab-preferences"
+                                    type="button" role="tab">
+                                    <i class="fa-solid fa-sliders me-1.5"></i> Tùy chọn & Giao diện
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content pt-1" id="settingsTabContent">
+                            <!-- Tab 1: Profile Info -->
+                            <div class="tab-pane fade show active space-y-3" id="tab-profile" role="tabpanel">
+                                <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 d-flex align-items-center gap-3">
+                                    <div class="w-12 h-12 rounded-2xl text-white font-black text-lg d-inline-flex align-items-center justify-content-center shadow-md flex-shrink-0" style="background: linear-gradient(135deg, #2563eb, #4f46e5);">
+                                        <span th:text="${user != null && user.fullName != null ? #strings.substring(user.fullName, 0, 1).toUpperCase() : 'U'}">U</span>
+                                    </div>
+                                    <div class="min-w-0 flex-grow-1">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <h6 class="font-bold text-slate-900 text-sm mb-0 text-truncate" th:text="${user != null ? user.fullName : 'Người dùng TopicHub'}">Người dùng</h6>
+                                            <span class="badge bg-blue-100 text-blue-800 text-[10px] font-bold rounded-md px-2 py-0.5" th:text="${user != null && user.role != null ? user.role.name : 'Thành viên'}">Trưởng Khoa</span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mb-0 mt-0.5 text-truncate" th:text="${user != null ? user.email : 'user@hcmus.edu.vn'}">email@hcmus.edu.vn</p>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-xs font-semibold text-slate-700 mb-1" for="field-fragments-scripts-0">Tên đăng nhập (Username)</label>
+                                        <input type="text" class="form-control form-control-sm text-xs rounded-xl bg-slate-50 border-slate-200" th:value="${user != null ? user.username : 'user'}" readonly title="Tên đăng nhập (Username)" aria-label="Tên đăng nhập (Username)" id="field-fragments-scripts-0">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-xs font-semibold text-slate-700 mb-1" for="field-fragments-scripts-1">Địa chỉ Email</label>
+                                        <input type="email" class="form-control form-control-sm text-xs rounded-xl bg-slate-50 border-slate-200" th:value="${user != null ? user.email : 'email@edu.vn'}" readonly title="Địa chỉ Email" aria-label="Địa chỉ Email" id="field-fragments-scripts-1">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab 2: Change Password -->
+                            <div class="tab-pane fade space-y-3" id="tab-security" role="tabpanel">
+                                <form autocomplete="off" onsubmit="return false;" class="space-y-3">
+                                    <!-- Hidden autofill traps to prevent browser from filling page search inputs -->
+                                    <input type="text" style="display:none;" name="fake_user" tabindex="-1"
+                                        autocomplete="off" title="fake_user" aria-label="fake_user">
+                                    <input type="password" style="display:none;" name="fake_pass" tabindex="-1"
+                                        autocomplete="new-password" title="fake_pass" aria-label="fake_pass">
+
+                                    <div
+                                        class="p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-xs text-blue-900">
+                                        <i class="fa-solid fa-info-circle me-1 text-blue-600"></i> Mật khẩu an toàn phải
+                                        có tối thiểu 6 ký tự.
+                                    </div>
+                                    <div class="space-y-2.5">
+                                        <div>
+                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1"
+                                                for="currentPassInput">Mật khẩu hiện tại *</label>
+                                            <input type="password"
+                                                class="form-control form-control-sm text-xs rounded-xl"
+                                                placeholder="••••••••" id="currentPassInput" autocomplete="new-password"
+                                                title="Mật khẩu hiện tại" aria-label="Mật khẩu hiện tại">
+                                        </div>
+                                        <div>
+                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1"
+                                                for="newPassInput">Mật khẩu mới *</label>
+                                            <input type="password"
+                                                class="form-control form-control-sm text-xs rounded-xl"
+                                                placeholder="••••••••" id="newPassInput" autocomplete="new-password"
+                                                title="Mật khẩu mới" aria-label="Mật khẩu mới">
+                                        </div>
+                                        <div>
+                                            <label class="form-label text-xs font-semibold text-slate-700 mb-1"
+                                                for="confirmPassInput">Xác nhận mật khẩu mới *</label>
+                                            <input type="password"
+                                                class="form-control form-control-sm text-xs rounded-xl"
+                                                placeholder="••••••••" id="confirmPassInput" autocomplete="new-password"
+                                                title="Xác nhận mật khẩu mới" aria-label="Xác nhận mật khẩu mới">
+                                        </div>
+                                    </div>
+                                    <button type="button"
+                                        class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3.5 text-xs font-semibold"
+                                        onclick="alert('Đã cập nhật mật khẩu mới thành công!')">
+                                        <i class="fa-solid fa-key me-1"></i> Đổi mật khẩu
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Tab 3: Preferences -->
+                            <div class="tab-pane fade space-y-3" id="tab-preferences" role="tabpanel">
+                                <div
+                                    class="divide-y divide-slate-100 border border-slate-100 rounded-2xl overflow-hidden p-3 bg-slate-50/50 space-y-3 text-xs">
+                                    <div class="d-flex justify-content-between align-items-center pt-1">
+                                        <div>
+                                            <strong class="text-slate-800 d-block">Thông báo Email khi có đề xuất
+                                                mới</strong>
+                                            <span class="text-slate-500 text-2xs">Gửi email tức thời khi có thông báo
+                                                hoặc đề tài cần duyệt.</span>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" checked
+                                                placeholder="Nhập thông tin" title="Nhập thông tin"
+                                                aria-label="Nhập thông tin">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center pt-3">
+                                        <div>
+                                            <strong class="text-slate-800 d-block">Âm thanh chuông báo</strong>
+                                            <span class="text-slate-500 text-2xs">Phát chuông nhỏ khi có tin nhắn từ Trợ
+                                                lý AI hoặc thông báo đợt.</span>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" checked
+                                                placeholder="Nhập thông tin" title="Nhập thông tin"
+                                                aria-label="Nhập thông tin">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center pt-3">
+                                        <div>
+                                            <strong class="text-slate-800 d-block">Giao diện (Theme)</strong>
+                                            <span class="text-slate-500 text-2xs">Chuyển đổi nhanh chế độ sáng /
+                                                tối.</span>
+                                        </div>
+                                        <button type="button"
+                                            class="btn btn-xs btn-outline-secondary rounded-xl px-2.5 py-1"
+                                            onclick="toggleTheme()">
+                                            <i class="fa-solid fa-moon me-1"></i> Đổi màu nền
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-t border-slate-100 bg-slate-50/50 p-3">
+                        <button type="button"
+                            class="btn btn-sm btn-light border border-slate-200 rounded-xl px-4 text-xs font-semibold"
+                            data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Global Topic Detail Modal (Cleanly referenced from fragments/drawer.html) -->
+        <div th:replace="~{fragments/drawer :: topicDrawer}"></div>
+
+        <!-- Global Toast Container (Fixed top-right) -->
+        <div class="saas-toast-container" id="saasToastContainer"></div>
+
+        <!-- Global Floating AI Assistant Widget -->
+        <div th:replace="~{fragments/ai_chat :: aiChatWidget}"></div>
+
+        <!-- Global Confirmation Modal (Replaces browser default confirm dialogs) -->
+        <div class="modal fade saas-confirm-modal" id="globalConfirmModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+                <div class="modal-content text-center p-4">
+                    <div class="d-flex justify-content-center">
+                        <div class="saas-confirm-icon-wrap primary" id="confirmModalIconWrap">
+                            <i class="fa-solid fa-circle-question" id="confirmModalIcon"></i>
+                        </div>
+                    </div>
+                    <h5 class="modal-title fw-bold text-slate-900 text-base mb-1" id="confirmModalTitle">Xác nhận thao
+                        tác</h5>
+                    <p class="text-xs text-slate-500 mb-4" id="confirmModalMessage">Bạn có chắc chắn muốn thực hiện hành
+                        động này?</p>
+                    <div class="d-flex gap-2">
+                        <button type="button"
+                            class="btn btn-sm btn-light border rounded-xl flex-grow-1 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                            data-bs-dismiss="modal" id="confirmModalCancelBtn">Hủy</button>
+                        <button type="button"
+                            class="btn btn-sm btn-primary rounded-xl flex-grow-1 py-2 text-xs font-semibold shadow-sm"
+                            id="confirmModalAcceptBtn">Xác nhận</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bootstrap 5.3 JS Bundle -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Chart.js 4.4.2 -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+        <script>
+            // Robust Unicode String Decoder (fixes any \uXXXX or \xXX escape artifacts)
+            function decodeUnicode(str) {
+                if (!str || typeof str !== 'string') return str || '';
+                try {
+                    if (/\\u[0-9a-fA-F]{4}|\\x[0-9a-fA-F]{2}/.test(str)) {
+                        return JSON.parse('"' + str.replace(/"/g, '\\"') + '"');
+                    }
+                } catch (e) {
+                    try {
+                        return decodeURIComponent(escape(str));
+                    } catch (e2) { }
+                }
+                return str;
+            }
+
+            let sidebarReturnFocus = null;
+            function toggleSidebar(forceOpen, restoreFocus = true) {
+                const sidebar = document.getElementById('saasSidebar');
+                if (!sidebar) return;
+                const mobile = window.matchMedia('(max-width: 991.98px)').matches;
+                const wasOpen = sidebar.classList.contains('show');
+                const open = mobile && (typeof forceOpen === 'boolean' ? forceOpen : !wasOpen);
+                if (open && !wasOpen) sidebarReturnFocus = document.activeElement;
+                sidebar.classList.toggle('show', open);
+                sidebar.inert = mobile && !open;
+                sidebar.setAttribute('aria-hidden', String(mobile && !open));
+                document.getElementById('sidebarOverlay')?.classList.toggle('show', open);
+                document.body.classList.toggle('sidebar-open', open);
+                document.getElementById('sidebarMobileToggle')?.setAttribute('aria-expanded', String(open));
+                if (open) document.getElementById('sidebarCloseBtn')?.focus();
+                else if (wasOpen && restoreFocus && sidebarReturnFocus?.isConnected) sidebarReturnFocus.focus();
+            }
+
+            function syncSidebarCollapse(isCollapsed) {
+                document.documentElement.classList.toggle('sidebar-collapsed', isCollapsed);
+                document.body.classList.toggle('sidebar-collapsed', isCollapsed);
+                const button = document.getElementById('sidebarDesktopCollapseBtn');
+                const label = isCollapsed ? 'Mở rộng menu' : 'Thu gọn menu';
+                if (button) {
+                    button.setAttribute('aria-expanded', String(!isCollapsed));
+                    button.setAttribute('aria-label', label);
+                    button.title = label;
+                }
+                const chevron = document.getElementById('sidebarCollapseChevronIcon');
+                if (chevron) chevron.className = isCollapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left';
+            }
+
+            function toggleDesktopSidebar() {
+                const collapsed = !document.documentElement.classList.contains('sidebar-collapsed');
+                syncSidebarCollapse(collapsed);
+                try { localStorage.setItem('topichub_sidebar_collapsed', String(collapsed)); } catch (e) { }
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                try { syncSidebarCollapse(localStorage.getItem('topichub_sidebar_collapsed') === 'true'); } catch (e) { }
+                toggleSidebar(false, false);
+                window.matchMedia('(max-width: 991.98px)').addEventListener('change', () => toggleSidebar(false, false));
+                const sidebar = document.getElementById('saasSidebar');
+                sidebar?.addEventListener('click', function (event) {
+                    if (event.target.closest('.workspace-footer button')) toggleSidebar(false, false);
+                });
+                document.getElementById('systemSettingsModal')?.addEventListener('hidden.bs.modal', function () {
+                    if (sidebar?.inert) document.getElementById('sidebarMobileToggle')?.focus();
+                });
+                sidebar?.addEventListener('keydown', function (event) {
+                    if (!sidebar.classList.contains('show')) return;
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        toggleSidebar(false);
+                    } else if (event.key === 'Tab') {
+                        const controls = [...sidebar.querySelectorAll('a, button')].filter(el => el.getClientRects().length);
+                        const first = controls[0], last = controls[controls.length - 1];
+                        if (event.shiftKey && document.activeElement === first) {
+                            event.preventDefault(); last?.focus();
+                        } else if (!event.shiftKey && document.activeElement === last) {
+                            event.preventDefault(); first?.focus();
+                        }
+                    }
+                });
+            });
+
+            // Universal Spring Security CSRF Helpers
+            window.getCsrfToken = function () {
+                const meta = document.querySelector('meta[name="_csrf"]');
+                if (meta && meta.content) return meta.content;
+                const input = document.querySelector('input[name="_csrf"]');
+                if (input && input.value) return input.value;
+                return '';
+            };
+
+            window.getCsrfParam = function () {
+                const meta = document.querySelector('meta[name="_csrf_parameter"]');
+                if (meta && meta.content) return meta.content;
+                return '_csrf';
+            };
+
+            // Safe Modal Switcher: cleanly hides fromModal, waits for hidden.bs.modal, then shows toModal
+            window.switchModal = function (fromModalId, toModalId, setupCallback) {
+                const fromEl = document.getElementById(fromModalId);
+                const toEl = document.getElementById(toModalId);
+                if (!toEl) {
+                    console.warn('Target modal not found:', toModalId);
+                    return;
+                }
+
+                if (setupCallback && typeof setupCallback === 'function') {
+                    try { setupCallback(); } catch (e) { console.error('switchModal callback error:', e); }
+                }
+
+                if (fromEl && fromEl.classList.contains('show')) {
+                    const fromInstance = bootstrap.Modal.getInstance(fromEl) || bootstrap.Modal.getOrCreateInstance(fromEl);
+                    fromEl.addEventListener('hidden.bs.modal', function onHidden() {
+                        fromEl.removeEventListener('hidden.bs.modal', onHidden);
+                        const toInstance = bootstrap.Modal.getOrCreateInstance(toEl);
+                        toInstance.show();
+                    }, { once: true });
+                    fromInstance.hide();
+                } else {
+                    const toInstance = bootstrap.Modal.getOrCreateInstance(toEl);
+                    toInstance.show();
+                }
+            }
+
+            // Dynamic Topbar Frosted Glass Effect on scroll
+            function initTopbarScrollEffect() {
+                const headerGroup = document.querySelector('.saas-header-group');
+                if (!headerGroup) return;
+
+                const onScroll = () => {
+                    const isScrolled = window.scrollY > 8;
+                    headerGroup.classList.toggle('is-scrolled', isScrolled);
+                };
+
+                window.addEventListener('scroll', onScroll, { passive: true });
+                onScroll(); // Run immediately on load
+            }
+
+            // Sync Desktop Sidebar collapse state & chevron icon on page load
+            document.addEventListener('DOMContentLoaded', function () {
+                try {
+                    initTopbarScrollEffect();
+                } catch (e) { }
+
+                try {
+                    if (window.innerWidth >= 992) {
+                        const savedState = localStorage.getItem('topichub_sidebar_collapsed');
+                        syncSidebarCollapse(savedState === 'true');
+                    }
+                } catch (e) { }
+            }, true);
+
+            // Clean UTF-8 Topic Drawer Opener (supports ID number, DOM element, or Object)
+            function openTopicDrawer(source) {
+                if (!source) return;
+
+                // Case 1: Numeric ID passed -> Fetch clean UTF-8 JSON from REST API
+                if (typeof source === 'number' || (typeof source === 'string' && /^\d+$/.test(source))) {
+                    fetch('/api/topics/' + source)
+                        .then(res => res.json())
+                        .then(data => renderTopicDrawer(data))
+                        .catch(err => console.error('Error fetching topic detail:', err));
+                    return;
+                }
+
+                // Case 2: DOM Element or Object passed
+                let data = {};
+                if (source instanceof HTMLElement) {
+                    let el = source;
+                    if (!el.dataset.topicId && !el.dataset.id && !el.dataset.topicTitle && !el.dataset.title) {
+                        const child = el.querySelector('[data-topic-id], [data-topic-title], [data-topic-code]');
+                        if (child) el = child;
+                    }
+                    data = {
+                        id: el.dataset.topicId || el.dataset.id,
+                        code: el.dataset.topicCode || el.dataset.code,
+                        title: el.dataset.topicTitle || el.dataset.title,
+                        period: el.dataset.topicPeriod || el.dataset.period,
+                        major: el.dataset.topicMajor || el.dataset.major || el.dataset.topicDepartment || el.dataset.department,
+                        supervisor: el.dataset.topicSupervisor || el.dataset.supervisor,
+                        coSupervisor: el.dataset.topicCoSupervisor || el.dataset.coSupervisor,
+                        reviewer: el.dataset.topicReviewer || el.dataset.reviewer,
+                        council: el.dataset.topicCouncil || el.dataset.council,
+                        maxStudents: el.dataset.topicMaxStudents || el.dataset.maxStudents,
+                        status: el.dataset.topicStatus || el.dataset.status,
+                        description: el.dataset.topicDescription || el.dataset.description,
+                        requirements: el.dataset.topicRequirements || el.dataset.requirements,
+                        groupName: el.dataset.topicGroupName || el.dataset.groupName,
+                        leaderName: el.dataset.topicLeaderName || el.dataset.leaderName,
+                        leaderCode: el.dataset.topicLeaderCode || el.dataset.leaderCode,
+                        role: el.dataset.topicRole || el.dataset.role,
+                        department: el.dataset.topicDepartment || el.dataset.department || '',
+                        isTaken: el.dataset.topicIsTaken === 'true',
+                        isMyTopic: el.dataset.topicIsMyTopic === 'true',
+                        hasGroupTopic: el.dataset.topicHasGroupTopic === 'true' || el.dataset.topicHasGroup === 'true',
+                        groupTopicTitle: el.dataset.topicGroupTopicTitle || ''
+                    };
+
+                    // Nếu có topic ID, đồng bộ thêm từ REST API để đảm bảo thông tin luôn mới nhất
+                    if (data.id && /^\d+$/.test(data.id)) {
+                        fetch('/api/topics/' + data.id)
+                            .then(res => res.ok ? res.json() : null)
+                            .then(apiData => {
+                                if (apiData) {
+                                    apiData.role = data.role;
+                                    apiData.isMyTopic = data.isMyTopic;
+                                    apiData.isTaken = data.isTaken;
+                                    apiData.hasGroupTopic = data.hasGroupTopic;
+                                    apiData.groupTopicTitle = data.groupTopicTitle;
+                                    renderTopicDrawer(apiData);
+                                }
+                            })
+                            .catch(() => { });
+                    }
+                } else {
+                    data = source;
+                }
+
+                renderTopicDrawer(data);
+            }
+
+            function renderTopicDrawer(data) {
+                if (!data) return;
+
+                // Decode all text fields through Unicode decoder
+                const code = decodeUnicode(data.code) || 'DT-N/A';
+                const title = decodeUnicode(data.title) || 'Chi tiết đề tài';
+                const period = decodeUnicode(data.period) || 'Chung';
+                const major = decodeUnicode(data.major || data.departmentName) || 'Khoa CNTT';
+                const supervisor = decodeUnicode(data.supervisor) || 'Chưa phân công';
+                const coSupervisor = decodeUnicode(data.coSupervisor) || 'Không có';
+                const reviewer = decodeUnicode(data.reviewer) || 'Chưa phân công GVPB';
+                const council = decodeUnicode(data.council) || 'Chưa phân hội đồng';
+                const description = decodeUnicode(data.description) || 'Chưa có mô tả chi tiết.';
+                const requirements = decodeUnicode(data.requirements) || 'Theo hướng dẫn của Giảng viên.';
+                const groupName = decodeUnicode(data.groupName);
+                const leaderName = decodeUnicode(data.leaderName);
+                const leaderCode = decodeUnicode(data.leaderCode);
+
+                const backdrop = document.getElementById('topicDrawerBackdrop');
+                const panel = document.getElementById('topicDrawerPanel');
+
+                if (document.getElementById('drawerTopicCode')) {
+                    document.getElementById('drawerTopicCode').textContent = code;
+                }
+                if (document.getElementById('drawerTopicTitle')) {
+                    document.getElementById('drawerTopicTitle').textContent = title;
+                }
+                if (document.getElementById('drawerTopicPeriod')) {
+                    document.getElementById('drawerTopicPeriod').textContent = period;
+                }
+                if (document.getElementById('drawerTopicMajor')) {
+                    document.getElementById('drawerTopicMajor').textContent = major;
+                }
+                if (document.getElementById('drawerTopicDepartment')) {
+                    const dept = decodeUnicode(data.department) || '';
+                    const deptEl = document.getElementById('drawerTopicDepartment');
+                    deptEl.textContent = dept || '—';
+                    // Làm nổi bật màu xanh nếu có tên Khoa
+                    deptEl.style.color = dept ? '#1d4ed8' : '#94a3b8';
+                }
+                if (document.getElementById('drawerTopicSupervisor')) {
+                    document.getElementById('drawerTopicSupervisor').textContent = supervisor;
+                }
+                if (document.getElementById('drawerTopicCoSupervisor')) {
+                    document.getElementById('drawerTopicCoSupervisor').textContent = coSupervisor;
+                }
+                if (document.getElementById('drawerTopicReviewer')) {
+                    document.getElementById('drawerTopicReviewer').textContent = reviewer;
+                }
+                if (document.getElementById('drawerTopicCouncil')) {
+                    document.getElementById('drawerTopicCouncil').textContent = council;
+                }
+                if (document.getElementById('drawerTopicQuota')) {
+                    document.getElementById('drawerTopicQuota').textContent = 'Tối đa ' + (data.maxStudents || 3) + ' SV';
+                }
+                if (document.getElementById('drawerTopicDescription')) {
+                    document.getElementById('drawerTopicDescription').textContent = description;
+                }
+                if (document.getElementById('drawerTopicRequirements')) {
+                    document.getElementById('drawerTopicRequirements').textContent = requirements;
+                }
+
+                // Status Badge
+                const statusBadge = document.getElementById('drawerTopicStatusBadge');
+                if (statusBadge) {
+                    const status = (data.status || 'PENDING').toUpperCase();
+                    if (status === 'APPROVED') {
+                        statusBadge.className = 'badge-pill-approved';
+                        statusBadge.innerHTML = '<i class="fa-solid fa-check"></i> Đã duyệt';
+                    } else if (status === 'REJECTED') {
+                        statusBadge.className = 'badge-pill-rejected';
+                        statusBadge.innerHTML = '<i class="fa-solid fa-xmark"></i> Từ chối';
+                    } else {
+                        statusBadge.className = 'badge-pill-pending';
+                        statusBadge.innerHTML = '<i class="fa-regular fa-clock"></i> Chờ duyệt';
+                    }
+                }
+
+                // Rejection Alert Box
+                let rejAlert = document.getElementById('drawerTopicRejectionAlert');
+                let rejText = document.getElementById('drawerTopicRejectionText');
+                const rejReason = data.rejectionReason || '';
+                if (data.status === 'REJECTED' && rejReason) {
+                    if (rejAlert) {
+                        rejAlert.style.display = 'block';
+                        if (rejText) rejText.textContent = rejReason;
+                    }
+                } else if (rejAlert) {
+                    rejAlert.style.display = 'none';
+                }
+
+                // Group Info
+                const groupInfo = document.getElementById('drawerTopicGroupInfo');
+                if (groupInfo) {
+                    if (groupName) {
+                        groupInfo.innerHTML = `
+                            <div class="p-2.5 rounded-xl bg-blue-50/50 border border-blue-100">
+                                <div class="fw-bold text-dark mb-1"><i class="fa-solid fa-users text-blue-600 me-1"></i> ${groupName}</div>
+                                <div class="text-muted text-xs">Trưởng nhóm: <strong class="text-dark">${leaderName || 'Sinh viên'}</strong> (${leaderCode || ''})</div>
+                            </div>
+                        `;
+                    } else {
+                        groupInfo.innerHTML = '<span class="text-muted">Chưa có nhóm nào đăng ký đề tài này.</span>';
+                    }
+                }
+
+                // Dynamic Action Buttons
+                const actionContainer = document.getElementById('drawerActionButtons');
+                if (actionContainer) {
+                    actionContainer.innerHTML = '';
+                    const safeTitle = title.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                    const safeDesc = (description || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                    const safeReq = (requirements || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+                    const csrfToken = window.getCsrfToken();
+                    const csrfParam = window.getCsrfParam();
+
+                    if (data.role === 'DEPARTMENT_HEAD') {
+                        let deptButtons = '';
+                        if (data.status === 'PENDING') {
+                            deptButtons = `
+                                <form action="/department-head/topics/${data.id}/approve" method="post" class="d-inline" onsubmit="return confirm('Xác nhận PHÊ DUYỆT đề tài này?');">
+                                    <input type="hidden" name="${csrfParam}" value="${csrfToken}">
+                                    <button type="submit" class="btn btn-sm bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm text-nowrap">
+                                        <i class="fa-solid fa-check me-1"></i> Phê duyệt
+                                    </button>
+                                </form>
+                                <button type="button" class="btn btn-sm bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-xl px-3.5 py-1.5 text-xs font-semibold text-nowrap"
+                                        onclick="window.switchModal('topicDetailModal', 'quickEditApproveModal', function() { if(window.prepareQuickEditModal) prepareQuickEditModal(${data.id}, null, '${safeTitle}', '${safeDesc}', '${safeReq}'); });">
+                                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Sửa &amp; Duyệt
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-xl px-3.5 py-1.5 text-xs font-semibold text-nowrap"
+                                        onclick="window.switchModal('topicDetailModal', 'rejectModal', function() { if(window.prepareRejectModal) prepareRejectModal(${data.id}, '${safeTitle}'); });">
+                                    <i class="fa-solid fa-xmark me-1"></i> Từ chối
+                                </button>
+                            `;
+                        } else if (data.status === 'APPROVED') {
+                            deptButtons = `
+                                <button type="button" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm text-nowrap"
+                                        onclick="window.switchModal('topicDetailModal', 'assignReviewerModal-${data.id}');">
+                                    <i class="fa-solid fa-user-shield me-1"></i> ${reviewer && !reviewer.includes('Chưa') ? 'Đổi GVPB' : 'Phân GVPB'}
+                                </button>
+                                <button type="button" class="btn btn-sm bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm text-nowrap"
+                                        onclick="window.switchModal('topicDetailModal', 'assignCouncilModal-${data.id}');">
+                                    <i class="fa-solid fa-users-rectangle me-1"></i> ${council && !council.includes('Chưa') ? 'Đổi Hội đồng' : 'Phân Hội đồng'}
+                                </button>
+                                <button type="button" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 text-nowrap"
+                                        onclick="window.switchModal('topicDetailModal', 'quickEditApproveModal', function() { if(window.prepareQuickEditModal) prepareQuickEditModal(${data.id}, null, '${safeTitle}', '${safeDesc}', '${safeReq}'); });">
+                                    <i class="fa-solid fa-pen me-1"></i> Sửa đề tài
+                                </button>
+                            `;
+                        } else if (data.status === 'REJECTED') {
+                            deptButtons = `
+                                <button type="button" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm text-nowrap"
+                                        onclick="window.switchModal('topicDetailModal', 'quickEditApproveModal', function() { if(window.prepareQuickEditModal) prepareQuickEditModal(${data.id}, null, '${safeTitle}', '${safeDesc}', '${safeReq}'); });">
+                                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Hiệu chỉnh &amp; Duyệt lại
+                                </button>
+                            `;
+                        }
+                        actionContainer.innerHTML = deptButtons;
+                    } else if (data.role === 'LECTURER') {
+                        let lecButtons = `
+                            <a href="/lecturer/topics/${data.id}/edit" class="btn btn-sm btn-dark rounded-xl px-3.5 py-1.5 text-xs font-semibold d-inline-flex align-items-center gap-1.5 shadow-sm">
+                                <i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa đề tài
+                            </a>
+                        `;
+                        if (data.status === 'PENDING' || data.status === 'REJECTED') {
+                            lecButtons += `
+                                <form action="/lecturer/topics/${data.id}/delete" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đề xuất đề tài này?');">
+                                    <input type="hidden" name="${csrfParam}" value="${csrfToken}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-3.5 py-1.5 text-xs font-semibold d-inline-flex align-items-center gap-1.5">
+                                        <i class="fa-solid fa-trash-can"></i> Xóa đề tài
+                                    </button>
+                                </form>
+                            `;
+                        }
+                        actionContainer.innerHTML = lecButtons;
+                    } else if (data.role === 'STUDENT') {
+                        if (data.isMyTopic) {
+                            actionContainer.innerHTML = `
+                                <a href="/student/my-topic" class="btn btn-sm btn-success rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm d-inline-flex align-items-center gap-1.5">
+                                    <i class="fa-solid fa-circle-check"></i> Đề tài nhóm bạn đang làm →
+                                </a>
+                            `;
+                        } else if (data.isTaken) {
+                            actionContainer.innerHTML = `
+                                <span class="badge bg-rose-50 text-rose-700 border border-rose-200 text-xs px-3 py-1.5 rounded-xl font-medium d-inline-flex align-items-center gap-1.5">
+                                    <i class="fa-solid fa-lock"></i> Đề tài đã có nhóm khác đăng ký
+                                </span>
+                            `;
+                        } else if (data.hasGroupTopic) {
+                            actionContainer.innerHTML = `
+                                <div class="d-inline-flex align-items-center gap-2 flex-wrap">
+                                    <span class="badge bg-slate-100 text-slate-600 border border-slate-200 text-xs px-3 py-1.5 rounded-xl font-medium">
+                                        <i class="fa-solid fa-circle-info text-blue-500 me-1"></i> Nhóm đã có đề tài
+                                    </span>
+                                    <a href="/student/my-topic" class="btn btn-sm btn-outline-secondary rounded-xl px-2.5 py-1.5 text-xs">
+                                        Xem đề tài của nhóm
+                                    </a>
+                                </div>
+                            `;
+                        } else if (data.status === 'APPROVED') {
+                            actionContainer.innerHTML = `
+                                <form action="/student/topics/${data.id}/register" method="post" class="d-inline" onsubmit="return confirm('Xác nhận đăng ký đề tài này cho nhóm của bạn?');">
+                                    <input type="hidden" name="${csrfParam}" value="${csrfToken}">
+                                    <button type="submit" class="btn btn-sm btn-dark rounded-xl px-3.5 py-1.5 text-xs font-semibold shadow-sm">
+                                        <i class="fa-solid fa-bookmark me-1"></i> Đăng ký ngay
+                                    </button>
+                                </form>
+                            `;
+                        }
+                    }
+                }
+
+                // Show centered modal (or fallback to side-drawer)
+                const modalEl = document.getElementById('topicDetailModal');
+                if (modalEl) {
+                    const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    bsModal.show();
+                } else {
+                    const backdrop = document.getElementById('topicDrawerBackdrop');
+                    const panel = document.getElementById('topicDrawerPanel');
+                    if (backdrop) backdrop.classList.add('show');
+                    if (panel) panel.classList.add('show');
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+
+            function closeTopicDrawer() {
+                const modalEl = document.getElementById('topicDetailModal');
+                if (modalEl) {
+                    const bsModal = bootstrap.Modal.getInstance(modalEl);
+                    if (bsModal) bsModal.hide();
+                }
+                const backdrop = document.getElementById('topicDrawerBackdrop');
+                const panel = document.getElementById('topicDrawerPanel');
+                if (backdrop) backdrop.classList.remove('show');
+                if (panel) panel.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+
+            // Close on ESC key
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') closeTopicDrawer();
+            });
+
+            // Announcement Unread / Read State Management via localStorage
+            function getReadAnnouncements() {
+                try {
+                    const stored = localStorage.getItem('topic_hub_read_announcements');
+                    return stored ? JSON.parse(stored) : [];
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            function markAnnouncementAsRead(id) {
+                if (!id) return;
+                const readList = getReadAnnouncements();
+                const strId = String(id);
+                if (!readList.includes(strId)) {
+                    readList.push(strId);
+                    try {
+                        localStorage.setItem('topic_hub_read_announcements', JSON.stringify(readList));
+                    } catch (e) { }
+                }
+                updateNotificationBadges();
+            }
+
+            function markAllAnnouncementsAsRead() {
+                const items = document.querySelectorAll('[data-announcement-id]');
+                const readList = getReadAnnouncements();
+                items.forEach(el => {
+                    const id = el.dataset.announcementId;
+                    if (id && !readList.includes(String(id))) {
+                        readList.push(String(id));
+                    }
+                });
+                try {
+                    localStorage.setItem('topic_hub_read_announcements', JSON.stringify(readList));
+                } catch (e) { }
+                updateNotificationBadges();
+            }
+
+            function updateNotificationBadges() {
+                const items = document.querySelectorAll('.notification-item-track');
+                const readList = getReadAnnouncements();
+                const uniqueAnnouncements = new Set();
+                const unreadAnnouncements = new Set();
+
+                items.forEach(el => {
+                    const id = el.dataset.announcementId;
+                    if (id) {
+                        uniqueAnnouncements.add(String(id));
+                        if (readList.includes(String(id))) {
+                            el.classList.add('opacity-60');
+                            const dot = el.querySelector('.unread-dot');
+                            if (dot) dot.classList.add('d-none');
+                        } else {
+                            unreadAnnouncements.add(String(id));
+                            el.classList.remove('opacity-60');
+                            const dot = el.querySelector('.unread-dot');
+                            if (dot) dot.classList.remove('d-none');
+                        }
+                    }
+                });
+
+                const unreadCount = unreadAnnouncements.size;
+                const badge = document.getElementById('topbarNotificationCount');
+                const headerCount = document.getElementById('topbarNotificationHeaderCount');
+                const emptyPlaceholder = document.getElementById('topbarNoNotificationsPlaceholder');
+
+                if (items.length === 0) {
+                    if (badge) badge.classList.add('d-none');
+                    if (headerCount) headerCount.classList.add('d-none');
+                    if (emptyPlaceholder) emptyPlaceholder.classList.remove('d-none');
+                    return;
+                } else {
+                    if (emptyPlaceholder) emptyPlaceholder.classList.add('d-none');
+                }
+
+                if (badge) {
+                    if (unreadCount > 0) {
+                        badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                        badge.classList.remove('d-none');
+                    } else {
+                        badge.classList.add('d-none');
+                    }
+                }
+
+                if (headerCount) {
+                    if (unreadCount > 0) {
+                        headerCount.textContent = unreadCount + ' chưa đọc';
+                        headerCount.className = 'badge bg-blue-100 text-blue-700 font-semibold rounded-pill px-2 py-0.5 text-xs';
+                        headerCount.classList.remove('d-none');
+                    } else if (uniqueAnnouncements.size > 0) {
+                        headerCount.textContent = 'Đã đọc hết';
+                        headerCount.className = 'badge bg-slate-100 text-slate-500 font-medium rounded-pill px-2 py-0.5 text-xs';
+                        headerCount.classList.remove('d-none');
+                    }
+                }
+            }
+
+            // Safe Markdown Formatter for modal text
+            function renderSafeAnnouncementMarkdown(raw) {
+                if (!raw) return '';
+                let safe = raw
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;");
+
+                // Format ### Headers
+                safe = safe.replace(/###\s*(.*?)(\n|$)/g, '<div class="fw-bold text-slate-900 mt-2.5 mb-1.5 fs-7">$1</div>');
+                // Format **bold**
+                safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900 font-semibold">$1</strong>');
+                // Format line breaks
+                safe = safe.replace(/\n/g, '<br>');
+                return safe;
+            }
+
+            // Global Announcement Detail Modal Opener
+            function showAnnouncementDetail(element) {
+                if (!element) return;
+                const annId = element.dataset.announcementId;
+                if (annId) {
+                    markAnnouncementAsRead(annId);
+                }
+
+                const title = decodeUnicode(element.dataset.title) || 'Thông báo';
+                const category = decodeUnicode(element.dataset.category) || 'Thông báo chung';
+                const author = decodeUnicode(element.dataset.author) || 'Ban chủ nhiệm Khoa';
+                const time = element.dataset.createdAt || '';
+                const period = decodeUnicode(element.dataset.period) || '';
+                const periodId = element.dataset.periodId || '';
+                const content = decodeUnicode(element.dataset.content) || 'Không có nội dung chi tiết.';
+
+                const modalTitle = document.getElementById('modalAnnouncementTitle');
+                const modalCategory = document.getElementById('modalAnnouncementCategory');
+                const modalAuthor = document.getElementById('modalAnnouncementAuthor');
+                const modalTime = document.getElementById('modalAnnouncementTime');
+                const modalContent = document.getElementById('modalAnnouncementContent');
+                const periodWrap = document.getElementById('modalAnnouncementPeriodWrap');
+                const modalPeriod = document.getElementById('modalAnnouncementPeriod');
+
+                if (modalTitle) modalTitle.textContent = title;
+                if (modalCategory) modalCategory.textContent = category;
+                if (modalAuthor) modalAuthor.textContent = author;
+                if (modalTime) modalTime.textContent = time;
+                if (modalContent) modalContent.innerHTML = renderSafeAnnouncementMarkdown(content);
+
+                if (periodWrap && modalPeriod) {
+                    if (period && period.trim() !== '') {
+                        modalPeriod.textContent = period;
+                        periodWrap.classList.remove('d-none');
+                    } else {
+                        periodWrap.classList.add('d-none');
+                    }
+                }
+
+                // Dynamic Action Buttons based on User Role & Notice Context
+                const path = window.location.pathname;
+                const isLecturer = path.startsWith('/lecturer');
+                const isStudent = path.startsWith('/student');
+                const isDeptHead = path.startsWith('/department-head');
+
+                const primaryBtn = document.getElementById('modalAnnouncementPrimaryActionBtn');
+                const actionText = document.getElementById('modalAnnouncementActionText');
+                const actionIcon = document.getElementById('modalAnnouncementActionIcon');
+                const secondaryWrap = document.getElementById('modalAnnouncementSecondaryActionWrap');
+
+                if (primaryBtn) primaryBtn.classList.add('d-none');
+                if (secondaryWrap) secondaryWrap.innerHTML = '';
+
+                const isPeriodNotice = category.toUpperCase() === 'PERIOD' || (title && (title.toLowerCase().includes('kế hoạch') || title.toLowerCase().includes('đợt')));
+
+                if (isPeriodNotice) {
+                    if (isLecturer) {
+                        if (primaryBtn && actionText && actionIcon) {
+                            let createUrl = '/lecturer/topics/create';
+                            const pList = [];
+                            if (periodId && periodId.trim()) {
+                                pList.push('periodId=' + encodeURIComponent(periodId.trim()));
+                            }
+                            if (period && period.trim()) {
+                                pList.push('periodName=' + encodeURIComponent(period.trim()));
+                            }
+                            if (annId && annId.trim()) {
+                                pList.push('noticeId=' + encodeURIComponent(annId.trim()));
+                            }
+                            if (title && title.trim()) {
+                                pList.push('refNoticeTitle=' + encodeURIComponent(title.trim()));
+                            }
+                            if (pList.length > 0) {
+                                createUrl += '?' + pList.join('&');
+                            }
+                            primaryBtn.href = createUrl;
+                            actionText.textContent = 'Đề xuất đề tài ngay';
+                            actionIcon.className = 'fa-solid fa-plus text-xs';
+                            primaryBtn.classList.remove('d-none');
+                        }
+                        if (secondaryWrap) {
+                            secondaryWrap.innerHTML = `
+                                <a href="/lecturer/schedule" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 d-inline-flex align-items-center gap-1.5 transition text-decoration-none">
+                                    <i class="fa-regular fa-calendar-days text-xs text-blue-600"></i> Xem lịch trình đợt
+                                </a>
+                            `;
+                        }
+                    } else if (isStudent) {
+                        if (primaryBtn && actionText && actionIcon) {
+                            primaryBtn.href = '/student/topics';
+                            actionText.textContent = 'Xem danh sách đề tài';
+                            actionIcon.className = 'fa-solid fa-list-check text-xs';
+                            primaryBtn.classList.remove('d-none');
+                        }
+                        if (secondaryWrap) {
+                            secondaryWrap.innerHTML = `
+                                <a href="/student/schedule" class="btn btn-sm btn-light border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 d-inline-flex align-items-center gap-1.5 transition text-decoration-none">
+                                    <i class="fa-regular fa-calendar-days text-xs text-blue-600"></i> Xem lịch trình
+                                </a>
+                            `;
+                        }
+                    } else if (isDeptHead) {
+                        if (primaryBtn && actionText && actionIcon) {
+                            primaryBtn.href = '/department-head/periods';
+                            actionText.textContent = 'Quản lý các đợt';
+                            actionIcon.className = 'fa-solid fa-calendar-check text-xs';
+                            primaryBtn.classList.remove('d-none');
+                        }
+                    }
+                }
+
+                if (isDeptHead && annId && secondaryWrap && secondaryWrap.innerHTML.trim() === '') {
+                    const csrfToken = window.getCsrfToken();
+                    const csrfParam = window.getCsrfParam();
+                    secondaryWrap.innerHTML = `
+                        <form action="/department-head/announcements/${annId}/delete" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa thông báo này?');">
+                            <input type="hidden" name="${csrfParam}" value="${csrfToken}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-xl px-3 py-2 text-xs font-semibold d-inline-flex align-items-center gap-1.5 transition">
+                                <i class="fa-regular fa-trash-can text-xs"></i> Xóa thông báo này
+                            </button>
+                        </form>
+                    `;
+                }
+
+                const modalEl = document.getElementById('announcementDetailModal');
+                if (modalEl) {
+                    const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    bsModal.show();
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                updateNotificationBadges();
+            });
+
+            // Segmented Control Tabs Filtering
+            function filterTableByStatus(status, tabElement) {
+                const tabs = document.querySelectorAll('.segmented-tab, .filter-pill-tab');
+                tabs.forEach(t => t.classList.remove('active'));
+                if (tabElement) tabElement.classList.add('active');
+
+                const rows = document.querySelectorAll('.filterable-row');
+                let count = 0;
+                rows.forEach(row => {
+                    const rowStatus = (row.getAttribute('data-status') || '').toUpperCase();
+                    if (!status || status === 'ALL' || rowStatus === status.toUpperCase()) {
+                        row.style.display = '';
+                        count++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                updateRowCountDisplay(count);
+            }
+
+            // Quick Search Filter
+            function filterTableByKeyword(keyword) {
+                const term = (keyword || '').toLowerCase().trim();
+                const rows = document.querySelectorAll('.filterable-row');
+                let count = 0;
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    if (!term || text.includes(term)) {
+                        row.style.display = '';
+                        count++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                updateRowCountDisplay(count);
+            }
+
+            // Multi-attribute Table Filter (Dropdown + Keyword)
+            function filterTableByAttribute(attrName, attrVal) {
+                const term = (attrVal || '').toLowerCase().trim();
+                const rows = document.querySelectorAll('.filterable-row');
+                let count = 0;
+                rows.forEach(row => {
+                    const val = (row.getAttribute('data-' + attrName) || '').toLowerCase();
+                    if (!term || term === 'all' || val === term || val.includes(term)) {
+                        row.style.display = '';
+                        count++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                updateRowCountDisplay(count);
+            }
+
+            function updateRowCountDisplay(count) {
+                const counter = document.getElementById('filteredRowCount');
+                if (counter) {
+                    counter.textContent = 'Hiển thị: ' + count + ' mục';
+                }
+            }
+
+            // Prepare Reject Modal (Department Head)
+            function prepareRejectModal(id, title) {
+                const form = document.getElementById('rejectForm');
+                const titleSpan = document.getElementById('rejectTopicTitle');
+                if (form) form.action = '/department-head/topics/' + id + '/reject';
+                if (titleSpan) titleSpan.textContent = decodeUnicode(title) || '';
+            }
+
+            // ==================== GLOBAL TOAST SYSTEM ====================
+            window.showToast = function (message, type = 'info', title = '', duration = 4000) {
+                if (!message) return;
+                const container = document.getElementById('saasToastContainer');
+                if (!container) return;
+
+                const toast = document.createElement('div');
+                toast.className = 'saas-toast saas-toast-' + type;
+
+                let iconHtml = '<i class="fa-solid fa-circle-info"></i>';
+                let defaultTitle = 'Thông báo';
+                if (type === 'success') {
+                    iconHtml = '<i class="fa-solid fa-circle-check"></i>';
+                    defaultTitle = 'Thành công';
+                } else if (type === 'error') {
+                    iconHtml = '<i class="fa-solid fa-circle-xmark"></i>';
+                    defaultTitle = 'Thông báo lỗi';
+                } else if (type === 'warning') {
+                    iconHtml = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                    defaultTitle = 'Cảnh báo';
+                }
+
+                toast.innerHTML = `
+                    <div class="saas-toast-icon">${iconHtml}</div>
+                    <div class="saas-toast-body">
+                        <div class="saas-toast-title">${title || defaultTitle}</div>
+                        <div class="saas-toast-message">${decodeUnicode(message)}</div>
+                    </div>
+                    <button type="button" class="saas-toast-close" aria-label="Close">&times;</button>
+                    <div class="saas-toast-progress" style="width: 100%;"></div>
+                `;
+
+                container.appendChild(toast);
+
+                // Animate in
+                requestAnimationFrame(() => {
+                    toast.classList.add('show');
+                    const progress = toast.querySelector('.saas-toast-progress');
+                    if (progress) {
+                        progress.style.transitionDuration = duration + 'ms';
+                        progress.style.width = '0%';
+                    }
+                });
+
+                function removeToast() {
+                    toast.classList.remove('show');
+                    setTimeout(() => { toast.remove(); }, 300);
+                }
+
+                const timer = setTimeout(removeToast, duration);
+
+                const closeBtn = toast.querySelector('.saas-toast-close');
+                if (closeBtn) {
+                    closeBtn.onclick = function () {
+                        clearTimeout(timer);
+                        removeToast();
+                    };
+                }
+            };
+
+            // Modern replacement for window.alert()
+            window.alert = function (msg) {
+                window.showToast(msg, 'warning', 'Cảnh báo');
+            };
+
+            // ==================== GLOBAL CONFIRMATION MODAL ====================
+            window.showConfirmDialog = function (options) {
+                const modalEl = document.getElementById('globalConfirmModal');
+                if (!modalEl) {
+                    if (options.onConfirm) options.onConfirm();
+                    return;
+                }
+
+                const titleEl = document.getElementById('confirmModalTitle');
+                const msgEl = document.getElementById('confirmModalMessage');
+                const iconWrap = document.getElementById('confirmModalIconWrap');
+                const iconEl = document.getElementById('confirmModalIcon');
+                const acceptBtn = document.getElementById('confirmModalAcceptBtn');
+                const cancelBtn = document.getElementById('confirmModalCancelBtn');
+
+                const isDanger = options.type === 'danger';
+                titleEl.textContent = options.title || 'Xác nhận thao tác';
+                msgEl.textContent = decodeUnicode(options.message) || 'Bạn có chắc chắn muốn tiếp tục?';
+
+                // Icon and Color Styling
+                iconWrap.className = 'saas-confirm-icon-wrap ' + (isDanger ? 'danger' : 'primary');
+                iconEl.className = isDanger ? 'fa-solid fa-triangle-exclamation' : 'fa-solid fa-circle-question';
+
+                acceptBtn.className = isDanger
+                    ? 'btn btn-sm btn-danger rounded-xl flex-grow-1 py-2 text-xs font-semibold shadow-sm'
+                    : 'btn btn-sm btn-primary rounded-xl flex-grow-1 py-2 text-xs font-semibold shadow-sm';
+                acceptBtn.textContent = options.confirmText || (isDanger ? 'Đồng ý' : 'Xác nhận');
+                if (cancelBtn) cancelBtn.textContent = options.cancelText || 'Hủy';
+
+                const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+                // Clone accept button to clean previous event listeners
+                const newAcceptBtn = acceptBtn.cloneNode(true);
+                acceptBtn.parentNode.replaceChild(newAcceptBtn, acceptBtn);
+
+                newAcceptBtn.onclick = function () {
+                    bsModal.hide();
+                    if (typeof options.onConfirm === 'function') {
+                        options.onConfirm();
+                    }
+                };
+
+                bsModal.show();
+            };
+
+            // ==================== AUTO INTERCEPT FORM CONFIRMS ====================
+            // Intercepts all forms using onsubmit="return confirm('...')" and transforms into sleek modern modal
+            document.addEventListener('submit', function (e) {
+                const form = e.target;
+                if (!form || form._isConfirmed) return;
+
+                const onsubmitAttr = form.getAttribute('onsubmit') || '';
+                let confirmMsg = null;
+                if (onsubmitAttr.includes('confirm(')) {
+                    const match = onsubmitAttr.match(/confirm\(\s*['"](.*?)['"]\s*\)/);
+                    if (match && match[1]) {
+                        confirmMsg = match[1].replace(/\\'/g, "'").replace(/\\"/g, '"');
+                    }
+                } else if (form.dataset.confirm) {
+                    confirmMsg = form.dataset.confirm;
+                }
+
+                if (confirmMsg) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+
+                    const isDanger = /xóa|từ chối|hủy|giải tán|cảnh báo|delete|reject|dissolve|cancel|unassign/i.test(confirmMsg);
+
+                    window.showConfirmDialog({
+                        title: isDanger ? 'Xác nhận hành động' : 'Xác nhận phê duyệt',
+                        message: confirmMsg,
+                        type: isDanger ? 'danger' : 'primary',
+                        confirmText: isDanger ? 'Đồng ý thực hiện' : 'Xác nhận',
+                        onConfirm: function () {
+                            form._isConfirmed = true;
+                            form.submit();
+                        }
+                    });
+                }
+            }, true);
+
+            // ==================== AUTO FLASH MESSAGE DETECTOR ====================
+            function detectAndShowFlashMessages() {
+                const alerts = document.querySelectorAll('.alert-success, .alert-danger, .alert-warning, .alert-info');
+                alerts.forEach(function (alert) {
+                    // Skip if inside modal, drawer, or already hidden
+                    if (alert.closest('.modal') || alert.closest('.saas-drawer-panel') || alert.classList.contains('saas-toast')) return;
+
+                    let type = 'info';
+                    if (alert.classList.contains('alert-success')) type = 'success';
+                    else if (alert.classList.contains('alert-danger')) type = 'error';
+                    else if (alert.classList.contains('alert-warning')) type = 'warning';
+
+                    const text = alert.innerText.trim();
+                    if (text) {
+                        window.showToast(text, type);
+                        // Hide ugly layout-pushing flash alert
+                        alert.style.display = 'none';
+                    }
+                });
+            }
+
+            // ==================== DARK / LIGHT THEME TOGGLE ====================
+            function initTheme() {
+                const savedTheme = localStorage.getItem('topichub-theme') || 'light';
+                setTheme(savedTheme);
+            }
+
+            function setTheme(theme) {
+                const icon = document.getElementById('themeToggleIcon');
+                if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('topichub-theme', 'dark');
+                    if (icon) {
+                        icon.className = 'fa-solid fa-sun text-amber-400';
+                    }
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                    localStorage.setItem('topichub-theme', 'light');
+                    if (icon) {
+                        icon.className = 'fa-regular fa-moon text-secondary';
+                    }
+                }
+            }
+
+            function toggleTheme() {
+                const current = localStorage.getItem('topichub-theme') || 'light';
+                setTheme(current === 'dark' ? 'light' : 'dark');
+            }
+
+            // Auto Initialize Tooltips, Flash detection, Theme & Top Loader
+            document.addEventListener('DOMContentLoaded', function () {
+                initTheme();
+                try {
+                    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                    tooltipTriggerList.forEach(function (el) { new bootstrap.Tooltip(el); });
+                } catch (e) { }
+
+                detectAndShowFlashMessages();
+
+                // === STAT COUNTER ANIMATION ===
+                function animateCounter(el) {
+                    var target = parseFloat(el.dataset.target || el.textContent.replace(/[^0-9.]/g, '')) || 0;
+                    var isFloat = String(target).includes('.');
+                    var decimals = isFloat ? 1 : 0;
+                    var duration = 800;
+                    var start = performance.now();
+                    function step(now) {
+                        var elapsed = Math.min((now - start) / duration, 1);
+                        var eased = 1 - Math.pow(1 - elapsed, 3);
+                        var val = target * eased;
+                        el.textContent = isFloat ? val.toFixed(decimals) : Math.floor(val);
+                        if (elapsed < 1) requestAnimationFrame(step);
+                        else el.textContent = isFloat ? target.toFixed(decimals) : target;
+                    }
+                    requestAnimationFrame(step);
+                }
+                if (window.IntersectionObserver) {
+                    var cObs = new IntersectionObserver(function (entries) {
+                        entries.forEach(function (entry) {
+                            if (entry.isIntersecting) { animateCounter(entry.target); cObs.unobserve(entry.target); }
+                        });
+                    }, { threshold: 0.5 });
+                    document.querySelectorAll('[data-counter]').forEach(function (el) {
+                        el.dataset.target = el.textContent.trim();
+                        el.textContent = '0';
+                        cObs.observe(el);
+                    });
+                }
+
+                // === DASHBOARD TAB SWITCHER ===
+                document.querySelectorAll('.dash-tab-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var grp = btn.dataset.tabGroup, tgt = btn.dataset.tabTarget;
+                        document.querySelectorAll('.dash-tab-btn[data-tab-group="' + grp + '"]').forEach(function (b) { b.classList.toggle('active', b === btn); });
+                        document.querySelectorAll('.dash-tab-pane[data-tab-group="' + grp + '"]').forEach(function (p) { p.classList.toggle('active', p.id === tgt); });
+                        try { sessionStorage.setItem('dash-tab-' + grp, tgt); } catch (e) { }
+                    });
+                });
+
+                // === COLLAPSIBLE SECTIONS ===
+                document.querySelectorAll('.section-toggle-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var t = document.getElementById(btn.dataset.collapseTarget);
+                        if (!t) return;
+                        var c = t.classList.toggle('collapsed');
+                        btn.classList.toggle('collapsed', c);
+                        try { sessionStorage.setItem('col-' + btn.dataset.collapseTarget, c ? '1' : '0'); } catch (e) { }
+                    });
+                    try {
+                        if (sessionStorage.getItem('col-' + btn.dataset.collapseTarget) === '1') {
+                            var t = document.getElementById(btn.dataset.collapseTarget);
+                            if (t) { t.classList.add('collapsed'); btn.classList.add('collapsed'); }
+                        }
+                    } catch (e) { }
+                });
+            });
+
+            // === SLIM TOP PROGRESS BAR (NON-BLOCKING) ===
+            (function () {
+                var bar = document.createElement('div');
+                bar.className = 'page-loader-bar';
+                document.documentElement.appendChild(bar);
+                var w = 0, iv = null, safetyTimeout = null;
+
+                function startPL() {
+                    w = 0;
+                    bar.style.opacity = '1';
+                    bar.style.width = '0%';
+                    clearInterval(iv);
+                    clearTimeout(safetyTimeout);
+                    iv = setInterval(function () {
+                        if (w < 85) { w += (85 - w) * 0.12 + 1; bar.style.width = Math.min(w, 85) + '%'; }
+                    }, 40);
+
+                    // Safety auto-dismiss: if no navigation occurs within 1s, dismiss smoothly
+                    safetyTimeout = setTimeout(finishPL, 1000);
+                }
+
+                function finishPL() {
+                    clearInterval(iv);
+                    clearTimeout(safetyTimeout);
+                    bar.style.width = '100%';
+                    setTimeout(function () {
+                        bar.style.opacity = '0';
+                        setTimeout(function () { bar.style.width = '0%'; }, 200);
+                    }, 150);
+                }
+
+                document.addEventListener('click', function (e) {
+                    if (e.defaultPrevented) return;
+                    var a = e.target.closest('a[href]');
+                    if (!a) return;
+                    var h = a.getAttribute('href');
+                    if (!h || h.charAt(0) === '#' || h.indexOf('javascript') === 0 || h.indexOf('mailto') === 0 || h.indexOf('tel') === 0 ||
+                        a.target === '_blank' || a.hasAttribute('data-bs-toggle') || a.hasAttribute('data-bs-dismiss') ||
+                        e.ctrlKey || e.metaKey || e.shiftKey) return;
+                    // Skip if navigating to the exact same URL hash/page
+                    if (a.href === window.location.href) return;
+                    startPL();
+                });
+
+                document.addEventListener('submit', function (e) {
+                    if (!e.defaultPrevented && e.target && e.target.method && e.target.method.toLowerCase() !== 'get') {
+                        startPL();
+                    }
+                });
+
+                window.addEventListener('pageshow', finishPL);
+                window.addEventListener('load', finishPL);
+            })();
+
+            // ================= SMART CALENDAR & QUICK NOTES CONTROLLER =================
+            (function () {
+                var calDate = new Date();
+                var selectedDate = new Date();
+
+                function renderCalendar() {
+                    var grid = document.getElementById('calMonthGrid');
+                    var title = document.getElementById('calCurrentMonthYear');
+                    if (!grid || !title) return;
+
+                    var year = calDate.getFullYear();
+                    var month = calDate.getMonth();
+
+                    var monthNames = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+                    title.textContent = monthNames[month] + ', ' + year;
+
+                    var firstDay = new Date(year, month, 1).getDay();
+                    var daysInMonth = new Date(year, month + 1, 0).getDate();
+                    var prevMonthDays = new Date(year, month, 0).getDate();
+
+                    var today = new Date();
+                    grid.innerHTML = '';
+
+                    // Prev month padding
+                    for (var i = firstDay - 1; i >= 0; i--) {
+                        var d = prevMonthDays - i;
+                        var el = document.createElement('span');
+                        el.className = 'text-3xs text-slate-300 py-1.5 rounded-full';
+                        el.textContent = d;
+                        grid.appendChild(el);
+                    }
+
+                    // Current month days
+                    for (var day = 1; day <= daysInMonth; day++) {
+                        var btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'text-xs font-semibold py-1.5 rounded-full transition d-flex align-items-center justify-content-center mx-auto';
+                        btn.style.width = '30px';
+                        btn.style.height = '30px';
+                        btn.textContent = day;
+
+                        var isToday = (today.getFullYear() === year && today.getMonth() === month && today.getDate() === day);
+                        var isSelected = (selectedDate.getFullYear() === year && selectedDate.getMonth() === month && selectedDate.getDate() === day);
+
+                        if (isSelected) {
+                            btn.className += ' bg-slate-900 text-teal-300 font-bold shadow-xs';
+                        } else if (isToday) {
+                            btn.className += ' bg-teal-100 text-teal-900 font-bold';
+                        } else {
+                            btn.className += ' text-slate-700 hover:bg-slate-100';
+                        }
+
+                        (function (d) {
+                            btn.onclick = function () {
+                                selectedDate = new Date(year, month, d);
+                                var dayText = document.getElementById('calSelectedDayText');
+                                if (dayText) {
+                                    var dayOfWeek = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'][selectedDate.getDay()];
+                                    dayText.textContent = dayOfWeek + ', ' + d + ' ' + monthNames[month];
+                                }
+                                renderCalendar();
+                                loadQuickNotes();
+                            };
+                        })(day);
+
+                        grid.appendChild(btn);
+                    }
+                }
+
+                window.navigateCalendarMonth = function (offset) {
+                    calDate.setMonth(calDate.getMonth() + offset);
+                    renderCalendar();
+                };
+
+                window.toggleQuickNoteInput = function () {
+                    var box = document.getElementById('quickNoteInputBox');
+                    if (box) {
+                        box.classList.toggle('d-none');
+                        if (!box.classList.contains('d-none')) {
+                            var input = document.getElementById('quickNoteText');
+                            if (input) input.focus();
+                        }
+                    }
+                };
+
+                window.saveQuickNote = function () {
+                    var input = document.getElementById('quickNoteText');
+                    if (!input || !input.value.trim()) return;
+                    var dateKey = 'topichub_note_' + selectedDate.toISOString().slice(0, 10);
+                    var notes = [];
+                    try { notes = JSON.parse(localStorage.getItem(dateKey) || '[]'); } catch (e) { }
+                    notes.push({ id: Date.now(), text: input.value.trim(), done: false });
+                    try { localStorage.setItem(dateKey, JSON.stringify(notes)); } catch (e) { }
+                    input.value = '';
+                    window.toggleQuickNoteInput();
+                    loadQuickNotes();
+                    if (window.showToast) window.showToast('Đã lưu ghi chú mới!', 'success');
+                };
+
+                window.deleteQuickNote = function (id) {
+                    var dateKey = 'topichub_note_' + selectedDate.toISOString().slice(0, 10);
+                    var notes = [];
+                    try { notes = JSON.parse(localStorage.getItem(dateKey) || '[]'); } catch (e) { }
+                    notes = notes.filter(function (n) { return n.id !== id; });
+                    try { localStorage.setItem(dateKey, JSON.stringify(notes)); } catch (e) { }
+                    loadQuickNotes();
+                };
+
+                function loadQuickNotes() {
+                    var container = document.getElementById('userQuickNotesList');
+                    if (!container) return;
+                    var dateKey = 'topichub_note_' + selectedDate.toISOString().slice(0, 10);
+                    var notes = [];
+                    try { notes = JSON.parse(localStorage.getItem(dateKey) || '[]'); } catch (e) { }
+                    container.innerHTML = '';
+
+                    notes.forEach(function (n) {
+                        var item = document.createElement('div');
+                        item.className = 'p-2.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 d-flex align-items-center justify-content-between gap-2';
+                        item.innerHTML = '<div class="d-flex align-items-center gap-2 overflow-hidden">' +
+                            '<i class="fa-solid fa-note-sticky text-amber-600 text-xs flex-shrink-0"></i>' +
+                            '<span class="text-xs text-slate-800 font-medium truncate">' + escapeHtml(n.text) + '</span>' +
+                            '</div>' +
+                            '<button type="button" class="btn btn-link p-0 text-slate-400 hover:text-rose-600 text-3xs border-0" onclick="deleteQuickNote(' + n.id + ')" title="Xóa">' +
+                            '<i class="fa-solid fa-trash-can"></i>' +
+                            '</button>';
+                        container.appendChild(item);
+                    });
+                }
+
+                function escapeHtml(str) {
+                    var div = document.createElement('div');
+                    div.appendChild(document.createTextNode(str));
+                    return div.innerHTML;
+                }
+
+                document.addEventListener('DOMContentLoaded', function () {
+                    renderCalendar();
+                    loadQuickNotes();
+                });
+            })();
+
+            /* =========================================================
+             *  FULL CALENDAR CONTROLLER (DOCTORS' SCHEDULE SPECIFICATION)
+             * ========================================================= */
+            window.fullCalendarApp = (function () {
+                var currentDate = new Date();
+                var currentView = 'month'; // 'day', 'week', 'month'
+                var currentFilter = 'ALL';
+                var selectedEvent = null;
+                var serverEvents = [];
+
+                function init() {
+                    serverEvents = [];
+                    var eventNodes = document.querySelectorAll('.server-cal-event');
+                    if (eventNodes && eventNodes.length > 0) {
+                        eventNodes.forEach(function (node) {
+                            var date = node.dataset.date;
+                            if (date) {
+                                serverEvents.push({
+                                    id: node.dataset.id || ('event-' + Math.random()),
+                                    type: node.dataset.type || 'PERIOD',
+                                    typeName: node.dataset.typeName || 'Sự kiện',
+                                    title: node.dataset.title || 'Mốc sự kiện',
+                                    date: date,
+                                    time: node.dataset.time || '08:00',
+                                    location: node.dataset.location || 'Tại Trường',
+                                    code: node.dataset.code || '',
+                                    colorClass: node.dataset.colorClass || 'cal-event-teal',
+                                    icon: node.dataset.icon || 'fa-calendar-check',
+                                    actionUrl: node.dataset.actionUrl || '#'
+                                });
+                            }
+                        });
+                    }
+
+                    // Prepopulate with a few demonstration milestones if empty
+                    if (serverEvents.length === 0) {
+                        var y = currentDate.getFullYear();
+                        var m = String(currentDate.getMonth() + 1).padStart(2, '0');
+                        serverEvents = [
+                            { id: "demo-1", type: "COUNCIL", typeName: "Hội đồng chấm bảo vệ", title: "HĐ: Bảo vệ KLTN CNTT 01", date: y + "-" + m + "-20", time: "09:00 AM", location: "Phòng H6.1", colorClass: "cal-event-teal", icon: "fa-scale-balanced", actionUrl: "#" },
+                            { id: "demo-2", type: "REVIEW", typeName: "Chấm phản biện", title: "GVPB: Đề tài AI Chatbot", date: y + "-" + m + "-11", time: "14:00 PM", location: "Hệ thống trực tuyến", colorClass: "cal-event-cyan", icon: "fa-clipboard-check", actionUrl: "#" },
+                            { id: "demo-3", type: "PERIOD", typeName: "Hạn đề xuất đề tài", title: "Hạn nộp đề xuất đề tài HK1", date: y + "-" + m + "-05", time: "17:00 PM", location: "Cổng TopicHub", colorClass: "cal-event-indigo", icon: "fa-book-bookmark", actionUrl: "#" },
+                            { id: "demo-4", type: "REGISTRATION", typeName: "Hạn SV chọn đề tài", title: "Hạn sinh viên chốt nhóm", date: y + "-" + m + "-14", time: "23:59 PM", location: "Cổng TopicHub", colorClass: "cal-event-amber", icon: "fa-users", actionUrl: "#" },
+                            { id: "demo-5", type: "SUBMISSION", typeName: "Báo cáo tiến độ", title: "Hạn nộp Báo cáo Giữa kỳ", date: y + "-" + m + "-18", time: "23:59 PM", location: "Nộp file PDF", colorClass: "cal-event-rose", icon: "fa-file-arrow-up", actionUrl: "#" }
+                        ];
+                    }
+
+                    render();
+                }
+
+                function getCustomNotes() {
+                    try {
+                        return JSON.parse(localStorage.getItem('topichub_fullcal_notes') || '[]');
+                    } catch (e) {
+                        return [];
+                    }
+                }
+
+                function saveCustomNotes(notes) {
+                    try {
+                        localStorage.setItem('topichub_fullcal_notes', JSON.stringify(notes));
+                    } catch (e) { }
+                }
+
+                function getAllEvents() {
+                    var custom = getCustomNotes().map(function (n) {
+                        return {
+                            id: "custom-" + n.id,
+                            rawId: n.id,
+                            isCustom: true,
+                            type: "NOTE",
+                            typeName: "Ghi chú cá nhân",
+                            title: n.title,
+                            date: n.date,
+                            time: n.time || "09:00",
+                            location: n.location || "Cá nhân",
+                            desc: n.desc || "",
+                            colorClass: n.colorClass || "cal-event-amber",
+                            icon: "fa-note-sticky",
+                            actionUrl: ""
+                        };
+                    });
+                    return serverEvents.concat(custom);
+                }
+
+                function getFilteredEvents() {
+                    var events = getAllEvents();
+                    if (currentFilter === 'ALL') return events;
+                    return events.filter(function (ev) {
+                        return ev.type === currentFilter;
+                    });
+                }
+
+                function render() {
+                    updateHeader();
+                    if (currentView === 'month') {
+                        renderMonthView();
+                    } else if (currentView === 'week') {
+                        renderWeekView();
+                    } else if (currentView === 'day') {
+                        renderDayView();
+                    }
+                }
+
+                function updateHeader() {
+                    var titleEl = document.getElementById('fullCalMonthYearTitle');
+                    if (!titleEl) return;
+                    var monthNames = ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"];
+                    titleEl.textContent = monthNames[currentDate.getMonth()] + " " + currentDate.getFullYear();
+                }
+
+                function formatDateYMD(d) {
+                    var year = d.getFullYear();
+                    var month = String(d.getMonth() + 1).padStart(2, '0');
+                    var day = String(d.getDate()).padStart(2, '0');
+                    return year + '-' + month + '-' + day;
+                }
+
+                function renderMonthView() {
+                    var grid = document.getElementById('fullCalMonthGrid');
+                    if (!grid) return;
+                    grid.innerHTML = '';
+
+                    var year = currentDate.getFullYear();
+                    var month = currentDate.getMonth();
+
+                    var firstDayIndex = new Date(year, month, 1).getDay(); // 0 = Sunday
+                    var totalDays = new Date(year, month + 1, 0).getDate();
+                    var prevMonthTotalDays = new Date(year, month, 0).getDate();
+
+                    var todayStr = formatDateYMD(new Date());
+                    var allEvents = getFilteredEvents();
+
+                    // 1. Previous Month Tail Days
+                    for (var i = firstDayIndex - 1; i >= 0; i--) {
+                        var pDay = prevMonthTotalDays - i;
+                        var pDate = new Date(year, month - 1, pDay);
+                        var pDateStr = formatDateYMD(pDate);
+                        var cell = createCell(pDay, pDateStr, true, pDateStr === todayStr, allEvents);
+                        grid.appendChild(cell);
+                    }
+
+                    // 2. Current Month Days
+                    for (var day = 1; day <= totalDays; day++) {
+                        var cDate = new Date(year, month, day);
+                        var cDateStr = formatDateYMD(cDate);
+                        var cell = createCell(day, cDateStr, false, cDateStr === todayStr, allEvents);
+                        grid.appendChild(cell);
+                    }
+
+                    // 3. Next Month Leading Days to complete 35 or 42 grid cells
+                    var totalCells = firstDayIndex + totalDays;
+                    var nextDaysCount = (totalCells % 7 === 0) ? 0 : 7 - (totalCells % 7);
+                    for (var nDay = 1; nDay <= nextDaysCount; nDay++) {
+                        var nDate = new Date(year, month + 1, nDay);
+                        var nDateStr = formatDateYMD(nDate);
+                        var cell = createCell(nDay, nDateStr, true, nDateStr === todayStr, allEvents);
+                        grid.appendChild(cell);
+                    }
+                }
+
+                function createCell(dayNum, dateStr, isOtherMonth, isToday, eventsList) {
+                    var cell = document.createElement('div');
+                    cell.className = 'calendar-cell' + (isOtherMonth ? ' other-month' : '') + (isToday ? ' today' : '');
+
+                    var header = document.createElement('div');
+                    header.className = 'day-header';
+                    var numSpan = document.createElement('span');
+                    numSpan.className = 'day-number';
+                    numSpan.textContent = dayNum;
+                    header.appendChild(numSpan);
+                    cell.appendChild(header);
+
+                    var evContainer = document.createElement('div');
+                    evContainer.className = 'events-container';
+
+                    var dayEvents = eventsList.filter(function (e) {
+                        return e.date === dateStr;
+                    });
+
+                    var maxVisible = 3;
+                    dayEvents.slice(0, maxVisible).forEach(function (ev) {
+                        var pill = document.createElement('a');
+                        pill.href = "javascript:void(0)";
+                        pill.className = 'cal-event-pill ' + (ev.colorClass || 'cal-event-teal');
+                        pill.title = ev.title + ' (' + (ev.time || '') + ')';
+                        pill.innerHTML = '<span class="fw-bold">' + escapeHtml(ev.title) + '</span>' +
+                            (ev.time ? '<span class="d-block opacity-80" style="font-size:0.6rem; font-weight:500;">🕒 ' + escapeHtml(ev.time) + '</span>' : '');
+                        pill.onclick = function (e) {
+                            e.stopPropagation();
+                            showEventDetail(ev);
+                        };
+                        evContainer.appendChild(pill);
+                    });
+
+                    if (dayEvents.length > maxVisible) {
+                        var moreBtn = document.createElement('span');
+                        moreBtn.className = 'badge bg-slate-100 text-slate-600 rounded-full px-2 py-0.5 text-3xs font-bold cursor-pointer hover:bg-slate-200 mt-1';
+                        moreBtn.textContent = '+' + (dayEvents.length - maxVisible) + ' sự kiện nữa';
+                        moreBtn.onclick = function (e) {
+                            e.stopPropagation();
+                            currentDate = new Date(dateStr + 'T00:00:00');
+                            setView('day');
+                        };
+                        evContainer.appendChild(moreBtn);
+                    }
+
+                    cell.appendChild(evContainer);
+
+                    cell.ondblclick = function () {
+                        openAddModal(dateStr);
+                    };
+
+                    return cell;
+                }
+
+                function renderWeekView() {
+                    var grid = document.getElementById('fullCalWeekGrid');
+                    if (!grid) return;
+                    grid.innerHTML = '';
+
+                    var curr = new Date(currentDate);
+                    var firstDay = curr.getDate() - curr.getDay(); // First day is Sunday
+                    var allEvents = getFilteredEvents();
+                    var todayStr = formatDateYMD(new Date());
+
+                    var shortDayLabels = ["CN", "THỨ 2", "THỨ 3", "THỨ 4", "THỨ 5", "THỨ 6", "THỨ 7"];
+
+                    for (var i = 0; i < 7; i++) {
+                        var d = new Date(curr.getFullYear(), curr.getMonth(), firstDay + i);
+                        var dStr = formatDateYMD(d);
+                        var isToday = dStr === todayStr;
+
+                        var col = document.createElement('div');
+                        col.className = 'cal-week-col' + (isToday ? ' is-today' : '');
+
+                        var headerHtml = '<div class="cal-week-header">' +
+                            '<span class="cal-week-day-name">' + shortDayLabels[i] + '</span>' +
+                            '<div class="cal-week-date-num">' + d.getDate() + '</div>' +
+                            (isToday ? '<span class="badge bg-teal-500 text-white rounded-full px-2 py-0.5 mt-1" style="font-size: 0.6rem; font-weight: 800; letter-spacing: 0.04em;">HÔM NAY</span>' : '<span class="text-3xs text-slate-400 font-semibold d-block mt-0.5">Thg ' + (d.getMonth() + 1) + '</span>') +
+                            '</div>';
+
+                        col.innerHTML = headerHtml;
+
+                        var evBox = document.createElement('div');
+                        evBox.className = 'd-flex flex-column gap-2 flex-grow-1 overflow-y-auto';
+
+                        var dayEvents = allEvents.filter(function (e) { return e.date === dStr; });
+                        if (dayEvents.length === 0) {
+                            var emptySlot = document.createElement('div');
+                            emptySlot.className = 'cal-empty-week-slot';
+                            emptySlot.innerHTML = '<i class="fa-regular fa-calendar-plus text-slate-300 text-lg mb-1.5"></i>' +
+                                '<span class="text-3xs font-bold text-slate-400 block">Trống lịch</span>' +
+                                '<span class="text-3xs text-teal-600 font-extrabold mt-1 opacity-90">+ Thêm việc</span>';
+                            emptySlot.onclick = (function (targetDate) {
+                                return function () { openAddModal(targetDate); };
+                            })(dStr);
+                            evBox.appendChild(emptySlot);
+                        } else {
+                            dayEvents.forEach(function (ev) {
+                                var item = document.createElement('div');
+                                var borderClass = 'border-teal';
+                                if (ev.colorClass === 'cal-event-cyan') borderClass = 'border-cyan';
+                                else if (ev.colorClass === 'cal-event-indigo') borderClass = 'border-indigo';
+                                else if (ev.colorClass === 'cal-event-amber') borderClass = 'border-amber';
+                                else if (ev.colorClass === 'cal-event-rose') borderClass = 'border-rose';
+
+                                item.className = 'cal-week-event-card ' + borderClass;
+                                item.innerHTML = '<div class="d-flex align-items-center justify-content-between mb-1 gap-1 overflow-hidden">' +
+                                    '<span class="badge bg-white text-slate-700 font-bold border border-slate-200/80 rounded-full px-1.5 py-0.5 text-3xs text-truncate flex-grow-1 text-start" style="font-size: 0.58rem; max-width: 62%;">' + escapeHtml(ev.typeName || ev.type) + '</span>' +
+                                    (ev.time ? '<span class="text-3xs text-slate-500 font-bold text-nowrap flex-shrink-0" style="font-size: 0.6rem;">' + escapeHtml(ev.time) + '</span>' : '') +
+                                    '</div>' +
+                                    '<div class="fw-extrabold text-slate-900 text-xs line-clamp-2 mb-1" style="line-height: 1.35;">' + escapeHtml(ev.title) + '</div>' +
+                                    (ev.location ? '<div class="text-3xs text-slate-500 font-medium d-flex align-items-center gap-1 overflow-hidden"><i class="fa-solid fa-location-dot text-teal-600 flex-shrink-0" style="font-size: 0.65rem;"></i><span class="text-truncate">' + escapeHtml(ev.location) + '</span></div>' : '');
+
+                                item.onclick = function (e) {
+                                    e.stopPropagation();
+                                    showEventDetail(ev);
+                                };
+                                evBox.appendChild(item);
+                            });
+
+                            var addMiniBtn = document.createElement('button');
+                            addMiniBtn.type = 'button';
+                            addMiniBtn.className = 'btn btn-xs w-100 mt-2 py-1.5 rounded-xl border border-dashed border-slate-200 text-slate-400 hover:text-teal-700 hover:border-teal-400 hover:bg-teal-50/50 text-3xs font-bold transition d-flex align-items-center justify-content-center gap-1';
+                            addMiniBtn.innerHTML = '<i class="fa-solid fa-plus text-3xs"></i> <span>Thêm việc</span>';
+                            addMiniBtn.onclick = (function (targetDate) {
+                                return function () { openAddModal(targetDate); };
+                            })(dStr);
+                            evBox.appendChild(addMiniBtn);
+                        }
+
+                        col.appendChild(evBox);
+
+                        col.ondblclick = (function (targetDate) {
+                            return function () { openAddModal(targetDate); };
+                        })(dStr);
+
+                        grid.appendChild(col);
+                    }
+                }
+
+                function renderDayView() {
+                    var container = document.getElementById('fullCalDayContent');
+                    if (!container) return;
+                    var dStr = formatDateYMD(currentDate);
+                    var allEvents = getFilteredEvents().filter(function (e) { return e.date === dStr; });
+
+                    var dayNames = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
+                    var dayName = dayNames[currentDate.getDay()];
+
+                    var html = '<div class="d-flex align-items-center justify-content-between pb-3 mb-4 border-b border-slate-100">' +
+                        '<div>' +
+                        '<span class="badge bg-teal-100 text-teal-800 rounded-full px-3 py-1 text-xs font-bold mb-1">' + dayName + '</span>' +
+                        '<h3 class="text-xl font-extrabold text-slate-900 mb-0">Lịch trình ngày ' + currentDate.getDate() + '/' + (currentDate.getMonth() + 1) + '/' + currentDate.getFullYear() + '</h3>' +
+                        '</div>' +
+                        '<button type="button" class="btn btn-sm btn-dark rounded-full px-3.5 py-1.5 text-xs font-bold" onclick="fullCalendarApp.openAddModal(\'' + dStr + '\')">' +
+                        '<i class="fa-solid fa-plus me-1"></i> Thêm việc ngày này' +
+                        '</button>' +
+                        '</div>';
+
+                    if (allEvents.length === 0) {
+                        html += '<div class="p-5 text-center text-slate-400">' +
+                            '<i class="fa-regular fa-calendar-check text-4xl mb-2 opacity-30"></i>' +
+                            '<p class="text-xs mb-0">Không có sự kiện hay hạn chót nào trong ngày này.</p>' +
+                            '</div>';
+                    } else {
+                        html += '<div class="space-y-3">';
+                        allEvents.forEach(function (ev) {
+                            html += '<div class="p-3.5 rounded-2xl border border-slate-200/80 hover:border-teal-300 bg-white transition d-flex align-items-center justify-content-between gap-3 shadow-2xs">' +
+                                '<div class="d-flex align-items-center gap-3">' +
+                                '<div class="w-10 h-10 rounded-2xl ' + (ev.colorClass || 'cal-event-teal') + ' d-flex align-items-center justify-content-center flex-shrink-0 text-sm">' +
+                                '<i class="fa-solid ' + (ev.icon || 'fa-calendar-check') + '"></i>' +
+                                '</div>' +
+                                '<div>' +
+                                '<div class="d-flex align-items-center gap-2">' +
+                                '<span class="badge bg-slate-100 text-slate-700 font-bold rounded-full px-2 py-0.5 text-3xs">' + escapeHtml(ev.typeName || ev.type) + '</span>' +
+                                '<span class="text-xs font-bold text-slate-900">' + escapeHtml(ev.title) + '</span>' +
+                                '</div>' +
+                                '<div class="text-3xs text-slate-500 mt-1 d-flex gap-3">' +
+                                '<span><i class="fa-regular fa-clock text-teal-600 me-1"></i>' + escapeHtml(ev.time || 'Cả ngày') + '</span>' +
+                                (ev.location ? '<span><i class="fa-solid fa-location-dot text-teal-600 me-1"></i>' + escapeHtml(ev.location) + '</span>' : '') +
+                                '</div>' +
+                                '</div>' +
+                                '</div>' +
+                                '<button type="button" class="btn btn-sm btn-light border border-slate-200/80 rounded-full px-3 py-1 text-xs font-bold" onclick=\'fullCalendarApp.showEventDetail(' + JSON.stringify(ev) + ')\'>Chi tiết</button>' +
+                                '</div>';
+                        });
+                        html += '</div>';
+                    }
+
+                    container.innerHTML = html;
+                }
+
+                function prevMonth() {
+                    if (currentView === 'month') {
+                        currentDate.setMonth(currentDate.getMonth() - 1);
+                    } else if (currentView === 'week') {
+                        currentDate.setDate(currentDate.getDate() - 7);
+                    } else if (currentView === 'day') {
+                        currentDate.setDate(currentDate.getDate() - 1);
+                    }
+                    render();
+                }
+
+                function nextMonth() {
+                    if (currentView === 'month') {
+                        currentDate.setMonth(currentDate.getMonth() + 1);
+                    } else if (currentView === 'week') {
+                        currentDate.setDate(currentDate.getDate() + 7);
+                    } else if (currentView === 'day') {
+                        currentDate.setDate(currentDate.getDate() + 1);
+                    }
+                    render();
+                }
+
+                function goToToday() {
+                    currentDate = new Date();
+                    render();
+                }
+
+                function setView(view) {
+                    currentView = view;
+                    ['day', 'week', 'month'].forEach(function (v) {
+                        var btn = document.getElementById('viewBtn' + v.charAt(0).toUpperCase() + v.slice(1));
+                        if (btn) {
+                            if (v === view) {
+                                btn.classList.add('active-cal-view', 'font-extrabold', 'shadow-2xs');
+                            } else {
+                                btn.classList.remove('active-cal-view', 'font-extrabold', 'shadow-2xs');
+                            }
+                        }
+                    });
+
+                    var monthPanel = document.getElementById('calendarMonthViewContainer');
+                    var weekPanel = document.getElementById('calendarWeekViewContainer');
+                    var dayPanel = document.getElementById('calendarDayViewContainer');
+
+                    if (monthPanel) monthPanel.classList.toggle('d-none', view !== 'month');
+                    if (weekPanel) weekPanel.classList.toggle('d-none', view !== 'week');
+                    if (dayPanel) dayPanel.classList.toggle('d-none', view !== 'day');
+
+                    render();
+                }
+
+                function setFilter(type, label) {
+                    currentFilter = type;
+                    var labelEl = document.getElementById('agendaFilterLabel');
+                    if (labelEl) labelEl.textContent = label;
+                    render();
+                }
+
+                function ensureModalInBody(modalEl) {
+                    if (modalEl && modalEl.parentElement !== document.body) {
+                        document.body.appendChild(modalEl);
+                    }
+                }
+
+                function showEventDetail(ev) {
+                    selectedEvent = ev;
+                    var modalEl = document.getElementById('eventDetailModal');
+                    if (!modalEl) return;
+                    ensureModalInBody(modalEl);
+
+                    document.getElementById('eventDetailTitle').textContent = ev.title || 'Sự kiện';
+                    document.getElementById('eventDetailType').textContent = ev.typeName || ev.type || 'Lịch trình';
+                    document.getElementById('eventDetailDate').textContent = ev.date || '--';
+                    document.getElementById('eventDetailTime').textContent = ev.time || 'Cả ngày';
+                    document.getElementById('eventDetailLocation').textContent = ev.location || 'Tại Trường / Trực tuyến';
+
+                    var descEl = document.getElementById('eventDetailDesc');
+                    var descRow = document.getElementById('eventDetailDescRow');
+                    if (ev.desc || ev.location) {
+                        descEl.textContent = ev.desc || ('Sự kiện được đồng bộ tự động từ hệ thống quản lý đề tài TopicHub. Vui lòng theo dõi đúng thời gian và địa điểm: ' + (ev.location || ''));
+                        descRow.classList.remove('d-none');
+                    } else {
+                        descRow.classList.add('d-none');
+                    }
+
+                    var deleteBtn = document.getElementById('eventDetailDeleteBtn');
+                    if (deleteBtn) {
+                        deleteBtn.classList.toggle('d-none', !ev.isCustom);
+                    }
+
+                    var actionBtn = document.getElementById('eventDetailActionBtn');
+                    if (actionBtn) {
+                        if (ev.actionUrl && ev.actionUrl !== '#' && !ev.isCustom) {
+                            actionBtn.href = ev.actionUrl;
+                            actionBtn.classList.remove('d-none');
+                        } else {
+                            actionBtn.classList.add('d-none');
+                        }
+                    }
+
+                    var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.show();
+                }
+
+                function openAddModal(prefillDate) {
+                    var modalEl = document.getElementById('addScheduleModal');
+                    if (!modalEl) return;
+                    ensureModalInBody(modalEl);
+                    var dateInput = document.getElementById('noteDate');
+                    if (dateInput) {
+                        dateInput.value = prefillDate || formatDateYMD(currentDate);
+                    }
+                    var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.show();
+                }
+
+                function saveCustomNote(e) {
+                    if (e) e.preventDefault();
+                    var title = document.getElementById('noteTitle').value;
+                    var date = document.getElementById('noteDate').value;
+                    var time = document.getElementById('noteTime').value;
+                    var location = document.getElementById('noteLocation').value;
+                    var desc = document.getElementById('noteDesc').value;
+                    var colorEl = document.querySelector('input[name="noteColor"]:checked');
+                    var colorClass = colorEl ? colorEl.value : 'cal-event-teal';
+
+                    if (!title || !date) return;
+
+                    var notes = getCustomNotes();
+                    notes.push({
+                        id: Date.now(),
+                        title: title.trim(),
+                        date: date,
+                        time: time,
+                        location: location ? location.trim() : '',
+                        desc: desc ? desc.trim() : '',
+                        colorClass: colorClass
+                    });
+                    saveCustomNotes(notes);
+
+                    var modalEl = document.getElementById('addScheduleModal');
+                    if (modalEl) {
+                        var modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+                    }
+
+                    document.getElementById('addScheduleForm').reset();
+                    if (window.showToast) window.showToast('Đã thêm lịch hẹn / ghi chú mới thành công!', 'success');
+                    render();
+                }
+
+                function deleteCurrentNote() {
+                    if (!selectedEvent || !selectedEvent.isCustom) return;
+                    if (!confirm('Bạn có chắc muốn xóa ghi chú lịch này không?')) return;
+
+                    var notes = getCustomNotes();
+                    notes = notes.filter(function (n) { return n.id !== selectedEvent.rawId; });
+                    saveCustomNotes(notes);
+
+                    var modalEl = document.getElementById('eventDetailModal');
+                    if (modalEl) {
+                        var modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+                    }
+
+                    if (window.showToast) window.showToast('Đã xóa ghi chú khỏi lịch!', 'info');
+                    render();
+                }
+
+                function escapeHtml(str) {
+                    if (!str) return '';
+                    var div = document.createElement('div');
+                    div.appendChild(document.createTextNode(str));
+                    return div.innerHTML;
+                }
+
+                document.addEventListener('DOMContentLoaded', init);
+
+                return {
+                    init: init,
+                    render: render,
+                    prevMonth: prevMonth,
+                    nextMonth: nextMonth,
+                    goToToday: goToToday,
+                    setView: setView,
+                    setFilter: setFilter,
+                    showEventDetail: showEventDetail,
+                    openAddModal: openAddModal,
+                    saveCustomNote: saveCustomNote,
+                    deleteCurrentNote: deleteCurrentNote
+                };
+            })();
+
+            /* =========================================================
+             *  WELLNEST ACCORDION CATEGORY TREE FILTER CONTROLLER
+             * ========================================================= */
+            window.toggleTreeGroup = function (headerBtn) {
+                var group = headerBtn.closest('.tree-group');
+                if (!group) return;
+                var subList = group.querySelector('.tree-sub-list');
+                var isOpen = group.classList.contains('is-open');
+
+                if (isOpen) {
+                    group.classList.remove('is-open');
+                    if (subList) subList.classList.add('d-none');
+                } else {
+                    group.classList.add('is-open');
+                    if (subList) subList.classList.remove('d-none');
+                }
+            };
+
+            window.filterByTreeCriteria = function (type, value, el) {
+                document.querySelectorAll('.tree-sub-item').forEach(function (item) {
+                    item.classList.remove('active');
+                });
+                if (el) el.classList.add('active');
+
+                var rows = document.querySelectorAll('.topic-item-row, .kanban-card, .student-topic-card');
+                var visibleCount = 0;
+
+                rows.forEach(function (row) {
+                    var match = true;
+                    if (type === 'ALL') {
+                        match = true;
+                    } else if (type === 'STATUS') {
+                        var status = (row.dataset.status || '').toUpperCase();
+                        match = (value === 'ALL' || status === value);
+                    } else if (type === 'WORKFLOW') {
+                        var status = (row.dataset.status || '').toUpperCase();
+                        var hasReviewer = row.dataset.hasReviewer === 'true';
+                        var hasCouncil = row.dataset.hasCouncil === 'true';
+                        if (value === 'PENDING') match = (status === 'PENDING');
+                        else if (value === 'NEEDS_REVIEWER') match = (status === 'APPROVED' && !hasReviewer);
+                        else if (value === 'NEEDS_COUNCIL') match = (status === 'APPROVED' && hasReviewer && !hasCouncil);
+                        else if (value === 'READY') match = (status === 'APPROVED' && hasReviewer && hasCouncil);
+                    } else if (type === 'PERIOD') {
+                        var period = (row.dataset.topicPeriod || '').toLowerCase();
+                        match = (value === 'ALL' || period.includes(value.toLowerCase()));
+                    } else if (type === 'MAJOR') {
+                        var major = (row.dataset.topicMajor || '').toLowerCase();
+                        match = (value === 'ALL' || major.includes(value.toLowerCase()));
+                    } else if (type === 'SUPERVISOR') {
+                        var supervisor = (row.dataset.topicSupervisor || '').toLowerCase();
+                        match = (value === 'ALL' || supervisor.includes(value.toLowerCase()));
+                    } else if (type === 'AVAILABILITY') {
+                        var isTaken = row.dataset.topicIsTaken === 'true';
+                        if (value === 'AVAILABLE') match = !isTaken;
+                        else if (value === 'TAKEN') match = isTaken;
+                        else match = true;
+                    }
+
+                    if (match) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                var countBadge = document.getElementById('filteredRowCount');
+                if (countBadge) {
+                    countBadge.textContent = 'Hiển thị: ' + visibleCount + ' đề tài';
+                }
+            };
+
+            window.searchTreeItems = function (keyword) {
+                var term = (keyword || '').toLowerCase().trim();
+                document.querySelectorAll('.tree-sub-item').forEach(function (item) {
+                    var text = item.textContent.toLowerCase();
+                    if (!term || text.includes(term)) {
+                        item.style.display = 'flex';
+                    }
+                });
+            };
+
+            // Global Protection: Automatically clear unwanted browser autofill on search/filter bars
+            document.addEventListener('DOMContentLoaded', function () {
+                function sanitizeSearchInputs() {
+                    document.querySelectorAll('input').forEach(function (inp) {
+                        var type = (inp.type || '').toLowerCase();
+                        if (type === 'password' || type === 'hidden' || type === 'checkbox' || type === 'radio' || type === 'number') return;
+                        var ph = (inp.getAttribute('placeholder') || '').toLowerCase();
+                        var name = (inp.getAttribute('name') || '').toLowerCase();
+                        var id = (inp.id || '').toLowerCase();
+                        var isSearch = ph.includes('tìm') || ph.includes('search') || name.includes('search') || name.includes('keyword') || id.includes('search') || id.includes('keyword');
+                        if (isSearch && inp.value && (inp.value === 'head_cntt' || inp.value === 'admin' || inp.value === 'lecturer1' || inp.value === 'student1' || inp.value.startsWith('head_') || inp.value.startsWith('lecturer') || inp.value.startsWith('student'))) {
+                            inp.value = '';
+                        }
+                    });
+                }
+                sanitizeSearchInputs();
+                setTimeout(sanitizeSearchInputs, 50);
+                setTimeout(sanitizeSearchInputs, 200);
+                setTimeout(sanitizeSearchInputs, 600);
+            });
+        </script>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopicHub Calendar Widget</title>
+</head>
+<body>
+
+    <!-- Reusable WellNest Smart Calendar & Deadline Agenda Widget -->
+    <div th:fragment="calendarWidget(periods, councils)" class="saas-card p-0 shadow-wellnest border border-slate-100 overflow-hidden" id="smartCalendarWidget">
+        
+        <!-- 1. Mini Month Calendar Header -->
+        <div class="p-4 pb-3 border-b border-slate-100 bg-white">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h6 class="fw-extrabold text-slate-900 mb-0" style="font-size: 0.95rem;" id="calCurrentMonthYear">Tháng 10, 2026</h6>
+                <div class="d-flex align-items-center gap-1">
+                    <button type="button" class="btn btn-xs btn-light border border-slate-200/80 rounded-full d-flex align-items-center justify-content-center text-slate-500 hover:text-slate-900" style="width: 28px; height: 28px; padding: 0;" onclick="navigateCalendarMonth(-1)" title="Tháng trước">
+                        <i class="fa-solid fa-chevron-left" style="font-size: 0.65rem;"></i>
+                    </button>
+                    <button type="button" class="btn btn-xs btn-light border border-slate-200/80 rounded-full d-flex align-items-center justify-content-center text-slate-500 hover:text-slate-900" style="width: 28px; height: 28px; padding: 0;" onclick="navigateCalendarMonth(1)" title="Tháng sau">
+                        <i class="fa-solid fa-chevron-right" style="font-size: 0.65rem;"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Month Days Header -->
+            <div class="grid grid-cols-7 text-center mb-1">
+                <span class="text-3xs font-bold text-slate-400 uppercase">CN</span>
+                <span class="text-3xs font-bold text-slate-400 uppercase">T2</span>
+                <span class="text-3xs font-bold text-slate-400 uppercase">T3</span>
+                <span class="text-3xs font-bold text-slate-400 uppercase">T4</span>
+                <span class="text-3xs font-bold text-slate-400 uppercase">T5</span>
+                <span class="text-3xs font-bold text-slate-400 uppercase">T6</span>
+                <span class="text-3xs font-bold text-slate-400 uppercase">T7</span>
+            </div>
+
+            <!-- Month Calendar Grid (Generated via JS) -->
+            <div class="grid grid-cols-7 text-center gap-1" id="calMonthGrid">
+                <!-- Injected via JavaScript -->
+            </div>
+        </div>
+
+        <!-- 2. Selected Day Header & Quick Note Action -->
+        <div class="px-4 py-3 bg-slate-50/70 border-b border-slate-100 d-flex align-items-center justify-content-between">
+            <div>
+                <span class="text-3xs font-bold text-teal-700 uppercase tracking-wider d-block">Lịch trình & Hạn chót</span>
+                <h6 class="fw-bold text-slate-900 mb-0 text-xs" id="calSelectedDayText">Hôm nay, 20 Tháng 10</h6>
+            </div>
+            <button type="button" class="btn btn-xs bg-slate-900 hover:bg-slate-800 text-teal-300 font-bold rounded-full px-2.5 py-1 text-2xs d-inline-flex align-items-center gap-1 transition shadow-2xs border-0" onclick="toggleQuickNoteInput()" title="Thêm ghi chú nhanh">
+                <i class="fa-solid fa-plus text-3xs"></i>
+                <span>Ghi chú</span>
+            </button>
+        </div>
+
+        <!-- 3. Quick Note Input Form (Collapsible) -->
+        <div id="quickNoteInputBox" class="p-3 bg-teal-50/50 border-b border-teal-100 d-none">
+            <div class="input-group input-group-sm">
+                <input type="text" id="quickNoteText" class="form-control rounded-l-xl text-xs border-teal-200 focus:ring-teal-400" placeholder="Ghi chú việc cần làm hôm nay..." title="Ghi chú việc cần làm hôm nay..." aria-label="Ghi chú việc cần làm hôm nay...">
+                <button class="btn bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold text-xs rounded-r-xl px-3" type="button" onclick="saveQuickNote()">Lưu</button>
+            </div>
+        </div>
+
+        <!-- 4. Agenda / Timeline Deadlines List -->
+        <div class="p-3.5 space-y-2.5" style="max-height: 380px; overflow-y: auto;" id="calAgendaContainer">
+            
+            <!-- Default Events / Deadlines -->
+            <div class="p-3 rounded-2xl bg-teal-50/80 border border-teal-200/70 text-slate-900 position-relative transition hover:shadow-2xs">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <span class="badge bg-teal-200/70 text-teal-900 text-3xs font-extrabold rounded-full px-2 py-0.5">08:00 - 11:30</span>
+                    <span class="text-3xs font-bold text-teal-700"><i class="fa-solid fa-circle-check text-3xs me-1"></i>Đang mở</span>
+                </div>
+                <h6 class="text-xs font-bold text-slate-900 mb-0.5">Đợt đề xuất Đề tài KLTN 2026</h6>
+                <p class="text-3xs text-slate-600 mb-0">Hạn chót giảng viên gửi đề tài lên BCN Khoa.</p>
+            </div>
+
+            <div class="p-3 rounded-2xl bg-sky-50/80 border border-sky-200/70 text-slate-900 position-relative transition hover:shadow-2xs">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <span class="badge bg-sky-200/70 text-sky-900 text-3xs font-extrabold rounded-full px-2 py-0.5">14:00 - 16:30</span>
+                    <span class="text-3xs font-bold text-sky-700"><i class="fa-solid fa-scale-balanced text-3xs me-1"></i>Hội đồng</span>
+                </div>
+                <h6 class="text-xs font-bold text-slate-900 mb-0.5">Họp Hội đồng Xét duyệt Đề cương</h6>
+                <p class="text-3xs text-slate-600 mb-0">Phòng họp trực tuyến Google Meet & A2-301.</p>
+            </div>
+
+            <div class="p-3 rounded-2xl bg-rose-50/80 border border-rose-200/70 text-slate-900 position-relative transition hover:shadow-2xs">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <span class="badge bg-rose-200/70 text-rose-900 text-3xs font-extrabold rounded-full px-2 py-0.5">Hạn chót 23:59</span>
+                    <span class="text-3xs font-bold text-rose-600"><i class="fa-solid fa-clock text-3xs me-1"></i>Sắp hết hạn</span>
+                </div>
+                <h6 class="text-xs font-bold text-slate-900 mb-0.5">Nộp Báo cáo Tiến độ Đợt 1</h6>
+                <p class="text-3xs text-slate-600 mb-0">Dành cho sinh viên làm khóa luận tốt nghiệp.</p>
+            </div>
+
+            <!-- Dynamic User Notes List -->
+            <div id="userQuickNotesList" class="space-y-2 pt-1">
+                <!-- User notes appended via JavaScript -->
+            </div>
+        </div>
+
+        <!-- 5. Footer Quick Tip -->
+        <div class="p-3 border-t border-slate-100 bg-white text-center">
+            <span class="text-3xs text-slate-400 font-medium">
+                <i class="fa-regular fa-lightbulb text-teal-500 me-1"></i> Nhấn vào ngày để lọc lịch trình & thêm ghi chú.
+            </span>
+        </div>
+    </div>
+
+</body>
+</html>
