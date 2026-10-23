@@ -1,5 +1,8 @@
 # HỆ THỐNG QUẢN LÝ ĐỀ TÀI KHÓA LUẬN TỐT NGHIỆP (TOPIC MANAGEMENT SYSTEM)
 
+> 🌐 **Trải nghiệm trực tuyến (Live Demo):** [https://java-project-b47q.onrender.com/login](https://java-project-b47q.onrender.com/login)  
+> *Đã triển khai trực tiếp trên nền tảng Render Cloud với cơ sở dữ liệu Neon PostgreSQL.*
+
 Hệ thống quản lý quy trình đăng ký, phân công hướng dẫn, phản biện, nộp báo cáo và đánh giá đề tài khóa luận tốt nghiệp theo kiến trúc phân tầng chuẩn mực trên nền tảng **Spring Boot** và **PostgreSQL**.
 
 ---
